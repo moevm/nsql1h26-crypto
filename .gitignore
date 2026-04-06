@@ -1,0 +1,9 @@
+# Заметки
+docs
+
+# Файлы idea
+.idea/*
+!.idea/vcs.xml
+!.idea/inspectionProfiles/
+!.idea/inspectionProfiles/Project_Default.xml
+!.idea/.gitignore

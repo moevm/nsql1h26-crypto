@@ -1,7 +1,7 @@
 import { PropsWithChildren } from "react";
 
 import type { AppSection } from "@/types/ui";
-import { appNavItems } from "@/utils/ui-mocks";
+import { appNavItems } from "@/utils/app-navigation";
 
 interface AppLayoutProps extends PropsWithChildren {
   activeSection: AppSection;

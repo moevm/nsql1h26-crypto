@@ -3,6 +3,7 @@ export type AppSection = "coins" | "favorites" | "statistics" | "importExport";
 export interface AppNavItem {
   key: AppSection;
   label: string;
+  href: string;
 }
 
 export interface WatchlistRow {

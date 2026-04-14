@@ -1,11 +1,4 @@
-import type { AppNavItem, FavoriteRow, StatisticsPreset, WatchlistRow } from "@/types/ui";
-
-export const appNavItems: AppNavItem[] = [
-  { key: "coins", label: "Монеты" },
-  { key: "favorites", label: "Избранное" },
-  { key: "statistics", label: "Статистика" },
-  { key: "importExport", label: "Импорт / экспорт" }
-];
+import type { FavoriteRow, StatisticsPreset, WatchlistRow } from "@/types/ui";
 
 export const watchlistRows: WatchlistRow[] = [
   {

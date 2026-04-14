@@ -1,19 +1,51 @@
 import { PropsWithChildren } from "react";
 
+import type { AppSection } from "@/types/ui";
+import { appNavItems } from "@/utils/ui-mocks";
+
 interface AppLayoutProps extends PropsWithChildren {
+  activeSection: AppSection;
   title: string;
+  description: string;
 }
 
-export const AppLayout = ({ children, title }: AppLayoutProps) => {
+export const AppLayout = ({
+  children,
+  activeSection,
+  title,
+  description
+}: AppLayoutProps) => {
   return (
-    <div className="min-h-screen bg-page px-4 py-8 sm:px-6">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <header className="rounded-2xl border border-border bg-surface px-6 py-5 shadow-panel">
-          <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
+    <div className="cw-app-shell">
+      <div className="cw-app-frame">
+        <header className="cw-surface overflow-hidden">
+          <div className="cw-app-header-bar">
+            <div className="cw-app-header-row">
+              <p className="cw-kicker mb-0">CryptoWatch</p>
+              <nav className="flex flex-wrap gap-2" aria-label="Основная навигация">
+                {appNavItems.map((item) => (
+                  <span
+                    key={item.key}
+                    className={`cw-app-nav-link ${
+                      item.key === activeSection ? "cw-app-nav-link-active" : ""
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          <div className="cw-app-header-copy">
+            <h1 className="cw-section-title">{title}</h1>
+            <p className="cw-auth-copy mt-3 max-w-2xl text-sm leading-7 sm:text-base">
+              {description}
+            </p>
+          </div>
         </header>
-        <main className="rounded-2xl border border-border bg-surface px-6 py-6 shadow-panel">
-          {children}
-        </main>
+
+        <main className="cw-surface cw-app-content">{children}</main>
       </div>
     </div>
   );

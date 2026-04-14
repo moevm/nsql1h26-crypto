@@ -1,4 +1,6 @@
 import { AppLayout } from "@/components/app-layout";
+import { ErrorState } from "@/components/error-state";
+import { useDemoErrorState } from "@/hooks/use-demo-error-state";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +11,7 @@ const chartBars = [34, 42, 39, 51, 55, 60, 58, 66, 69, 74, 72, 79];
 
 export default function StatisticsPage() {
   const { pushToast } = useToast();
+  const showErrorState = useDemoErrorState();
 
   return (
     <>
@@ -109,39 +112,47 @@ export default function StatisticsPage() {
                 <h2 className="cw-card-title">Результат</h2>
               </div>
 
-              <div className="cw-surface overflow-hidden px-5 py-5 sm:px-6">
-                <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <span className="cw-chip">BTC</span>
-                  <span className="cw-chip">ETH</span>
-                  <span className="cw-chip">SOL</span>
+              {showErrorState ? (
+                <ErrorState
+                  title="Не удалось построить график"
+                  message="Проверьте параметры и попробуйте снова"
+                  onAction={() => pushToast(statisticsToastMessages.chartBuilt)}
+                />
+              ) : (
+                <div className="cw-surface overflow-hidden px-5 py-5 sm:px-6">
+                  <div className="mb-6 flex flex-wrap items-center gap-3">
+                    <span className="cw-chip">BTC</span>
+                    <span className="cw-chip">ETH</span>
+                    <span className="cw-chip">SOL</span>
+                  </div>
+
+                  <div className="relative rounded-[28px] border border-border bg-white/80 px-4 py-6 sm:px-6">
+                    <div className="pointer-events-none absolute inset-y-6 left-12 right-6 flex flex-col justify-between">
+                      <div className="border-t border-dashed border-border"></div>
+                      <div className="border-t border-dashed border-border"></div>
+                      <div className="border-t border-dashed border-border"></div>
+                      <div className="border-t border-dashed border-border"></div>
+                    </div>
+
+                    <div className="relative flex h-[280px] items-end gap-3 pl-10 pr-2">
+                      {chartBars.map((value, index) => (
+                        <div
+                          key={index}
+                          className="flex-1 rounded-t-[18px] bg-brand/80"
+                          style={{ height: `${value}%` }}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="mt-5 flex justify-between pl-10 text-xs uppercase tracking-[0.14em] text-text-muted">
+                      <span>1 нед</span>
+                      <span>2 нед</span>
+                      <span>3 нед</span>
+                      <span>4 нед</span>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="relative rounded-[28px] border border-border bg-white/80 px-4 py-6 sm:px-6">
-                  <div className="pointer-events-none absolute inset-y-6 left-12 right-6 flex flex-col justify-between">
-                    <div className="border-t border-dashed border-border"></div>
-                    <div className="border-t border-dashed border-border"></div>
-                    <div className="border-t border-dashed border-border"></div>
-                    <div className="border-t border-dashed border-border"></div>
-                  </div>
-
-                  <div className="relative flex h-[280px] items-end gap-3 pl-10 pr-2">
-                    {chartBars.map((value, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 rounded-t-[18px] bg-brand/80"
-                        style={{ height: `${value}%` }}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex justify-between pl-10 text-xs uppercase tracking-[0.14em] text-text-muted">
-                    <span>1 нед</span>
-                    <span>2 нед</span>
-                    <span>3 нед</span>
-                    <span>4 нед</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

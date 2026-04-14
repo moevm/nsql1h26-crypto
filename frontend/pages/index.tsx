@@ -36,6 +36,26 @@ export default function IndexPage() {
               </li>
             </ul>
           </div>
+
+          <div className="mt-8 space-y-3">
+            <div className="cw-section-label !mb-0 !mt-0 !pt-0 !border-t-0">
+              Проверка ошибок
+            </div>
+            <ul className="space-y-3 text-sm text-text-main sm:text-base">
+              <li>
+                <code>/app?demo=error</code> -- ошибка на главной
+              </li>
+              <li>
+                <code>/app/favorites?demo=error</code> -- ошибка на странице избранного
+              </li>
+              <li>
+                <code>/app/statistics?demo=error</code> -- ошибка на странице статистики
+              </li>
+              <li>
+                <code>/app/admin/import-export?demo=error</code> -- ошибка на странице импорта / экспорта
+              </li>
+            </ul>
+          </div>
         </div>
       </main>
     </>

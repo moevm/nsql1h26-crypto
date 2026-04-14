@@ -299,3 +299,24 @@
 .cw-toast-dismiss:hover {
   color: var(--color-brand);
 }
+
+.cw-error-state {
+  @apply rounded-[28px] border px-5 py-6 sm:px-6;
+  border-color: rgba(239, 68, 68, 0.18);
+  background: rgba(253, 236, 236, 0.72);
+}
+
+.cw-error-badge {
+  color: var(--color-danger);
+  @apply inline-flex items-center rounded-full border border-current px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em];
+}
+
+.cw-error-title {
+  color: var(--color-text-strong);
+  @apply mt-4 text-xl font-semibold;
+}
+
+.cw-error-message {
+  color: var(--color-text-main);
+  @apply mt-3 max-w-2xl text-sm leading-6 sm:text-base;
+}

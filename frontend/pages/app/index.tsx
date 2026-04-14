@@ -1,5 +1,7 @@
 import { AppLayout } from "@/components/app-layout";
 import { CoinTable } from "@/components/coin-table";
+import { ErrorState } from "@/components/error-state";
+import { useDemoErrorState } from "@/hooks/use-demo-error-state";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +10,7 @@ import { watchlistRows } from "@/utils/ui-mocks";
 
 export default function AppHomePage() {
   const { pushToast } = useToast();
+  const showErrorState = useDemoErrorState();
 
   return (
     <>
@@ -106,17 +109,27 @@ export default function AppHomePage() {
               <h2 className="cw-card-title">Watchlist</h2>
             </div>
 
-            <CoinTable rows={watchlistRows} />
+            {showErrorState ? (
+              <ErrorState
+                title="Не удалось загрузить список"
+                message="Попробуйте обновить данные еще раз"
+                onAction={() => pushToast(watchlistToastMessages.filtersShown)}
+              />
+            ) : (
+              <>
+                <CoinTable rows={watchlistRows} />
 
-            <div className="cw-pagination">
-              <span>Показано 1-4 из 24 монет</span>
-              <div className="flex gap-2">
-                <span className="cw-page-pill cw-page-pill-active">1</span>
-                <span className="cw-page-pill">2</span>
-                <span className="cw-page-pill">3</span>
-                <span className="cw-page-pill">...</span>
-              </div>
-            </div>
+                <div className="cw-pagination">
+                  <span>Показано 1-4 из 24 монет</span>
+                  <div className="flex gap-2">
+                    <span className="cw-page-pill cw-page-pill-active">1</span>
+                    <span className="cw-page-pill">2</span>
+                    <span className="cw-page-pill">3</span>
+                    <span className="cw-page-pill">...</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </section>
       </AppLayout>

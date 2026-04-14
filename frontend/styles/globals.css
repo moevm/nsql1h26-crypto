@@ -4,9 +4,9 @@
 
 :root {
   color-scheme: light;
-  --color-brand: #6366f1;
-  --color-brand-dark: #5659e8;
-  --color-brand-soft: #e6e7fd;
+  --color-brand: #7c3aed;
+  --color-brand-dark: #6d28d9;
+  --color-brand-soft: #ede9fe;
   --color-brand-contrast: #ffffff;
   --color-page: #f5f5f5;
   --color-surface: #ffffff;
@@ -22,10 +22,10 @@
   --color-warning: #f59e0b;
   --shadow-panel-lg: 0 32px 80px rgba(15, 23, 42, 0.12);
   --shadow-panel: 0 24px 48px rgba(15, 23, 42, 0.08);
-  --shadow-field-focus: 0 0 0 4px rgba(99, 102, 241, 0.16);
+  --shadow-field-focus: 0 0 0 4px rgba(124, 58, 237, 0.16);
   --gradient-auth: linear-gradient(
     135deg,
-    rgba(230, 231, 253, 0.95) 0%,
+    rgba(237, 233, 254, 0.95) 0%,
     rgba(255, 255, 255, 1) 45%,
     rgba(243, 244, 246, 0.95) 100%
   );

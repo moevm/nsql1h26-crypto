@@ -117,6 +117,16 @@
   color: var(--color-brand-dark);
 }
 
+.cw-app-nav-toggle {
+  @apply w-full sm:w-auto;
+}
+
+.cw-app-nav-mobile {
+  @apply flex flex-col gap-2 rounded-3xl border p-3;
+  border-color: rgba(229, 231, 235, 0.92);
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .cw-kicker {
   @apply text-xs font-semibold uppercase tracking-[0.18em];
   color: var(--color-brand-dark);

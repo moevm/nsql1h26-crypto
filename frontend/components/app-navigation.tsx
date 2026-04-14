@@ -1,0 +1,66 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
+import type { AppSection } from "@/types/ui";
+import { appNavItems } from "@/utils/app-navigation";
+
+interface AppNavigationProps {
+  activeSection: AppSection;
+}
+
+export const AppNavigation = ({ activeSection }: AppNavigationProps) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  return (
+    <div className="cw-app-nav">
+      <nav className="hidden flex-wrap gap-2 lg:flex" aria-label="Основная навигация">
+        {appNavItems.map((item) => (
+          <Link
+            key={item.key}
+            href={item.href}
+            className={`cw-app-nav-link ${
+              item.key === activeSection ? "cw-app-nav-link-active" : ""
+            }`}
+            aria-current={item.key === activeSection ? "page" : undefined}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="lg:hidden">
+        <button
+          type="button"
+          className="cw-button-secondary cw-app-nav-toggle"
+          onClick={() => setIsMobileMenuOpen((currentState) => !currentState)}
+        >
+          {isMobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+        </button>
+      </div>
+
+      {isMobileMenuOpen ? (
+        <nav className="cw-app-nav-mobile lg:hidden" aria-label="Мобильная навигация">
+          {appNavItems.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`cw-app-nav-link ${
+                item.key === activeSection ? "cw-app-nav-link-active" : ""
+              }`}
+              aria-current={item.key === activeSection ? "page" : undefined}
+              onClick={closeMobileMenu}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+    </div>
+  );
+};

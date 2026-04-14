@@ -1,0 +1,77 @@
+.cw-auth-page {
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 24%),
+    var(--gradient-auth);
+  @apply min-h-screen px-4 py-6 sm:px-6 lg:px-8;
+}
+
+.cw-auth-frame {
+  @apply mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col justify-center;
+}
+
+.cw-auth-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-panel-lg);
+  @apply overflow-hidden rounded-[32px] border border-border;
+}
+
+.cw-auth-grid {
+  @apply grid min-h-[720px] lg:grid-cols-[1.05fr_0.95fr];
+}
+
+.cw-auth-side {
+  @apply flex flex-col border-b border-border px-6 py-8 sm:px-10 lg:border-b-0 lg:border-r lg:px-12 lg:py-12;
+}
+
+.cw-auth-side-copy {
+  @apply max-w-md;
+}
+
+.cw-auth-brand-panel {
+  @apply mt-8 rounded-[28px] bg-brand px-6 py-6 text-white sm:px-8;
+}
+
+.cw-auth-brand-grid {
+  @apply mt-8 grid gap-3 sm:grid-cols-2;
+}
+
+.cw-auth-brand-card {
+  @apply rounded-2xl border border-white/20 bg-white/10 p-4;
+}
+
+.cw-auth-content {
+  @apply flex items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-12;
+}
+
+.cw-auth-content-inner {
+  @apply mx-auto w-full max-w-md;
+}
+
+.cw-app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top center, rgba(99, 102, 241, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(245, 245, 245, 1) 100%);
+}
+
+.cw-app-frame {
+  @apply mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8;
+}
+
+.cw-app-header-bar {
+  @apply border-b border-border px-5 py-4 sm:px-6 lg:px-8;
+}
+
+.cw-app-header-row {
+  @apply flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between;
+}
+
+.cw-app-header-copy {
+  @apply px-5 py-5 sm:px-6 lg:px-8;
+}
+
+.cw-app-content {
+  @apply px-5 py-5 sm:px-6 lg:px-8 lg:py-8;
+}

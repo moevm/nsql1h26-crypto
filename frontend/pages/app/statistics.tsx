@@ -1,11 +1,15 @@
 import { AppLayout } from "@/components/app-layout";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
+import { useToast } from "@/hooks/use-toast";
+import { statisticsToastMessages } from "@/utils/toast-mocks";
 import { statisticsPresets } from "@/utils/ui-mocks";
 
 const chartBars = [34, 42, 39, 51, 55, 60, 58, 66, 69, 74, 72, 79];
 
 export default function StatisticsPage() {
+  const { pushToast } = useToast();
+
   return (
     <>
       <PageHead 
@@ -20,13 +24,25 @@ export default function StatisticsPage() {
       >
         <section className="cw-toolbar">
           <div className="cw-toolbar-actions">
-            <button className="cw-button-primary" type="button">
+            <button
+              className="cw-button-primary"
+              type="button"
+              onClick={() => pushToast(statisticsToastMessages.chartBuilt)}
+            >
               Построить
             </button>
-            <button className="cw-button-secondary" type="button">
+            <button
+              className="cw-button-secondary"
+              type="button"
+              onClick={() => pushToast(statisticsToastMessages.presetSaved)}
+            >
               Сохранить настройки
             </button>
-            <button className="cw-button-ghost" type="button">
+            <button
+              className="cw-button-ghost"
+              type="button"
+              onClick={() => pushToast(statisticsToastMessages.formReset)}
+            >
               Сбросить
             </button>
           </div>
@@ -146,10 +162,18 @@ export default function StatisticsPage() {
                       Агрегация: {preset.aggregation}
                     </p>
                     <div className="mt-4 flex gap-2">
-                      <button className="cw-button-secondary" type="button">
+                      <button
+                        className="cw-button-secondary"
+                        type="button"
+                        onClick={() => pushToast(statisticsToastMessages.presetLoaded(preset.name))}
+                      >
                         Загрузить
                       </button>
-                      <button className="cw-button-ghost" type="button">
+                      <button
+                        className="cw-button-ghost"
+                        type="button"
+                        onClick={() => pushToast(statisticsToastMessages.presetRemoved(preset.name))}
+                      >
                         Удалить
                       </button>
                     </div>

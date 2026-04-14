@@ -2,9 +2,13 @@ import { AppLayout } from "@/components/app-layout";
 import { CoinTable } from "@/components/coin-table";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
+import { useToast } from "@/hooks/use-toast";
+import { favoritesToastMessages } from "@/utils/toast-mocks";
 import { favoriteRows } from "@/utils/ui-mocks";
 
 export default function FavoritesPage() {
+  const { pushToast } = useToast();
+
   return (
     <>
       <PageHead 
@@ -19,10 +23,18 @@ export default function FavoritesPage() {
       >
         <section className="cw-toolbar">
           <div className="cw-toolbar-actions">
-            <button className="cw-button-primary" type="button">
+            <button
+              className="cw-button-primary"
+              type="button"
+              onClick={() => pushToast(favoritesToastMessages.filtersApplied)}
+            >
               Применить фильтр
             </button>
-            <button className="cw-button-secondary" type="button">
+            <button
+              className="cw-button-secondary"
+              type="button"
+              onClick={() => pushToast(favoritesToastMessages.filtersReset)}
+            >
               Сбросить
             </button>
           </div>

@@ -1,7 +1,11 @@
 import { AppLayout } from "@/components/app-layout";
 import { PageHead } from "@/components/page-head";
+import { useToast } from "@/hooks/use-toast";
+import { importExportToastMessages } from "@/utils/toast-mocks";
 
 export default function ImportExportPage() {
+  const { pushToast } = useToast();
+
   return (
     <>
       <PageHead
@@ -28,7 +32,11 @@ export default function ImportExportPage() {
                 </div>
                 <div className="rounded-[24px] border border-border bg-white/70 p-5">
                   <p className="cw-card-title text-base">Действие</p>
-                  <button className="cw-button-primary mt-4 w-full" type="button">
+                  <button
+                    className="cw-button-primary mt-4 w-full"
+                    type="button"
+                    onClick={() => pushToast(importExportToastMessages.exportStarted)}
+                  >
                     Экспорт
                   </button>
                 </div>
@@ -50,16 +58,28 @@ export default function ImportExportPage() {
                   <p className="cw-card-title text-base">Файл JSON</p>
                   <p className="mt-3 text-sm leading-6 text-text-main">Один файл для импорта</p>
                   <input className="sr-only" id="import-file" name="import-file" type="file" />
-                  <button className="cw-button-secondary mt-5" type="button">
+                  <button
+                    className="cw-button-secondary mt-5"
+                    type="button"
+                    onClick={() => pushToast(importExportToastMessages.fileSelectPending)}
+                  >
                     Выбрать файл
                   </button>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                  <button className="cw-button-primary opacity-70 sm:flex-1" type="button">
+                  <button
+                    className="cw-button-primary opacity-70 sm:flex-1"
+                    type="button"
+                    onClick={() => pushToast(importExportToastMessages.importStarted)}
+                  >
                     Импортировать
                   </button>
-                  <button className="cw-button-secondary sm:flex-1" type="button">
+                  <button
+                    className="cw-button-secondary sm:flex-1"
+                    type="button"
+                    onClick={() => pushToast(importExportToastMessages.importReset)}
+                  >
                     Сбросить
                   </button>
                 </div>

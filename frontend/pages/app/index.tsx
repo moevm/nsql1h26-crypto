@@ -2,9 +2,13 @@ import { AppLayout } from "@/components/app-layout";
 import { CoinTable } from "@/components/coin-table";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
+import { useToast } from "@/hooks/use-toast";
+import { watchlistToastMessages } from "@/utils/toast-mocks";
 import { watchlistRows } from "@/utils/ui-mocks";
 
 export default function AppHomePage() {
+  const { pushToast } = useToast();
+
   return (
     <>
       <PageHead 
@@ -19,10 +23,18 @@ export default function AppHomePage() {
       >
         <section className="cw-toolbar">
           <div className="cw-toolbar-actions">
-            <button className="cw-button-primary" type="button">
+            <button
+              className="cw-button-primary"
+              type="button"
+              onClick={() => pushToast(watchlistToastMessages.addCoinPending)}
+            >
               Добавить монету
             </button>
-            <button className="cw-button-secondary" type="button">
+            <button
+              className="cw-button-secondary"
+              type="button"
+              onClick={() => pushToast(watchlistToastMessages.comparePending)}
+            >
               Сравнить
             </button>
           </div>
@@ -46,7 +58,11 @@ export default function AppHomePage() {
                   />
                 </div>
                 <div className="lg:pt-7">
-                  <button className="cw-button-secondary" type="button">
+                  <button
+                    className="cw-button-secondary"
+                    type="button"
+                    onClick={() => pushToast(watchlistToastMessages.filtersShown)}
+                  >
                     Фильтры
                   </button>
                 </div>
@@ -59,10 +75,18 @@ export default function AppHomePage() {
             <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="cw-card-title">Диапазоны</h2>
               <div className="flex gap-3">
-                <button className="cw-button-primary" type="button">
+                <button
+                  className="cw-button-primary"
+                  type="button"
+                  onClick={() => pushToast(watchlistToastMessages.filtersApplied)}
+                >
                   Применить
                 </button>
-                <button className="cw-button-secondary" type="button">
+                <button
+                  className="cw-button-secondary"
+                  type="button"
+                  onClick={() => pushToast(watchlistToastMessages.filtersReset)}
+                >
                   Сбросить
                 </button>
               </div>

@@ -1,16 +1,15 @@
 import { AppLayout } from "@/components/app-layout";
 import { CoinTable } from "@/components/coin-table";
-import { ErrorState } from "@/components/error-state";
-import { useDemoErrorState } from "@/hooks/use-demo-error-state";
+import { useFavoritesViewMock } from "@/hooks/use-favorites-view-mock";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
+import { ViewStateSection } from "@/components/view-state-section";
 import { useToast } from "@/hooks/use-toast";
 import { favoritesToastMessages } from "@/utils/toast-mocks";
-import { favoriteRows } from "@/utils/ui-mocks";
 
 export default function FavoritesPage() {
   const { pushToast } = useToast();
-  const showErrorState = useDemoErrorState();
+  const viewState = useFavoritesViewMock();
 
   return (
     <>
@@ -87,18 +86,20 @@ export default function FavoritesPage() {
               <h2 className="cw-card-title">Список</h2>
             </div>
 
-            {showErrorState ? (
-              <ErrorState
-                title="Не удалось загрузить избранное"
-                message="Попробуйте повторить запрос"
-                onAction={() => pushToast(favoritesToastMessages.filtersApplied)}
-              />
-            ) : (
+            <ViewStateSection
+              status={viewState.status}
+              errorTitle="Не удалось загрузить избранное"
+              errorMessage="Попробуйте повторить запрос"
+              onRetry={() => {
+                viewState.retry();
+                pushToast(favoritesToastMessages.filtersApplied);
+              }}
+            >
               <>
-                <CoinTable rows={favoriteRows} />
+                <CoinTable rows={viewState.rows} />
 
                 <div className="cw-pagination">
-                  <span>Показано 1-3 из 11 избранных монет</span>
+                  <span>{viewState.totalLabel}</span>
                   <div className="flex gap-2">
                     <span className="cw-page-pill cw-page-pill-active">1</span>
                     <span className="cw-page-pill">2</span>
@@ -106,7 +107,7 @@ export default function FavoritesPage() {
                   </div>
                 </div>
               </>
-            )}
+            </ViewStateSection>
           </div>
         </section>
       </AppLayout>

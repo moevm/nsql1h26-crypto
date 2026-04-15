@@ -1,17 +1,14 @@
 import { AppLayout } from "@/components/app-layout";
-import { ErrorState } from "@/components/error-state";
-import { useDemoErrorState } from "@/hooks/use-demo-error-state";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
+import { ViewStateSection } from "@/components/view-state-section";
+import { useStatisticsViewMock } from "@/hooks/use-statistics-view-mock";
 import { useToast } from "@/hooks/use-toast";
 import { statisticsToastMessages } from "@/utils/toast-mocks";
-import { statisticsPresets } from "@/utils/ui-mocks";
-
-const chartBars = [34, 42, 39, 51, 55, 60, 58, 66, 69, 74, 72, 79];
 
 export default function StatisticsPage() {
   const { pushToast } = useToast();
-  const showErrorState = useDemoErrorState();
+  const viewState = useStatisticsViewMock();
 
   return (
     <>
@@ -112,21 +109,25 @@ export default function StatisticsPage() {
                 <h2 className="cw-card-title">Результат</h2>
               </div>
 
-              {showErrorState ? (
-                <ErrorState
-                  title="Не удалось построить график"
-                  message="Проверьте параметры и попробуйте снова"
-                  onAction={() => pushToast(statisticsToastMessages.chartBuilt)}
-                />
-              ) : (
+              <ViewStateSection
+                status={viewState.status}
+                errorTitle="Не удалось построить график"
+                errorMessage="Проверьте параметры и попробуйте снова"
+                onRetry={() => {
+                  viewState.retry();
+                  pushToast(statisticsToastMessages.chartBuilt);
+                }}
+              >
                 <div className="cw-surface overflow-hidden px-5 py-5 sm:px-6">
                   <div className="mb-6 flex flex-wrap items-center gap-3">
-                    <span className="cw-chip">BTC</span>
-                    <span className="cw-chip">ETH</span>
-                    <span className="cw-chip">SOL</span>
+                    {viewState.selectedSymbols.map((symbol) => (
+                      <span key={symbol} className="cw-chip">
+                        {symbol}
+                      </span>
+                    ))}
                   </div>
 
-                  <div className="relative rounded-[28px] border border-border bg-white/80 px-4 py-6 sm:px-6">
+                  <div className="cw-surface-soft relative">
                     <div className="pointer-events-none absolute inset-y-6 left-12 right-6 flex flex-col justify-between">
                       <div className="border-t border-dashed border-border"></div>
                       <div className="border-t border-dashed border-border"></div>
@@ -135,7 +136,7 @@ export default function StatisticsPage() {
                     </div>
 
                     <div className="relative flex h-[280px] items-end gap-3 pl-10 pr-2">
-                      {chartBars.map((value, index) => (
+                      {viewState.chartBars.map((value, index) => (
                         <div
                           key={index}
                           className="flex-1 rounded-t-[18px] bg-brand/80"
@@ -145,14 +146,13 @@ export default function StatisticsPage() {
                     </div>
 
                     <div className="mt-5 flex justify-between pl-10 text-xs uppercase tracking-[0.14em] text-text-muted">
-                      <span>1 нед</span>
-                      <span>2 нед</span>
-                      <span>3 нед</span>
-                      <span>4 нед</span>
+                      {viewState.chartLabels.map((label) => (
+                        <span key={label}>{label}</span>
+                      ))}
                     </div>
                   </div>
                 </div>
-              )}
+              </ViewStateSection>
             </div>
           </div>
 
@@ -161,11 +161,8 @@ export default function StatisticsPage() {
               <h2 className="cw-card-title">Сохраненная конфигурация</h2>
 
               <div className="mt-4 space-y-4">
-                {statisticsPresets.map((preset) => (
-                  <div
-                    key={preset.name}
-                    className="rounded-[24px] border border-border bg-white/70 p-4"
-                  >
+                {viewState.presets.map((preset) => (
+                  <div key={preset.name} className="cw-card-surface">
                     <p className="cw-card-title text-base">{preset.name}</p>
                     <p className="mt-2 text-sm leading-6 text-text-main">Монеты: {preset.symbols}</p>
                     <p className="text-sm leading-6 text-text-main">Период: {preset.range}</p>

@@ -1,6 +1,6 @@
 .cw-auth-page {
   background:
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 28%),
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 28%),
     radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 24%),
     var(--gradient-auth);
   @apply min-h-screen px-4 py-6 sm:px-6 lg:px-8;
@@ -32,7 +32,7 @@
 .cw-auth-brand-panel {
   background:
     linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
-  box-shadow: 0 24px 48px rgba(109, 40, 217, 0.24);
+  box-shadow: var(--shadow-brand-panel);
   @apply mt-8 rounded-[28px] px-6 py-6 text-white sm:px-8;
 }
 
@@ -56,7 +56,7 @@
 .cw-app-shell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top center, rgba(99, 102, 241, 0.08), transparent 24%),
+    radial-gradient(circle at top center, rgba(124, 58, 237, 0.08), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(245, 245, 245, 1) 100%);
 }
 

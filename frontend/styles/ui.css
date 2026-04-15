@@ -7,7 +7,7 @@
 .cw-auth-badge {
   @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em];
   border-color: var(--color-border);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--overlay-panel-card);
   color: var(--color-brand-dark);
 }
 
@@ -73,7 +73,7 @@
 
 .cw-button-secondary {
   border-color: var(--color-border);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--overlay-panel-soft);
   color: var(--color-text-strong);
 }
 
@@ -84,7 +84,7 @@
 
 .cw-button-ghost {
   border-color: var(--color-border);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--overlay-panel-card);
   color: var(--color-text-main);
 }
 
@@ -108,7 +108,7 @@
 }
 
 .cw-app-nav-link:hover {
-  background: rgba(230, 231, 253, 0.45);
+  background: var(--overlay-brand-soft);
   color: var(--color-text-strong);
 }
 
@@ -124,13 +124,13 @@
 .cw-app-nav-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.24);
+  background: var(--overlay-backdrop);
 }
 
 .cw-app-nav-mobile {
   @apply fixed inset-x-4 top-24 flex flex-col gap-2 rounded-3xl border p-3 shadow-2xl sm:inset-x-6;
-  border-color: rgba(229, 231, 235, 0.92);
-  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--border-soft-strong);
+  background: var(--overlay-panel);
   backdrop-filter: blur(16px);
 }
 
@@ -157,7 +157,7 @@
 
 .cw-section-label {
   @apply mb-3 border-t border-dashed pt-3 text-xs font-semibold uppercase tracking-[0.16em];
-  border-color: rgba(209, 213, 219, 0.95);
+  border-color: var(--border-soft-dashed);
   color: var(--color-text-muted);
 }
 
@@ -171,20 +171,44 @@
 
 .cw-panel-muted {
   @apply rounded-3xl border p-4;
-  border-color: rgba(229, 231, 235, 0.9);
-  background: rgba(243, 244, 246, 0.8);
+  border-color: var(--border-soft);
+  background: var(--overlay-panel-muted);
 }
 
 .cw-chip {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
-  background: rgba(230, 231, 253, 0.72);
+  background: var(--overlay-brand-chip);
   color: var(--color-brand-dark);
+}
+
+.cw-card-surface {
+  @apply rounded-[24px] border p-4;
+  border-color: var(--border-soft);
+  background: var(--overlay-panel-card);
+}
+
+.cw-card-surface-md {
+  @apply rounded-[24px] border p-5;
+  border-color: var(--border-soft);
+  background: var(--overlay-panel-card);
+}
+
+.cw-surface-soft {
+  @apply rounded-[28px] border px-4 py-6 sm:px-6;
+  border-color: var(--border-soft);
+  background: var(--overlay-panel-chart);
+}
+
+.cw-dropzone-surface {
+  @apply rounded-[28px] border border-dashed px-5 py-8 text-center;
+  border-color: var(--color-border-strong);
+  background: var(--overlay-panel-dropzone);
 }
 
 .cw-table-wrap {
   @apply overflow-x-auto rounded-3xl border;
-  border-color: rgba(229, 231, 235, 0.92);
-  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--border-soft-strong);
+  background: var(--overlay-panel);
 }
 
 .cw-table {
@@ -194,17 +218,17 @@
 .cw-table th {
   color: var(--color-text-muted);
   @apply border-b px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.16em];
-  border-color: rgba(229, 231, 235, 0.9);
+  border-color: var(--border-soft);
 }
 
 .cw-table td {
   color: var(--color-text-main);
   @apply border-b px-4 py-4 text-sm;
-  border-color: rgba(229, 231, 235, 0.75);
+  border-color: var(--border-soft-row);
 }
 
 .cw-table tbody tr:hover {
-  background: rgba(230, 231, 253, 0.22);
+  background: var(--overlay-brand-row);
 }
 
 .cw-table tbody tr:last-child td {
@@ -245,12 +269,12 @@
 .cw-page-pill {
   @apply inline-flex h-10 min-w-10 items-center justify-center rounded-2xl border px-3 text-sm font-semibold;
   border-color: var(--color-border);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--overlay-panel-soft);
   color: var(--color-text-main);
 }
 
 .cw-page-pill-active {
-  border-color: rgba(99, 102, 241, 0.18);
+  border-color: var(--border-brand-soft);
   background: var(--color-brand-soft);
   color: var(--color-brand-dark);
 }
@@ -261,20 +285,20 @@
 
 .cw-toast {
   @apply pointer-events-auto flex items-start justify-between gap-3 rounded-3xl border px-4 py-4 shadow-2xl;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--overlay-strong);
   backdrop-filter: blur(14px);
 }
 
 .cw-toast-info {
-  border-color: rgba(124, 58, 237, 0.22);
+  border-color: var(--border-brand-toast);
 }
 
 .cw-toast-success {
-  border-color: rgba(34, 197, 94, 0.22);
+  border-color: var(--border-success-toast);
 }
 
 .cw-toast-error {
-  border-color: rgba(239, 68, 68, 0.22);
+  border-color: var(--border-danger-toast);
 }
 
 .cw-toast-copy {
@@ -302,8 +326,8 @@
 
 .cw-error-state {
   @apply rounded-[28px] border px-5 py-6 sm:px-6;
-  border-color: rgba(239, 68, 68, 0.18);
-  background: rgba(253, 236, 236, 0.72);
+  border-color: var(--border-danger-soft);
+  background: var(--overlay-danger-soft);
 }
 
 .cw-error-badge {

@@ -34,10 +34,16 @@ export const AuthLayout = ({
                 </p>
                 <div className="cw-auth-brand-grid">
                   <div className="cw-auth-brand-card">
-                    <p className="text-xs uppercase tracking-[0.18em] text-indigo-100/80">
-                      Режим
+                    <p className="text-xs uppercase tracking-[0.18em] text-white/75">
+                      Фокус
                     </p>
-                    <p className="mt-2 text-sm font-medium text-white">Макет</p>
+                    <p className="mt-2 text-sm font-medium text-white">Мониторинг криптовалют</p>
+                  </div>
+                  <div className="cw-auth-brand-card">
+                    <p className="text-xs uppercase tracking-[0.18em] text-white/75">
+                      Возможности
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-white">Watchlist, избранное и статистика</p>
                   </div>
                 </div>
               </div>

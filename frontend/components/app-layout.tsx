@@ -1,7 +1,7 @@
 import { PropsWithChildren } from "react";
 
+import { AppNavigation } from "@/components/app-navigation";
 import type { AppSection } from "@/types/ui";
-import { appNavItems } from "@/utils/ui-mocks";
 
 interface AppLayoutProps extends PropsWithChildren {
   activeSection: AppSection;
@@ -22,18 +22,7 @@ export const AppLayout = ({
           <div className="cw-app-header-bar">
             <div className="cw-app-header-row">
               <p className="cw-kicker mb-0">CryptoWatch</p>
-              <nav className="flex flex-wrap gap-2" aria-label="Основная навигация">
-                {appNavItems.map((item) => (
-                  <span
-                    key={item.key}
-                    className={`cw-app-nav-link ${
-                      item.key === activeSection ? "cw-app-nav-link-active" : ""
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                ))}
-              </nav>
+              <AppNavigation activeSection={activeSection} />
             </div>
           </div>
 

@@ -2,9 +2,15 @@ import { AppLayout } from "@/components/app-layout";
 import { CoinTable } from "@/components/coin-table";
 import { PageHead } from "@/components/page-head";
 import { RangeField } from "@/components/range-field";
-import { watchlistRows } from "@/utils/ui-mocks";
+import { ViewStateSection } from "@/components/view-state-section";
+import { useToast } from "@/hooks/use-toast";
+import { useWatchlistViewMock } from "@/hooks/use-watchlist-view-mock";
+import { watchlistToastMessages } from "@/utils/toast-mocks";
 
 export default function AppHomePage() {
+  const { pushToast } = useToast();
+  const viewState = useWatchlistViewMock();
+
   return (
     <>
       <PageHead 
@@ -19,10 +25,18 @@ export default function AppHomePage() {
       >
         <section className="cw-toolbar">
           <div className="cw-toolbar-actions">
-            <button className="cw-button-primary" type="button">
+            <button
+              className="cw-button-primary"
+              type="button"
+              onClick={() => pushToast(watchlistToastMessages.addCoinPending)}
+            >
               Добавить монету
             </button>
-            <button className="cw-button-secondary" type="button">
+            <button
+              className="cw-button-secondary"
+              type="button"
+              onClick={() => pushToast(watchlistToastMessages.comparePending)}
+            >
               Сравнить
             </button>
           </div>
@@ -46,7 +60,11 @@ export default function AppHomePage() {
                   />
                 </div>
                 <div className="lg:pt-7">
-                  <button className="cw-button-secondary" type="button">
+                  <button
+                    className="cw-button-secondary"
+                    type="button"
+                    onClick={() => pushToast(watchlistToastMessages.filtersShown)}
+                  >
                     Фильтры
                   </button>
                 </div>
@@ -59,10 +77,18 @@ export default function AppHomePage() {
             <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="cw-card-title">Диапазоны</h2>
               <div className="flex gap-3">
-                <button className="cw-button-primary" type="button">
+                <button
+                  className="cw-button-primary"
+                  type="button"
+                  onClick={() => pushToast(watchlistToastMessages.filtersApplied)}
+                >
                   Применить
                 </button>
-                <button className="cw-button-secondary" type="button">
+                <button
+                  className="cw-button-secondary"
+                  type="button"
+                  onClick={() => pushToast(watchlistToastMessages.filtersReset)}
+                >
                   Сбросить
                 </button>
               </div>
@@ -82,17 +108,29 @@ export default function AppHomePage() {
               <h2 className="cw-card-title">Watchlist</h2>
             </div>
 
-            <CoinTable rows={watchlistRows} />
+            <ViewStateSection
+              status={viewState.status}
+              errorTitle="Не удалось загрузить список"
+              errorMessage="Попробуйте обновить данные еще раз"
+              onRetry={() => {
+                viewState.retry();
+                pushToast(watchlistToastMessages.filtersShown);
+              }}
+            >
+              <>
+                <CoinTable rows={viewState.rows} />
 
-            <div className="cw-pagination">
-              <span>Показано 1-4 из 24 монет</span>
-              <div className="flex gap-2">
-                <span className="cw-page-pill cw-page-pill-active">1</span>
-                <span className="cw-page-pill">2</span>
-                <span className="cw-page-pill">3</span>
-                <span className="cw-page-pill">...</span>
-              </div>
-            </div>
+                <div className="cw-pagination">
+                  <span>{viewState.totalLabel}</span>
+                  <div className="flex gap-2">
+                    <span className="cw-page-pill cw-page-pill-active">1</span>
+                    <span className="cw-page-pill">2</span>
+                    <span className="cw-page-pill">3</span>
+                    <span className="cw-page-pill">...</span>
+                  </div>
+                </div>
+              </>
+            </ViewStateSection>
           </div>
         </section>
       </AppLayout>

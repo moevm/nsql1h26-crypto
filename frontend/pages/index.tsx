@@ -23,6 +23,9 @@ export default function IndexPage() {
                 <code>/auth/login</code> -- логин
               </li>
               <li>
+                <code>/auth/register</code> -- регистрация
+              </li>
+              <li>
                 <code>/app</code> -- главная
               </li>
               <li>

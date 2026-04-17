@@ -144,4 +144,55 @@ public class CoinsController {
                 sortBy, order, pageSize, pageNo);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/favorites")
+    public ResponseEntity<FavoritesResponse> getFavorites(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "marketCap") String sortBy,
+            @RequestParam(defaultValue = "desc") String order,
+            @RequestParam(required = false) Double priceMin,
+            @RequestParam(required = false) Double priceMax,
+            @RequestParam(required = false) Double capMin,
+            @RequestParam(required = false) Double capMax,
+            @RequestParam(required = false) Double changeMin,
+            @RequestParam(required = false) Double changeMax,
+            @RequestParam(required = false) Double volumeMin,
+            @RequestParam(required = false) Double volumeMax) {
+
+        String token = authHeader.substring(7);
+        String userId = jwtTokenProvider.extractUserId(token);
+        FavoritesResponse response = coinService.getFavorites(
+                userId, pageSize, pageNo, sortBy, order,
+                priceMin, priceMax, capMin, capMax,
+                changeMin, changeMax, volumeMin, volumeMax);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/favorites")
+    public ResponseEntity<AddCoinResponse> addToFavorites(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody AddToFavoritesRequest request) {
+
+        String token = authHeader.substring(7);
+        String userId = jwtTokenProvider.extractUserId(token);
+        AddCoinResponse response = coinService.addToFavorites(userId, request.getSymbol());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/favorites/{symbol}")
+    public ResponseEntity<DeleteCoinResponse> removeFromFavorites(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String symbol) {
+
+        String token = authHeader.substring(7);
+        String userId = jwtTokenProvider.extractUserId(token);
+        DeleteCoinResponse response = coinService.removeFromFavorites(userId, symbol);
+        return ResponseEntity.ok(response);
+    }
+
+    @lombok.Data
+    static class AddToFavoritesRequest {
+        private String symbol;
+    }
 }

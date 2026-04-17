@@ -1,12 +1,13 @@
 import { AppLayout } from "@/components/app-layout";
 import { PageHead } from "@/components/page-head";
+import { ProtectedPage } from "@/components/protected-page";
 import { RangeField } from "@/components/range-field";
 import { ViewStateSection } from "@/components/view-state-section";
 import { useStatisticsViewMock } from "@/hooks/use-statistics-view-mock";
 import { useToast } from "@/hooks/use-toast";
 import { statisticsToastMessages } from "@/utils/toast-mocks";
 
-export default function StatisticsPage() {
+const StatisticsPageContent = () => {
   const { pushToast } = useToast();
   const viewState = useStatisticsViewMock();
 
@@ -193,5 +194,13 @@ export default function StatisticsPage() {
         </section>
       </AppLayout>
     </>
+  );
+};
+
+export default function StatisticsPage() {
+  return (
+    <ProtectedPage>
+      <StatisticsPageContent />
+    </ProtectedPage>
   );
 }

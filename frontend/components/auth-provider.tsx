@@ -9,41 +9,101 @@ import {
   useState
 } from "react";
 
+import { authService } from "@/services/auth";
 import type { AuthSession } from "@/types/auth";
 import { authStorage } from "@/utils/auth-storage";
 
+type AuthStatus = "checking" | "authenticated" | "guest";
+
 interface AuthContextValue {
-  isHydrated: boolean;
+  status: AuthStatus;
   session: AuthSession | null;
+  authFlowMessage: string | null;
   setSession: (session: AuthSession) => void;
   clearSession: () => void;
+  setAuthFlowMessage: (message: string) => void;
+  clearAuthFlowMessage: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [session, setSessionState] = useState<AuthSession | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [status, setStatus] = useState<AuthStatus>("checking");
+  const [authFlowMessage, setAuthFlowMessageState] = useState<string | null>(null);
 
   useEffect(() => {
-    setSessionState(authStorage.getSession());
-    setIsHydrated(true);
+    let isMounted = true;
+
+    const hydrateSession = async () => {
+      const storedSession = authStorage.getSession();
+
+      if (!storedSession) {
+        if (isMounted) {
+          setSessionState(null);
+          setStatus("guest");
+        }
+
+        return;
+      }
+
+      try {
+        const verifiedSession = await authService.verify(storedSession.token);
+        const nextSession: AuthSession = {
+          ...storedSession,
+          userId: verifiedSession.userId,
+          login: verifiedSession.login,
+          role: verifiedSession.role
+        };
+
+        if (!isMounted) {
+          return;
+        }
+
+        authStorage.setSession(nextSession);
+        setSessionState(nextSession);
+        setStatus("authenticated");
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        authStorage.clearSession();
+        setSessionState(null);
+        setStatus("guest");
+      }
+    };
+
+    void hydrateSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      isHydrated,
+      status,
       session,
+      authFlowMessage,
       setSession(nextSession) {
         authStorage.setSession(nextSession);
         setSessionState(nextSession);
+        setStatus("authenticated");
       },
       clearSession() {
         authStorage.clearSession();
         setSessionState(null);
+        setStatus("guest");
+      },
+      setAuthFlowMessage(message) {
+        setAuthFlowMessageState(message);
+      },
+      clearAuthFlowMessage() {
+        setAuthFlowMessageState(null);
       }
     }),
-    [isHydrated, session]
+    [authFlowMessage, session, status]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

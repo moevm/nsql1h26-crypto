@@ -1,25 +1,27 @@
-import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 import { AuthForm } from "@/components/auth-form";
 import { AuthLayout } from "@/components/auth-layout";
 import { PageHead } from "@/components/page-head";
-import { useAuthPageGuard } from "@/hooks/use-auth-page-guard";
+import { useAuth } from "@/hooks/use-auth";
+import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { useLoginForm } from "@/hooks/use-login-form";
 
-const getInitialSuccessMessage = (queryValue: string | string[] | undefined): string | undefined => {
-  if (queryValue === "1") {
-    return "Регистрация прошла успешно";
-  }
-
-  return undefined;
-};
-
 export default function LoginPage() {
-  const router = useRouter();
-  const isReady = useAuthPageGuard();
+  const { authFlowMessage, clearAuthFlowMessage } = useAuth();
+  const isReady = useAuthRouting({ mode: "guest-only" });
   const { login, password, errors, isSubmitting, setLogin, setPassword, handleSubmit } =
     useLoginForm();
-  const successMessage = getInitialSuccessMessage(router.query.registered);
+  const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!authFlowMessage) {
+      return;
+    }
+
+    setSuccessMessage(authFlowMessage);
+    clearAuthFlowMessage();
+  }, [authFlowMessage, clearAuthFlowMessage]);
 
   if (!isReady) {
     return null;

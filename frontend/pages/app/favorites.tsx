@@ -2,12 +2,13 @@ import { AppLayout } from "@/components/app-layout";
 import { CoinTable } from "@/components/coin-table";
 import { useFavoritesViewMock } from "@/hooks/use-favorites-view-mock";
 import { PageHead } from "@/components/page-head";
+import { ProtectedPage } from "@/components/protected-page";
 import { RangeField } from "@/components/range-field";
 import { ViewStateSection } from "@/components/view-state-section";
 import { useToast } from "@/hooks/use-toast";
 import { favoritesToastMessages } from "@/utils/toast-mocks";
 
-export default function FavoritesPage() {
+const FavoritesPageContent = () => {
   const { pushToast } = useToast();
   const viewState = useFavoritesViewMock();
 
@@ -112,5 +113,13 @@ export default function FavoritesPage() {
         </section>
       </AppLayout>
     </>
+  );
+};
+
+export default function FavoritesPage() {
+  return (
+    <ProtectedPage>
+      <FavoritesPageContent />
+    </ProtectedPage>
   );
 }

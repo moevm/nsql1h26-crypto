@@ -1,11 +1,11 @@
 import { AuthForm } from "@/components/auth-form";
 import { AuthLayout } from "@/components/auth-layout";
 import { PageHead } from "@/components/page-head";
-import { useAuthPageGuard } from "@/hooks/use-auth-page-guard";
+import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { useRegisterForm } from "@/hooks/use-register-form";
 
 export default function RegisterPage() {
-  const isReady = useAuthPageGuard();
+  const isReady = useAuthRouting({ mode: "guest-only" });
   const {
     login,
     password,

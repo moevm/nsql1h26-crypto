@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
+import { useAuth } from "@/hooks/use-auth";
 import type { AuthFormErrors } from "@/services/auth/auth-validation";
 import { validateRegisterPayload } from "@/services/auth/auth-validation";
 import { ApiError } from "@/services/http-client";
@@ -20,6 +21,7 @@ interface UseRegisterFormResult {
 
 export const useRegisterForm = (): UseRegisterFormResult => {
   const router = useRouter();
+  const { setAuthFlowMessage } = useAuth();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -46,7 +48,8 @@ export const useRegisterForm = (): UseRegisterFormResult => {
 
     try {
       await authService.register(payload);
-      await router.push("/auth/login?registered=1");
+      setAuthFlowMessage("Регистрация прошла успешно");
+      await router.push("/auth/login");
     } catch (error) {
       if (error instanceof ApiError) {
         setErrors({ form: error.message });

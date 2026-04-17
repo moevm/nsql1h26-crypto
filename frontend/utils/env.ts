@@ -16,25 +16,6 @@ const getApiMode = (): ApiMode => {
   return value;
 };
 
-const getApiBaseUrl = (apiMode: ApiMode): string => {
-  if (apiMode === "mock") {
-    return "";
-  }
-
-  const value = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  if (!value) {
-    throw new Error(
-      "Missing required environment variable: NEXT_PUBLIC_API_BASE_URL"
-    );
-  }
-
-  return value;
-};
-
-const apiMode = getApiMode();
-
 export const env = {
-  apiMode,
-  apiBaseUrl: getApiBaseUrl(apiMode)
+  apiMode: getApiMode()
 };

@@ -7,7 +7,7 @@ import { authService } from "@/services/auth";
 
 export const useLogout = () => {
   const router = useRouter();
-  const { session, clearSession, setAuthFlowMessage } = useAuth();
+  const { session, clearSession, setAuthFlowNotice } = useAuth();
   const { pushToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,7 +28,10 @@ export const useLogout = () => {
       hasLogoutError = true;
     } finally {
       clearSession();
-      setAuthFlowMessage("Вы вышли из аккаунта");
+      setAuthFlowNotice({
+        tone: "success",
+        message: "Вы вышли из аккаунта"
+      });
       await router.push("/auth/login");
 
       if (hasLogoutError) {

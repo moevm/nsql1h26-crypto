@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { AuthForm } from "@/components/auth-form";
 import { AuthLayout } from "@/components/auth-layout";
@@ -8,28 +8,18 @@ import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { useLoginForm } from "@/hooks/use-login-form";
 
 export default function LoginPage() {
-  const { authFlowMessage, clearAuthFlowMessage } = useAuth();
+  const { authFlowNotice, clearAuthFlowNotice } = useAuth();
   const isReady = useAuthRouting({ mode: "guest-only" });
   const { login, password, errors, isSubmitting, setLogin, setPassword, handleSubmit } =
     useLoginForm();
-  const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!authFlowMessage) {
-      return;
-    }
-
-    setSuccessMessage(authFlowMessage);
-    clearAuthFlowMessage();
-  }, [authFlowMessage, clearAuthFlowMessage]);
 
   useEffect(() => {
     if (!errors.form) {
       return;
     }
 
-    setSuccessMessage(undefined);
-  }, [errors.form]);
+    clearAuthFlowNotice();
+  }, [clearAuthFlowNotice, errors.form]);
 
   if (!isReady) {
     return null;
@@ -44,21 +34,32 @@ export default function LoginPage() {
         title="Вход в CryptoWatch"
         description="Введите логин и пароль"
       >
-        <AuthForm
-          title="Войти"
-          submitLabel="Войти"
-          alternateHref="/auth/register"
-          alternateLabel="Регистрация"
-          formError={errors.form}
-          successMessage={successMessage}
-          login={login}
-          password={password}
-          errors={errors}
-          isSubmitting={isSubmitting}
-          onLoginChange={setLogin}
-          onPasswordChange={setPassword}
-          onSubmit={handleSubmit}
-        />
+        <div className="space-y-5">
+          {authFlowNotice ? (
+            <p
+              className={`${
+                authFlowNotice.tone === "error" ? "cw-form-error" : "cw-form-success"
+              } text-sm`}
+            >
+              {authFlowNotice.message}
+            </p>
+          ) : null}
+
+          <AuthForm
+            title="Войти"
+            submitLabel="Войти"
+            alternateHref="/auth/register"
+            alternateLabel="Регистрация"
+            formError={errors.form}
+            login={login}
+            password={password}
+            errors={errors}
+            isSubmitting={isSubmitting}
+            onLoginChange={setLogin}
+            onPasswordChange={setPassword}
+            onSubmit={handleSubmit}
+          />
+        </div>
       </AuthLayout>
     </>
   );

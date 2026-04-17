@@ -21,7 +21,7 @@ interface UseRegisterFormResult {
 
 export const useRegisterForm = (): UseRegisterFormResult => {
   const router = useRouter();
-  const { setAuthFlowMessage } = useAuth();
+  const { setAuthFlowNotice } = useAuth();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -48,7 +48,10 @@ export const useRegisterForm = (): UseRegisterFormResult => {
 
     try {
       await authService.register(payload);
-      setAuthFlowMessage("Регистрация прошла успешно");
+      setAuthFlowNotice({
+        tone: "success",
+        message: "Регистрация прошла успешно"
+      });
       await router.push("/auth/login");
     } catch (error) {
       if (error instanceof ApiError) {

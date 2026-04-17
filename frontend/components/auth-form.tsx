@@ -11,7 +11,6 @@ interface AuthFormProps {
   alternateHref: string;
   alternateLabel: string;
   formError?: string;
-  successMessage?: string;
   login: string;
   password: string;
   passwordConfirm?: string;
@@ -78,7 +77,6 @@ export const AuthForm = ({
   alternateHref,
   alternateLabel,
   formError,
-  successMessage,
   login,
   password,
   passwordConfirm,
@@ -96,7 +94,6 @@ export const AuthForm = ({
       </div>
 
       <form className="space-y-5" onSubmit={onSubmit} noValidate>
-        {successMessage ? <p className="cw-form-success text-sm">{successMessage}</p> : null}
         {formError ? <p className="cw-form-error text-sm">{formError}</p> : null}
 
         <AuthField

@@ -211,4 +211,130 @@ public class CoinService {
                 .dateRange(range)
                 .build();
     }
+    public FavoritesResponse getFavorites(String userId, int pageSize, int pageNo,
+                                        String sortBy, String order,
+                                        Double priceMin, Double priceMax,
+                                        Double capMin, Double capMax,
+                                        Double changeMin, Double changeMax,
+                                        Double volumeMin, Double volumeMax) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        List<String> favoriteSymbols = user.getFavorites();
+        List<String> finalFavorites = (favoriteSymbols == null) ? new ArrayList<>() : favoriteSymbols;
+
+        if (finalFavorites.isEmpty()) {
+            return FavoritesResponse.builder()
+                    .success(true)
+                    .coins(List.of())
+                    .totalCount(0)
+                    .pageSize(pageSize)
+                    .pageNo(pageNo)
+                    .hasMore(false)
+                    .build();
+        }
+
+        List<CoinsMeta> metas = coinsMetaRepository.findAll().stream()
+                .filter(meta -> finalFavorites.contains(meta.getSymbol()))
+                .collect(Collectors.toList());
+
+        List<CoinSnapshot> latestSnapshots = snapshotsRepository.findLatestSnapshotsForSymbols(finalFavorites);
+        Map<String, CoinSnapshot> snapshotMap = latestSnapshots.stream()
+                .collect(Collectors.toMap(CoinSnapshot::getSymbol, s -> s));
+
+        List<CoinDto> allCoins = metas.stream()
+                .map(meta -> {
+                    CoinSnapshot snap = snapshotMap.get(meta.getSymbol());
+                    if (snap == null) return null;
+                    return CoinDto.builder()
+                            .symbol(meta.getSymbol())
+                            .name(meta.getName())
+                            .price(snap.getPrice())
+                            .percentChange24h(snap.getPercentChange24h())
+                            .marketCap(snap.getMarketCap())
+                            .volume24h(snap.getVolume24h())
+                            .isFavorite(true) // always true because it's from favorites
+                            .lastUpdated(snap.getTimestamp())
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .filter(coin -> applyFilters(coin, priceMin, priceMax, capMin, capMax, changeMin, changeMax, volumeMin, volumeMax))
+                .collect(Collectors.toList());
+
+        Comparator<CoinDto> comparator = getComparator(sortBy, order);
+        allCoins.sort(comparator);
+
+        long totalCount = allCoins.size();
+        int start = pageNo * pageSize;
+        int end = Math.min(start + pageSize, allCoins.size());
+        List<CoinDto> pagedCoins = (start < allCoins.size()) ? allCoins.subList(start, end) : new ArrayList<>();
+        boolean hasMore = end < totalCount;
+
+        return FavoritesResponse.builder()
+                .success(true)
+                .coins(pagedCoins)
+                .totalCount(totalCount)
+                .pageSize(pageSize)
+                .pageNo(pageNo)
+                .hasMore(hasMore)
+                .build();
+    }
+
+    public AddCoinResponse addToFavorites(String userId, String symbol) {
+        if (symbol == null || symbol.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Symbol is required");
+        }
+        symbol = symbol.toUpperCase();
+
+        CoinsMeta coinMeta = coinsMetaRepository.findBySymbol(symbol)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        List<String> favorites = user.getFavorites();
+        if (favorites == null) favorites = new ArrayList<>();
+
+        if (favorites.contains(symbol)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin already in favorites");
+        }
+
+        favorites.add(symbol);
+        user.setFavorites(favorites);
+        userRepository.save(user);
+
+        AddCoinResponse.CoinInfo coinInfo = AddCoinResponse.CoinInfo.builder()
+                .symbol(coinMeta.getSymbol())
+                .name(coinMeta.getName())
+                .build();
+
+        return AddCoinResponse.builder()
+                .success(true)
+                .message(symbol + " added to favorites")
+                .coin(coinInfo)
+                .build();
+    }
+
+    public DeleteCoinResponse removeFromFavorites(String userId, String symbol) {
+        if (symbol == null || symbol.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid symbol");
+        }
+        symbol = symbol.toUpperCase();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        List<String> favorites = user.getFavorites();
+        if (favorites == null || !favorites.contains(symbol)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin not in favorites");
+        }
+
+        favorites.remove(symbol);
+        user.setFavorites(favorites);
+        userRepository.save(user);
+
+        return DeleteCoinResponse.builder()
+                .success(true)
+                .message(symbol + " removed from favorites")
+                .build();
+    }
 }

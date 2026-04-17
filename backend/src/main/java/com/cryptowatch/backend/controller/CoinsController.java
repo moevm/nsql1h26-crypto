@@ -1,15 +1,18 @@
 package com.cryptowatch.backend.controller;
 
-import com.cryptowatch.backend.dto.AddCoinResponse;
-import com.cryptowatch.backend.dto.DeleteCoinResponse;
-import com.cryptowatch.backend.dto.WatchlistResponse;
+import com.cryptowatch.backend.dto.*;
 import com.cryptowatch.backend.security.JwtTokenProvider;
+import com.cryptowatch.backend.service.CoinService;
 import com.cryptowatch.backend.service.WatchlistService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Date;
 
 @RestController
 @RequestMapping("/api/coins")
@@ -18,6 +21,7 @@ public class CoinsController {
 
     private final WatchlistService watchlistService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CoinService coinService;
 
     @GetMapping("/watchlist")
     public ResponseEntity<?> getWatchlist(
@@ -79,5 +83,65 @@ public class CoinsController {
     @lombok.Data
     static class AddToWatchlistRequest {
         private String symbol;
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<SearchCoinsResponse> searchCoins(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Double priceMin,
+            @RequestParam(required = false) Double priceMax,
+            @RequestParam(required = false) Double capMin,
+            @RequestParam(required = false) Double capMax,
+            @RequestParam(required = false) Double changeMin,
+            @RequestParam(required = false) Double changeMax,
+            @RequestParam(required = false) Double volumeMin,
+            @RequestParam(required = false) Double volumeMax,
+            @RequestParam(defaultValue = "marketCap") String sortBy,
+            @RequestParam(defaultValue = "desc") String order,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "0") int pageNo) {
+        
+        String token = authHeader.substring(7);
+        String userId = jwtTokenProvider.extractUserId(token);
+        SearchCoinsResponse response = coinService.searchCoins(
+                userId, query, priceMin, priceMax, capMin, capMax,
+                changeMin, changeMax, volumeMin, volumeMax,
+                sortBy, order, pageSize, pageNo);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{symbol}")
+    public ResponseEntity<CoinDetailsResponse> getCoinDetails(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String symbol) {
+        String token = authHeader.substring(7);
+        String userId = jwtTokenProvider.extractUserId(token);
+        CoinDetailsResponse response = coinService.getCoinDetails(userId, symbol);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{symbol}/history")
+    public ResponseEntity<CoinHistoryResponse> getCoinHistory(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String symbol,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date dateTo,
+            @RequestParam(required = false) Double priceMin,
+            @RequestParam(required = false) Double priceMax,
+            @RequestParam(required = false) Double volumeMin,
+            @RequestParam(required = false) Double volumeMax,
+            @RequestParam(defaultValue = "timestamp") String sortBy,
+            @RequestParam(defaultValue = "desc") String order,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "0") int pageNo) {
+        
+        String token = authHeader.substring(7);
+        jwtTokenProvider.extractUserId(token); // just validate
+        
+        CoinHistoryResponse response = coinService.getCoinHistory(
+                symbol, dateFrom, dateTo, priceMin, priceMax, volumeMin, volumeMax,
+                sortBy, order, pageSize, pageNo);
+        return ResponseEntity.ok(response);
     }
 }

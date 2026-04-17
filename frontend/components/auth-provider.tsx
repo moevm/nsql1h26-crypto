@@ -9,11 +9,9 @@ import {
   useState
 } from "react";
 
-import { authService } from "@/services/auth";
+import { restoreAuthState, type AuthStatus } from "@/services/auth/auth-session";
 import type { AuthSession } from "@/types/auth";
 import { authStorage } from "@/utils/auth-storage";
-
-type AuthStatus = "checking" | "authenticated" | "guest";
 
 interface AuthContextValue {
   status: AuthStatus;
@@ -36,42 +34,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     let isMounted = true;
 
     const hydrateSession = async () => {
-      const storedSession = authStorage.getSession();
+      const restoredState = await restoreAuthState();
 
-      if (!storedSession) {
-        if (isMounted) {
-          setSessionState(null);
-          setStatus("guest");
-        }
-
+      if (!isMounted) {
         return;
       }
 
-      try {
-        const verifiedSession = await authService.verify(storedSession.token);
-        const nextSession: AuthSession = {
-          ...storedSession,
-          userId: verifiedSession.userId,
-          login: verifiedSession.login,
-          role: verifiedSession.role
-        };
-
-        if (!isMounted) {
-          return;
-        }
-
-        authStorage.setSession(nextSession);
-        setSessionState(nextSession);
-        setStatus("authenticated");
-      } catch {
-        if (!isMounted) {
-          return;
-        }
-
-        authStorage.clearSession();
-        setSessionState(null);
-        setStatus("guest");
-      }
+      setSessionState(restoredState.session);
+      setStatus(restoredState.status);
     };
 
     void hydrateSession();

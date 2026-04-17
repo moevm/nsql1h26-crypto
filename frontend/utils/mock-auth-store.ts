@@ -1,3 +1,4 @@
+import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import type { AuthRole, AuthUser } from "@/types/auth";
 
 interface MockStoredUser extends AuthUser {
@@ -11,7 +12,7 @@ const seedUsers: MockStoredUser[] = [
     userId: "mock-user-1",
     login: "user",
     password: "User123!",
-    role: "ROLE_USER",
+    role: AUTH_ROLES.USER,
     watchlist: [],
     favorites: []
   },
@@ -19,7 +20,7 @@ const seedUsers: MockStoredUser[] = [
     userId: "mock-admin-1",
     login: "admin",
     password: "Admin123!",
-    role: "ROLE_ADMIN",
+    role: AUTH_ROLES.ADMIN,
     watchlist: [],
     favorites: []
   }
@@ -71,7 +72,7 @@ export const mockAuthStore = {
       prefix !== "mock-token" ||
       !userId ||
       !login ||
-      (role !== "ROLE_USER" && role !== "ROLE_ADMIN")
+      (role !== AUTH_ROLES.USER && role !== AUTH_ROLES.ADMIN)
     ) {
       return null;
     }

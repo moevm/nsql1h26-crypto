@@ -1,4 +1,6 @@
-export type AuthRole = "ROLE_USER" | "ROLE_ADMIN";
+import type { AUTH_ROLES } from "@/services/auth/auth-roles";
+
+export type AuthRole = (typeof AUTH_ROLES)[keyof typeof AUTH_ROLES];
 
 export interface AuthUser {
   userId: string;

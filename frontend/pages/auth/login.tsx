@@ -23,6 +23,14 @@ export default function LoginPage() {
     clearAuthFlowMessage();
   }, [authFlowMessage, clearAuthFlowMessage]);
 
+  useEffect(() => {
+    if (!errors.form) {
+      return;
+    }
+
+    setSuccessMessage(undefined);
+  }, [errors.form]);
+
   if (!isReady) {
     return null;
   }

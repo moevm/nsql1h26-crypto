@@ -165,6 +165,16 @@
   color: var(--color-brand-dark);
 }
 
+.cw-session-login {
+  color: var(--color-text-strong);
+  @apply text-sm font-semibold;
+}
+
+.cw-session-role {
+  color: var(--color-text-muted);
+  @apply text-xs uppercase tracking-[0.14em];
+}
+
 .cw-section-title {
   @apply text-3xl font-semibold tracking-tight;
 }

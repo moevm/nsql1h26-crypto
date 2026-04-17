@@ -1,3 +1,4 @@
+import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import { ApiError } from "@/services/http-client";
 import type {
   AuthApi,
@@ -41,7 +42,7 @@ export const mockAuthService: AuthApi = {
       userId,
       login: payload.login,
       password: payload.password,
-      role: "ROLE_USER",
+      role: AUTH_ROLES.USER,
       watchlist: [],
       favorites: []
     };

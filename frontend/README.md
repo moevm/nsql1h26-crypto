@@ -16,7 +16,9 @@
 
 - `NEXT_PUBLIC_API_MODE=mock|backend`
 
-Для backend-режима нужна переменная окружения:
+`NEXT_PUBLIC_API_MODE` обязательна. Если она не задана, frontend завершится с ошибкой сразу.
+
+Для backend-режима нужна переменная окружения на стороне Next.js:
 
 - `BACKEND_API_ORIGIN=http://localhost:8080`
 
@@ -27,9 +29,6 @@
 Важно:
 
 - `BACKEND_API_ORIGIN` читается на стороне Next.js
+- `BACKEND_API_ORIGIN` нужна только в `backend`-режиме
+- в backend-режиме браузер обращается только к /api/* на том же адресе сайта, а Next.js пересылает запросы дальше
 - после изменения env нужно перезапустить frontend
-
-## Проверка error-state
-
-- для защищенных страниц доступен демонстрационный режим `?demo=error`
-- примеры: `/app?demo=error`, `/app/favorites?demo=error`, `/app/statistics?demo=error`, `/app/admin/import-export?demo=error`

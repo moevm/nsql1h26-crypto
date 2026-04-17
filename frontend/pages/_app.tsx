@@ -10,11 +10,11 @@ import "@/styles/ui.css";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <AuthProvider>
-      <AuthSessionEffects />
-      <ToastProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <AuthSessionEffects />
         <Component {...pageProps} />
-      </ToastProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

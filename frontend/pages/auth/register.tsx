@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/auth-form";
 import { AuthLayout } from "@/components/auth-layout";
+import { LoadingState } from "@/components/loading-state";
 import { PageHead } from "@/components/page-head";
 import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { useRegisterForm } from "@/hooks/use-register-form";
@@ -19,7 +20,12 @@ export default function RegisterPage() {
   } = useRegisterForm();
 
   if (!isReady) {
-    return null;
+    return (
+      <LoadingState
+        title="Проверяем доступ"
+        message="Открываем приложение"
+      />
+    );
   }
 
   return (

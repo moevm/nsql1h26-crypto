@@ -3,20 +3,22 @@
 import { useEffect } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { registerUnauthorizedHandler } from "@/services/auth-http-client";
 
 export const AuthSessionEffects = () => {
-  const { clearSession, setAuthFlowNotice } = useAuth();
+  const { clearSession } = useAuth();
+  const { pushToast } = useToast();
 
   useEffect(() => {
     return registerUnauthorizedHandler(() => {
       clearSession();
-      setAuthFlowNotice({
-        tone: "error",
+      pushToast({
+        type: "error",
         message: "Сессия истекла"
       });
     });
-  }, [clearSession, setAuthFlowNotice]);
+  }, [clearSession, pushToast]);
 
   return null;
 };

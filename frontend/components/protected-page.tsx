@@ -3,6 +3,7 @@
 import { PropsWithChildren } from "react";
 
 import { ErrorState } from "@/components/error-state";
+import { LoadingState } from "@/components/loading-state";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
@@ -17,7 +18,12 @@ export const ProtectedPage = ({ children, requiredRole }: ProtectedPageProps) =>
   const { session } = useAuth();
 
   if (!isReady) {
-    return null;
+    return (
+      <LoadingState
+        title="Проверяем доступ"
+        message="Открываем нужный раздел"
+      />
+    );
   }
 
   if (requiredRole && session?.role !== requiredRole) {

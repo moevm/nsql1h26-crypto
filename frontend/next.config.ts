@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
-const apiMode = process.env.NEXT_PUBLIC_API_MODE ?? "mock";
+import { parseApiMode } from "./utils/api-mode";
+
+const apiMode = parseApiMode(process.env.NEXT_PUBLIC_API_MODE);
 
 const getBackendApiOrigin = (): string => {
   const value = process.env.BACKEND_API_ORIGIN;

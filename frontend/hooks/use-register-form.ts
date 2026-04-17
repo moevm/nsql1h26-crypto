@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
-import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import type { AuthFormErrors } from "@/services/auth/auth-validation";
 import { validateRegisterPayload } from "@/services/auth/auth-validation";
 import { ApiError } from "@/services/http-client";
@@ -21,7 +21,7 @@ interface UseRegisterFormResult {
 
 export const useRegisterForm = (): UseRegisterFormResult => {
   const router = useRouter();
-  const { setAuthFlowNotice } = useAuth();
+  const { pushToast } = useToast();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -48,8 +48,8 @@ export const useRegisterForm = (): UseRegisterFormResult => {
 
     try {
       await authService.register(payload);
-      setAuthFlowNotice({
-        tone: "success",
+      pushToast({
+        type: "success",
         message: "Регистрация прошла успешно"
       });
       await router.push("/auth/login");
@@ -57,7 +57,7 @@ export const useRegisterForm = (): UseRegisterFormResult => {
       if (error instanceof ApiError) {
         setErrors({ form: error.message });
       } else {
-        setErrors({ form: "Не удалось завершить регистрацию. Попробуйте еще раз." });
+        setErrors({ form: "Не удалось завершить регистрацию" });
       }
     } finally {
       setIsSubmitting(false);

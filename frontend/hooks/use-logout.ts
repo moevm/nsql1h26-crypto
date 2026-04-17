@@ -7,7 +7,7 @@ import { authService } from "@/services/auth";
 
 export const useLogout = () => {
   const router = useRouter();
-  const { session, clearSession, setAuthFlowNotice } = useAuth();
+  const { session, clearSession } = useAuth();
   const { pushToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,8 +28,8 @@ export const useLogout = () => {
       hasLogoutError = true;
     } finally {
       clearSession();
-      setAuthFlowNotice({
-        tone: "success",
+      pushToast({
+        type: "success",
         message: "Вы вышли из аккаунта"
       });
       await router.push("/auth/login");
@@ -37,7 +37,7 @@ export const useLogout = () => {
       if (hasLogoutError) {
         pushToast({
           type: "error",
-          message: "Сеанс завершен локально, но запрос logout не дошел до backend."
+          message: "Сеанс завершен только локально!"
         });
       }
 

@@ -3,6 +3,7 @@
 import {
   createContext,
   PropsWithChildren,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -13,19 +14,11 @@ import { restoreAuthState, type AuthStatus } from "@/services/auth/auth-session"
 import type { AuthSession } from "@/types/auth";
 import { authStorage } from "@/utils/auth-storage";
 
-interface AuthFlowNotice {
-  tone: "success" | "error";
-  message: string;
-}
-
 interface AuthContextValue {
   status: AuthStatus;
   session: AuthSession | null;
-  authFlowNotice: AuthFlowNotice | null;
   setSession: (session: AuthSession) => void;
   clearSession: () => void;
-  setAuthFlowNotice: (notice: AuthFlowNotice) => void;
-  clearAuthFlowNotice: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -33,7 +26,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [session, setSessionState] = useState<AuthSession | null>(null);
   const [status, setStatus] = useState<AuthStatus>("checking");
-  const [authFlowNotice, setAuthFlowNoticeState] = useState<AuthFlowNotice | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -56,29 +48,26 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
   }, []);
 
+  const setSession = useCallback((nextSession: AuthSession) => {
+    authStorage.setSession(nextSession);
+    setSessionState(nextSession);
+    setStatus("authenticated");
+  }, []);
+
+  const clearSession = useCallback(() => {
+    authStorage.clearSession();
+    setSessionState(null);
+    setStatus("guest");
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
       session,
-      authFlowNotice,
-      setSession(nextSession) {
-        authStorage.setSession(nextSession);
-        setSessionState(nextSession);
-        setStatus("authenticated");
-      },
-      clearSession() {
-        authStorage.clearSession();
-        setSessionState(null);
-        setStatus("guest");
-      },
-      setAuthFlowNotice(notice) {
-        setAuthFlowNoticeState(notice);
-      },
-      clearAuthFlowNotice() {
-        setAuthFlowNoticeState(null);
-      }
+      setSession,
+      clearSession
     }),
-    [authFlowNotice, session, status]
+    [clearSession, session, setSession, status]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

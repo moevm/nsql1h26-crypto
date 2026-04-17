@@ -3,12 +3,21 @@ import { AuthLayout } from "@/components/auth-layout";
 import { LoadingState } from "@/components/loading-state";
 import { PageHead } from "@/components/page-head";
 import { useAuthRouting } from "@/hooks/use-auth-routing";
-import { useLoginForm } from "@/hooks/use-login-form";
+import { useRegisterForm } from "@/hooks/use-register-form";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const isReady = useAuthRouting({ mode: "guest-only" });
-  const { login, password, errors, isSubmitting, setLogin, setPassword, handleSubmit } =
-    useLoginForm();
+  const {
+    login,
+    password,
+    passwordConfirm,
+    errors,
+    isSubmitting,
+    setLogin,
+    setPassword,
+    setPasswordConfirm,
+    handleSubmit
+  } = useRegisterForm();
 
   if (!isReady) {
     return (
@@ -21,25 +30,27 @@ export default function LoginPage() {
 
   return (
     <>
-      <PageHead title="Вход | CryptoWatch" description="Страница входа CryptoWatch" />
+      <PageHead title="Регистрация | CryptoWatch" description="Страница регистрации CryptoWatch" />
 
       <AuthLayout
-        eyebrow="Вход"
-        title="Вход в CryptoWatch"
-        description="Введите логин и пароль"
+        eyebrow="Регистрация"
+        title="Регистрация в CryptoWatch"
+        description="Создайте аккаунт"
       >
         <AuthForm
-          title="Войти"
-          submitLabel="Войти"
-          alternateHref="/auth/register"
-          alternateLabel="Регистрация"
+          title="Создать аккаунт"
+          submitLabel="Зарегистрироваться"
+          alternateHref="/auth/login"
+          alternateLabel="Вход"
           formError={errors.form}
           login={login}
           password={password}
+          passwordConfirm={passwordConfirm}
           errors={errors}
           isSubmitting={isSubmitting}
           onLoginChange={setLogin}
           onPasswordChange={setPassword}
+          onPasswordConfirmChange={setPasswordConfirm}
           onSubmit={handleSubmit}
         />
       </AuthLayout>

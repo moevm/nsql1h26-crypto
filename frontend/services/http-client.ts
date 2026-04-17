@@ -1,5 +1,4 @@
 import { ApiErrorPayload, ApiRequestOptions } from "@/types/api";
-import { env } from "@/utils/env";
 import { createQueryString } from "@/utils/query-string";
 
 export class ApiError extends Error {
@@ -15,7 +14,19 @@ export class ApiError extends Error {
 const buildUrl = (path: string, params?: ApiRequestOptions["params"]): string => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
-  return `${env.apiBaseUrl}${normalizedPath}${createQueryString(params)}`;
+  return `${normalizedPath}${createQueryString(params)}`;
+};
+
+const buildHeaders = (options?: ApiRequestOptions, contentType?: "application/json"): HeadersInit => {
+  const headers = new Headers(options?.headers);
+
+  headers.set("Accept", "application/json");
+
+  if (contentType) {
+    headers.set("Content-Type", contentType);
+  }
+
+  return headers;
 };
 
 const parseResponse = async <T>(response: Response): Promise<T> => {
@@ -47,10 +58,7 @@ export const httpClient = {
     const response = await fetch(buildUrl(path, options?.params), {
       ...options,
       method: "GET",
-      headers: {
-        Accept: "application/json",
-        ...options?.headers
-      }
+      headers: buildHeaders(options)
     });
 
     return parseResponse<T>(response);
@@ -59,11 +67,7 @@ export const httpClient = {
     const response = await fetch(buildUrl(path, options?.params), {
       ...options,
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...options?.headers
-      }
+      headers: buildHeaders(options, "application/json")
     });
 
     return parseResponse<T>(response);

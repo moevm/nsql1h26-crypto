@@ -1,13 +1,14 @@
 import { AppLayout } from "@/components/app-layout";
 import { CoinTable } from "@/components/coin-table";
 import { PageHead } from "@/components/page-head";
+import { ProtectedPage } from "@/components/protected-page";
 import { RangeField } from "@/components/range-field";
 import { ViewStateSection } from "@/components/view-state-section";
 import { useToast } from "@/hooks/use-toast";
 import { useWatchlistViewMock } from "@/hooks/use-watchlist-view-mock";
 import { watchlistToastMessages } from "@/utils/toast-mocks";
 
-export default function AppHomePage() {
+const AppHomePageContent = () => {
   const { pushToast } = useToast();
   const viewState = useWatchlistViewMock();
 
@@ -135,5 +136,13 @@ export default function AppHomePage() {
         </section>
       </AppLayout>
     </>
+  );
+};
+
+export default function AppHomePage() {
+  return (
+    <ProtectedPage>
+      <AppHomePageContent />
+    </ProtectedPage>
   );
 }

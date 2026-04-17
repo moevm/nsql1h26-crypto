@@ -72,10 +72,18 @@
   @apply flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between;
 }
 
+.cw-app-header-actions {
+  @apply flex flex-col gap-3 lg:items-end;
+}
+
 .cw-app-nav {
   @apply flex flex-col gap-3 lg:items-end;
   position: relative;
   z-index: 10;
+}
+
+.cw-session-card {
+  @apply mt-3 space-y-1;
 }
 
 .cw-app-header-copy {

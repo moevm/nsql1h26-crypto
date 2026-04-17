@@ -1,20 +1,34 @@
-# Frontend UI Routes
+# Frontend
 
-Страницы `issue #21` открываются отдельно по URL.
+## Маршруты
 
-Доступные маршруты:
-- `/` -- техническая заглушка
-- `/auth/login` -- экран логина
+- `/` -- ведет в `/app`, если сессия есть, и в `/auth/login`, если сессии нет
+- `/auth/login` -- логин
+- `/auth/register` -- регистрация
 - `/app` -- главная страница watchlist
 - `/app/favorites` -- избранные монеты
 - `/app/statistics` -- статистика и пресеты
 - `/app/admin/import-export` -- импорт / экспорт
 
-Проверка error-state:
-- для защищенных страниц доступен демонстрационный режим `?demo=error`
-- примеры: `/app?demo=error`, `/app/favorites?demo=error`, `/app/statistics?demo=error`, `/app/admin/import-export?demo=error`
+## Режимы API
 
-Ограничения:
-- страницы открываются напрямую
-- кнопки и формы в основном визуальные
-- общая навигация остается для `issue #19`
+Используется один публичный переключатель:
+
+- `NEXT_PUBLIC_API_MODE=mock|backend`
+
+`NEXT_PUBLIC_API_MODE` обязательна. Если она не задана, frontend завершится с ошибкой сразу.
+
+Для backend-режима нужна переменная окружения на стороне Next.js:
+
+- `BACKEND_API_ORIGIN=http://localhost:8080`
+
+Или, для Docker-сети:
+
+- `BACKEND_API_ORIGIN=http://backend:8080`
+
+Важно:
+
+- `BACKEND_API_ORIGIN` читается на стороне Next.js
+- `BACKEND_API_ORIGIN` нужна только в `backend`-режиме
+- в backend-режиме браузер обращается только к /api/* на том же адресе сайта, а Next.js пересылает запросы дальше
+- после изменения env нужно перезапустить frontend

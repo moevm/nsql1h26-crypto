@@ -1,11 +1,13 @@
 import { AppLayout } from "@/components/app-layout";
 import { useImportExportViewMock } from "@/hooks/use-import-export-view-mock";
 import { PageHead } from "@/components/page-head";
+import { ProtectedPage } from "@/components/protected-page";
+import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import { ViewStateSection } from "@/components/view-state-section";
 import { useToast } from "@/hooks/use-toast";
 import { importExportToastMessages } from "@/utils/toast-mocks";
 
-export default function ImportExportPage() {
+const ImportExportPageContent = () => {
   const { pushToast } = useToast();
   const viewState = useImportExportViewMock();
 
@@ -106,5 +108,13 @@ export default function ImportExportPage() {
         </section>
       </AppLayout>
     </>
+  );
+};
+
+export default function ImportExportPage() {
+  return (
+    <ProtectedPage requiredRole={AUTH_ROLES.ADMIN}>
+      <ImportExportPageContent />
+    </ProtectedPage>
   );
 }

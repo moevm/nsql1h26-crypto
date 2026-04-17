@@ -1,13 +1,5 @@
+import { parseApiMode } from "@/utils/api-mode";
+
 export const env = {
-  apiBaseUrl: (() => {
-    const value = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-    if (!value) {
-      throw new Error(
-        "Missing required environment variable: NEXT_PUBLIC_API_BASE_URL"
-      );
-    }
-
-    return value;
-  })()
+  apiMode: parseApiMode(process.env.NEXT_PUBLIC_API_MODE)
 };

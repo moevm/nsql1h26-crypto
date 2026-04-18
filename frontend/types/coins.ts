@@ -22,16 +22,23 @@ export interface CoinTableSortState {
   direction: CoinTableSortDirection;
 }
 
+export interface WatchlistRequestParams {
+  pageSize?: number;
+  pageNo?: number;
+}
+
 export interface WatchlistResponse {
   coins: WatchlistCoin[];
   totalCount: number;
   hasMore: boolean;
+  updatedAt: string | null;
 }
 
 export interface RefreshWatchlistResponse {
   success: boolean;
   refreshedCount: number;
   message?: string;
+  lastUpdatedAt?: string | null;
 }
 
 export interface CoinsMutationResponse {
@@ -40,7 +47,7 @@ export interface CoinsMutationResponse {
 }
 
 export interface CoinsApi {
-  getWatchlist(): Promise<WatchlistResponse>;
+  getWatchlist(params?: WatchlistRequestParams): Promise<WatchlistResponse>;
   refreshWatchlist(): Promise<RefreshWatchlistResponse>;
   addFavorite(symbol: string): Promise<CoinsMutationResponse>;
   removeFavorite(symbol: string): Promise<CoinsMutationResponse>;

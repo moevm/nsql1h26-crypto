@@ -4,11 +4,20 @@ import {
   normalizeRefreshWatchlistResponse,
   normalizeWatchlistResponse
 } from "@/services/coins/backend-coins-normalizer";
-import type { CoinsApi } from "@/types/coins";
+import type { CoinsApi, WatchlistRequestParams } from "@/types/coins";
 
 export const backendCoinsService: CoinsApi = {
-  async getWatchlist() {
-    const response = await authorizedHttpClient.get<unknown>("/api/coins/watchlist");
+  async getWatchlist(params?: WatchlistRequestParams) {
+    const queryParams = params
+      ? {
+          pageNo: params.pageNo,
+          pageSize: params.pageSize
+        }
+      : undefined;
+
+    const response = await authorizedHttpClient.get<unknown>("/api/coins/watchlist", {
+      params: queryParams
+    });
 
     return normalizeWatchlistResponse(response);
   },

@@ -23,6 +23,8 @@ import type { CoinTableAction } from "@/types/coin-table";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
 
+const WATCHLIST_PAGE_SIZE = 1000;
+
 const getLoadedStatus = (coinsCount: number, totalCount: number): ViewStatus => {
   return coinsCount === 0 || totalCount === 0 ? VIEW_STATUS.EMPTY : VIEW_STATUS.READY;
 };
@@ -50,6 +52,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
   const { pushToast } = useToast();
   const [sourceCoins, setSourceCoins] = useState<WatchlistCoin[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<ViewStatus>(VIEW_STATUS.LOADING);
   const [errorMessage, setErrorMessage] = useState("Не удалось загрузить список монет");
   const [reloadKey, setReloadKey] = useState(0);
@@ -68,7 +71,10 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       setErrorMessage("Не удалось загрузить список монет");
 
       try {
-        const response = await coinsService.getWatchlist();
+        const response = await coinsService.getWatchlist({
+          pageNo: 0,
+          pageSize: WATCHLIST_PAGE_SIZE
+        });
 
         if (isCancelled) {
           return;
@@ -76,6 +82,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
 
         setSourceCoins(response.coins);
         setTotalCount(response.totalCount);
+        setHasMore(response.hasMore);
         setStatus(getLoadedStatus(response.coins.length, response.totalCount));
         setErrorMessage("Не удалось загрузить список монет");
       } catch (error) {
@@ -85,6 +92,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
 
         setSourceCoins([]);
         setTotalCount(0);
+        setHasMore(false);
         setErrorMessage(getCoinsErrorMessage(error));
         setStatus(VIEW_STATUS.ERROR);
       }
@@ -148,10 +156,14 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       const refreshResponse = await coinsService.refreshWatchlist();
       assertSuccessfulResponse(refreshResponse, "Не удалось обновить данные списка");
 
-      const watchlistResponse = await coinsService.getWatchlist();
+      const watchlistResponse = await coinsService.getWatchlist({
+        pageNo: 0,
+        pageSize: WATCHLIST_PAGE_SIZE
+      });
 
       setSourceCoins(watchlistResponse.coins);
       setTotalCount(watchlistResponse.totalCount);
+      setHasMore(watchlistResponse.hasMore);
       setStatus(getLoadedStatus(watchlistResponse.coins.length, watchlistResponse.totalCount));
       setErrorMessage("Не удалось загрузить список монет");
 
@@ -320,7 +332,9 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
   return {
     status: derivedStatus,
     coins: visibleCoins,
-    totalLabel: `Показано ${visibleCoins.length} из ${totalCount}`,
+    totalLabel: hasMore
+      ? `Показано ${visibleCoins.length} из ${sourceCoins.length} загруженных монет (всего ${totalCount})`
+      : `Показано ${visibleCoins.length} из ${totalCount}`,
     errorMessage,
     emptyState,
     query,

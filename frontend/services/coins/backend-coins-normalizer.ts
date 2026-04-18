@@ -19,16 +19,6 @@ const createShapeError = (fieldName: string): ApiError =>
     message: `${INVALID_RESPONSE_MESSAGE}: ${fieldName}`
   });
 
-const pickFirstDefined = (record: UnknownRecord, keys: string[]): unknown => {
-  for (const key of keys) {
-    if (record[key] !== undefined) {
-      return record[key];
-    }
-  }
-
-  return undefined;
-};
-
 const parseNumber = (value: unknown): number | null => {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : null;
@@ -49,31 +39,7 @@ const parseNumber = (value: unknown): number | null => {
   return Number.isFinite(parsedValue) ? parsedValue : null;
 };
 
-const parseBoolean = (value: unknown): boolean | null => {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  if (typeof value === "number") {
-    return value === 1 ? true : value === 0 ? false : null;
-  }
-
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const normalizedValue = value.trim().toLowerCase();
-
-  if (normalizedValue === "true") {
-    return true;
-  }
-
-  if (normalizedValue === "false") {
-    return false;
-  }
-
-  return null;
-};
+const parseBoolean = (value: unknown): boolean | null => (typeof value === "boolean" ? value : null);
 
 const parseString = (value: unknown): string | null => {
   if (typeof value !== "string") {
@@ -85,22 +51,22 @@ const parseString = (value: unknown): string | null => {
   return normalizedValue ? normalizedValue : null;
 };
 
-const unwrapResponseRecord = (payload: unknown): UnknownRecord => {
-  if (!isRecord(payload)) {
-    throw createShapeError("payload");
+const parseIsoDateString = (value: unknown): string | null => {
+  let parsedValue: string | null = null;
+
+  if (value instanceof Date) {
+    parsedValue = value.toISOString();
+  } else if (typeof value === "number" && Number.isFinite(value)) {
+    parsedValue = new Date(value).toISOString();
+  } else {
+    parsedValue = parseString(value);
   }
 
-  const nestedData = payload.data;
-
-  if (
-    nestedData !== undefined &&
-    isRecord(nestedData) &&
-    (nestedData.coins !== undefined || nestedData.items !== undefined)
-  ) {
-    return nestedData;
+  if (!parsedValue) {
+    return null;
   }
 
-  return payload;
+  return Number.isNaN(Date.parse(parsedValue)) ? null : parsedValue;
 };
 
 const normalizeCoin = (payload: unknown): WatchlistCoin => {
@@ -108,7 +74,7 @@ const normalizeCoin = (payload: unknown): WatchlistCoin => {
     throw createShapeError("coin");
   }
 
-  const symbol = parseString(pickFirstDefined(payload, ["symbol", "ticker"]));
+  const symbol = parseString(payload.symbol);
 
   if (!symbol) {
     throw createShapeError("coin.symbol");
@@ -119,14 +85,11 @@ const normalizeCoin = (payload: unknown): WatchlistCoin => {
   return {
     symbol,
     name,
-    priceUsd: parseNumber(pickFirstDefined(payload, ["priceUsd", "price"])),
-    change24hPercent: parseNumber(
-      pickFirstDefined(payload, ["change24hPercent", "percentChange24h", "change24h", "change"])
-    ),
-    marketCapUsd: parseNumber(pickFirstDefined(payload, ["marketCapUsd", "marketCap", "cap"])),
-    volume24hUsd: parseNumber(pickFirstDefined(payload, ["volume24hUsd", "volume24h", "volume"])),
-    isFavorite:
-      parseBoolean(pickFirstDefined(payload, ["isFavorite", "favorite", "inFavorites"])) ?? false
+    priceUsd: parseNumber(payload.price),
+    change24hPercent: parseNumber(payload.percentChange24h),
+    marketCapUsd: parseNumber(payload.marketCap),
+    volume24hUsd: parseNumber(payload.volume24h),
+    isFavorite: parseBoolean(payload.isFavorite) ?? false
   };
 };
 
@@ -142,21 +105,25 @@ const normalizeMutationResponse = (payload: unknown): CoinsMutationResponse => {
 };
 
 export const normalizeWatchlistResponse = (payload: unknown): WatchlistResponse => {
-  const responseRecord = unwrapResponseRecord(payload);
-  const rawCoins = pickFirstDefined(responseRecord, ["coins", "items"]);
+  if (!isRecord(payload)) {
+    throw createShapeError("payload");
+  }
+
+  const rawCoins = payload.coins;
 
   if (!Array.isArray(rawCoins)) {
     throw createShapeError("coins");
   }
 
   const coins = rawCoins.map(normalizeCoin);
-  const totalCount = parseNumber(pickFirstDefined(responseRecord, ["totalCount", "count", "total"]));
-  const hasMore = parseBoolean(pickFirstDefined(responseRecord, ["hasMore", "hasNext"])) ?? false;
+  const totalCount = parseNumber(payload.totalCount);
+  const hasMore = parseBoolean(payload.hasMore) ?? false;
 
   return {
     coins,
     totalCount: totalCount ?? coins.length,
-    hasMore
+    hasMore,
+    updatedAt: parseIsoDateString(payload.updatedAt)
   };
 };
 
@@ -172,7 +139,8 @@ export const normalizeRefreshWatchlistResponse = (payload: unknown): RefreshWatc
 
   return {
     ...mutationResult,
-    refreshedCount: parseNumber(payload.refreshedCount) ?? 0
+    refreshedCount: parseNumber(payload.refreshedCount) ?? 0,
+    lastUpdatedAt: parseIsoDateString(payload.lastUpdatedAt)
   };
 };
 

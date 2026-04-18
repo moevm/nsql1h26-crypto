@@ -1,5 +1,10 @@
 import { ApiError } from "@/services/http-client";
-import type { CoinsApi, CoinsMutationResponse, WatchlistCoin } from "@/types/coins";
+import type {
+  CoinsApi,
+  CoinsMutationResponse,
+  WatchlistCoin,
+  WatchlistRequestParams
+} from "@/types/coins";
 import { authStorage } from "@/utils/auth-storage";
 import { mockAuthStore, type MockStoredUser } from "@/utils/mocks/mock-auth-store";
 import { mockCoinCatalog } from "@/utils/mocks/mock-coin-catalog";
@@ -75,14 +80,19 @@ const updateCurrentMockUser = (
 };
 
 export const mockCoinsService: CoinsApi = {
-  async getWatchlist() {
+  async getWatchlist(params?: WatchlistRequestParams) {
     const user = getCurrentMockUser();
-    const coins = buildWatchlistCoins(user);
+    const allCoins = buildWatchlistCoins(user);
+    const pageSize = params?.pageSize ?? allCoins.length;
+    const pageNo = params?.pageNo ?? 0;
+    const start = pageNo * pageSize;
+    const coins = allCoins.slice(start, start + pageSize);
 
     return {
       coins,
-      totalCount: coins.length,
-      hasMore: false
+      totalCount: allCoins.length,
+      hasMore: start + coins.length < allCoins.length,
+      updatedAt: null
     };
   },
   async refreshWatchlist() {

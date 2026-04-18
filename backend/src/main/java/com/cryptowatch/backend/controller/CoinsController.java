@@ -4,6 +4,7 @@ import com.cryptowatch.backend.dto.*;
 import com.cryptowatch.backend.security.JwtTokenProvider;
 import com.cryptowatch.backend.service.CoinService;
 import com.cryptowatch.backend.service.WatchlistService;
+import com.cryptowatch.backend.service.CoinMarketCapService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/coins")
@@ -22,6 +26,7 @@ public class CoinsController {
     private final WatchlistService watchlistService;
     private final JwtTokenProvider jwtTokenProvider;
     private final CoinService coinService;
+    private final CoinMarketCapService coinMarketCapService;
 
     @GetMapping("/watchlist")
     public ResponseEntity<?> getWatchlist(
@@ -194,5 +199,30 @@ public class CoinsController {
     @lombok.Data
     static class AddToFavoritesRequest {
         private String symbol;
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> RefreshSnapshots(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody(required = false) RefreshRequest request)
+            {
+        String token = authHeader.substring(7);
+        String userId = jwtTokenProvider.extractUserId(token);
+
+        List<String> symbols = (request != null && request.getSymbols() != null)
+            ? request.getSymbols(): null;
+        CoinMarketCapService.RefreshResult result = coinMarketCapService.refreshSnapshots(symbols); // lowercase 'r'
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Snapshots refreshed");
+        response.put("refreshedCount", result.getRefreshedCount());
+        response.put("symbols", result.getSymbols());
+        response.put("lastUpdatedAt", result.getLastUpdatedAt());
+        return ResponseEntity.ok(response);
+    }
+
+    @lombok.Data
+    static class RefreshRequest {
+        private List<String> symbols;
     }
 }

@@ -1,6 +1,13 @@
-import { ReactNode } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 
 import { RangeField } from "@/components/range-field";
+
+interface RangeFieldControl {
+  startValue?: string;
+  endValue?: string;
+  onStartChange?: (value: string) => void;
+  onEndChange?: (value: string) => void;
+}
 
 interface CoinFiltersPanelProps {
   sectionLabel: string;
@@ -10,7 +17,14 @@ interface CoinFiltersPanelProps {
   queryLabel: string;
   queryPlaceholder: string;
   rangeIdPrefix: string;
+  queryValue?: string;
+  onQueryChange?: (value: string) => void;
+  priceRange?: RangeFieldControl;
+  capRange?: RangeFieldControl;
+  changeRange?: RangeFieldControl;
+  volumeRange?: RangeFieldControl;
   children?: ReactNode;
+  footer?: ReactNode;
 }
 
 export const CoinFiltersPanel = ({
@@ -21,8 +35,22 @@ export const CoinFiltersPanel = ({
   queryLabel,
   queryPlaceholder,
   rangeIdPrefix,
-  children
+  queryValue,
+  onQueryChange,
+  priceRange,
+  capRange,
+  changeRange,
+  volumeRange,
+  children,
+  footer
 }: CoinFiltersPanelProps) => {
+  const queryControlProps = onQueryChange
+    ? {
+        value: queryValue ?? "",
+        onChange: (event: ChangeEvent<HTMLInputElement>) => onQueryChange(event.target.value)
+      }
+    : {};
+
   return (
     <div>
       <div className="cw-section-label">{sectionLabel}</div>
@@ -40,24 +68,39 @@ export const CoinFiltersPanel = ({
             name={queryName}
             placeholder={queryPlaceholder}
             type="search"
+            {...queryControlProps}
           />
         </div>
 
         <div className="cw-filter-grid mt-6">
-          <RangeField id={`${rangeIdPrefix}-price`} label="Цена, USD" inputType="number" />
+          <RangeField
+            id={`${rangeIdPrefix}-price`}
+            label="Цена, USD"
+            inputType="number"
+            {...priceRange}
+          />
           <RangeField
             id={`${rangeIdPrefix}-cap`}
             label="Капитализация"
             inputType="number"
+            {...capRange}
           />
           <RangeField
             id={`${rangeIdPrefix}-change`}
             label="Изменение за 24ч"
             inputType="number"
+            {...changeRange}
           />
-          <RangeField id={`${rangeIdPrefix}-volume`} label="Объем торгов" inputType="number" />
+          <RangeField
+            id={`${rangeIdPrefix}-volume`}
+            label="Объем торгов"
+            inputType="number"
+            {...volumeRange}
+          />
           {children}
         </div>
+
+        {footer ? <div className="mt-6">{footer}</div> : null}
       </div>
     </div>
   );

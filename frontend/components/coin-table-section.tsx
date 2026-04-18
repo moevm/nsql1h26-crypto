@@ -1,6 +1,6 @@
 import { CoinTable } from "@/components/coin-table";
 import { ViewStateSection } from "@/components/view-state-section";
-import type { WatchlistCoin } from "@/types/coins";
+import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
 import type { CoinTableAction } from "@/types/ui";
 import type { ViewStatus } from "@/types/view-state";
 
@@ -17,6 +17,12 @@ interface CoinTableSectionProps {
   getFavoriteActionLabel?: (coin: WatchlistCoin) => string;
   isFavoriteActionPending?: (coin: WatchlistCoin) => boolean;
   actions?: CoinTableAction[];
+  sort?: CoinTableSortState | null;
+  onSortChange?: (key: CoinTableSortKey) => void;
+  emptyTitle?: string;
+  emptyMessage?: string;
+  emptyActionLabel?: string;
+  onEmptyAction?: () => void;
 }
 
 export const CoinTableSection = ({
@@ -31,7 +37,13 @@ export const CoinTableSection = ({
   onToggleFavorite,
   getFavoriteActionLabel,
   isFavoriteActionPending,
-  actions
+  actions,
+  sort,
+  onSortChange,
+  emptyTitle,
+  emptyMessage,
+  emptyActionLabel,
+  onEmptyAction
 }: CoinTableSectionProps) => {
   return (
     <div>
@@ -45,6 +57,10 @@ export const CoinTableSection = ({
         errorTitle={errorTitle}
         errorMessage={errorMessage}
         onRetry={onRetry}
+        emptyTitle={emptyTitle}
+        emptyMessage={emptyMessage}
+        emptyActionLabel={emptyActionLabel}
+        onEmptyAction={onEmptyAction}
       >
         <>
           <CoinTable
@@ -53,6 +69,8 @@ export const CoinTableSection = ({
             getFavoriteActionLabel={getFavoriteActionLabel}
             isFavoriteActionPending={isFavoriteActionPending}
             actions={actions}
+            sort={sort}
+            onSortChange={onSortChange}
           />
 
           <div className="cw-pagination">

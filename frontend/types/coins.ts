@@ -8,6 +8,20 @@ export interface WatchlistCoin {
   isFavorite: boolean;
 }
 
+export type CoinTableSortKey =
+  | "name"
+  | "priceUsd"
+  | "change24hPercent"
+  | "marketCapUsd"
+  | "volume24hUsd";
+
+export type CoinTableSortDirection = "asc" | "desc";
+
+export interface CoinTableSortState {
+  key: CoinTableSortKey;
+  direction: CoinTableSortDirection;
+}
+
 export interface WatchlistResponse {
   coins: WatchlistCoin[];
   totalCount: number;

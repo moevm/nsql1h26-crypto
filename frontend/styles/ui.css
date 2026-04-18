@@ -31,10 +31,13 @@
 }
 
 .cw-input {
-  @apply w-full rounded-2xl border px-4 py-3 text-sm transition;
+  @apply w-full rounded-2xl border px-4 py-3 text-sm;
   border-color: var(--color-border);
   background: rgba(255, 255, 255, 0.92);
   color: var(--color-text-strong);
+  transition-duration: 160ms;
+  transition-property: border-color, box-shadow, background-color, color;
+  transition-timing-function: ease-out;
 }
 
 .cw-input::placeholder {
@@ -64,7 +67,10 @@
 .cw-button-secondary,
 .cw-button-ghost,
 .cw-button-danger {
-  @apply inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition;
+  @apply inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold;
+  transition-duration: 160ms;
+  transition-property: background-color, border-color, color, box-shadow, opacity, transform;
+  transition-timing-function: ease-out;
 }
 
 .cw-button-primary {
@@ -133,7 +139,10 @@
 
 .cw-link {
   color: var(--color-brand-dark);
-  @apply font-semibold transition;
+  @apply font-semibold;
+  transition-duration: 160ms;
+  transition-property: color, text-decoration-color;
+  transition-timing-function: ease-out;
 }
 
 .cw-link:hover {
@@ -187,11 +196,15 @@
 .cw-loading-message {
   @apply mt-3 max-w-md text-sm leading-6;
   color: var(--color-text-main);
+  overflow-wrap: anywhere;
 }
 
 .cw-app-nav-link {
-  @apply inline-flex items-center rounded-full px-4 py-2 text-sm font-medium transition;
+  @apply inline-flex items-center rounded-full px-4 py-2 text-sm font-medium;
   color: var(--color-text-main);
+  transition-duration: 160ms;
+  transition-property: background-color, color, box-shadow;
+  transition-timing-function: ease-out;
 }
 
 .cw-app-nav-link:hover {
@@ -328,10 +341,49 @@
   border-color: var(--border-soft);
 }
 
+.cw-table-sort-button {
+  color: inherit;
+  @apply inline-flex w-full items-center justify-between gap-2 text-left;
+  transition-duration: 160ms;
+  transition-property: color, box-shadow;
+  transition-timing-function: ease-out;
+}
+
+.cw-table-sort-button:hover {
+  color: var(--color-text-strong);
+}
+
+.cw-table-sort-button:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.cw-table-sort-button-active {
+  color: var(--color-text-strong);
+}
+
+.cw-table-sort-indicator {
+  @apply shrink-0 text-[11px];
+}
+
 .cw-table td {
   color: var(--color-text-main);
   @apply border-b px-4 py-4 text-sm;
   border-color: var(--border-soft-row);
+}
+
+.cw-table-cell-coin {
+  width: 18rem;
+}
+
+.cw-table-coin-copy {
+  @apply min-w-0;
+}
+
+.cw-table-coin-name,
+.cw-table-coin-symbol {
+  @apply min-w-0;
+  overflow-wrap: anywhere;
 }
 
 .cw-table tbody tr:hover {
@@ -369,8 +421,11 @@
 }
 
 .cw-favorite-button {
-  @apply inline-flex h-10 w-10 items-center justify-center rounded-2xl border text-lg transition;
+  @apply inline-flex h-10 w-10 items-center justify-center rounded-2xl border text-lg;
   border-color: var(--color-border);
+  transition-duration: 160ms;
+  transition-property: background-color, border-color, color, box-shadow, opacity, transform;
+  transition-timing-function: ease-out;
 }
 
 .cw-favorite-button-active {
@@ -448,16 +503,21 @@
 .cw-toast-title {
   color: var(--color-text-strong);
   @apply mb-1 text-sm font-semibold;
+  overflow-wrap: anywhere;
 }
 
 .cw-toast-message {
   color: var(--color-text-main);
   @apply text-sm leading-6;
+  overflow-wrap: anywhere;
 }
 
 .cw-toast-dismiss {
   color: var(--color-brand-dark);
-  @apply shrink-0 text-sm font-semibold transition;
+  @apply shrink-0 text-sm font-semibold;
+  transition-duration: 160ms;
+  transition-property: color, box-shadow;
+  transition-timing-function: ease-out;
 }
 
 .cw-toast-dismiss:hover {
@@ -483,6 +543,7 @@
 .cw-error-message {
   color: var(--color-text-main);
   @apply mt-3 max-w-2xl text-sm leading-6 sm:text-base;
+  overflow-wrap: anywhere;
 }
 
 .cw-empty-state {
@@ -504,6 +565,7 @@
 .cw-empty-message {
   color: var(--color-text-main);
   @apply mt-3 max-w-2xl text-sm leading-6 sm:text-base;
+  overflow-wrap: anywhere;
 }
 
 @keyframes cw-loading-bounce {
@@ -521,6 +583,19 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cw-input,
+  .cw-button-primary,
+  .cw-button-secondary,
+  .cw-button-ghost,
+  .cw-button-danger,
+  .cw-link,
+  .cw-app-nav-link,
+  .cw-table-sort-button,
+  .cw-favorite-button,
+  .cw-toast-dismiss {
+    transition-duration: 0.01ms;
+  }
+
   .cw-loading-dot {
     animation: none;
   }

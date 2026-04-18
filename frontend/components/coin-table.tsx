@@ -1,4 +1,8 @@
-import type { WatchlistCoin } from "@/types/coins";
+import type {
+  CoinTableSortKey,
+  CoinTableSortState,
+  WatchlistCoin
+} from "@/types/coins";
 import type { CoinTableAction, CoinTableActionTone } from "@/types/ui";
 import {
   formatPercentChange,
@@ -7,13 +11,32 @@ import {
   getPercentChangeTone
 } from "@/utils/coin-formatters";
 
+type SortOrderForAria = "ascending" | "descending" | "none";
+
 interface CoinTableProps {
   coins: WatchlistCoin[];
   onToggleFavorite?: (coin: WatchlistCoin) => void;
   getFavoriteActionLabel?: (coin: WatchlistCoin) => string;
   isFavoriteActionPending?: (coin: WatchlistCoin) => boolean;
   actions?: CoinTableAction[];
+  sort?: CoinTableSortState | null;
+  onSortChange?: (key: CoinTableSortKey) => void;
 }
+
+interface CoinTableColumn {
+  key: string;
+  label: string;
+  sortKey?: CoinTableSortKey;
+}
+
+const COIN_TABLE_COLUMNS: CoinTableColumn[] = [
+  { key: "name", label: "Название / тикер", sortKey: "name" },
+  { key: "priceUsd", label: "Цена", sortKey: "priceUsd" },
+  { key: "change24hPercent", label: "24ч", sortKey: "change24hPercent" },
+  { key: "marketCapUsd", label: "Капитализация", sortKey: "marketCapUsd" },
+  { key: "volume24hUsd", label: "Объем", sortKey: "volume24hUsd" },
+  { key: "favorite", label: "Избранное" }
+];
 
 const getButtonClassName = (tone: CoinTableActionTone = "secondary"): string => {
   if (tone === "danger") {
@@ -27,12 +50,56 @@ const getButtonClassName = (tone: CoinTableActionTone = "secondary"): string => 
   return "cw-button-secondary";
 };
 
+const getSortIndicator = (
+  sort: CoinTableSortState | null | undefined,
+  key: CoinTableSortKey
+): string => {
+  if (sort?.key !== key) {
+    return "↕";
+  }
+
+  return sort.direction === "asc" ? "↑" : "↓";
+};
+
+const getSortAriaOrder = (
+  sort: CoinTableSortState | null | undefined,
+  key?: CoinTableSortKey
+): SortOrderForAria | undefined => {
+  if (!key) {
+    return undefined;
+  }
+
+  if (sort?.key !== key) {
+    return "none";
+  }
+
+  return sort.direction === "asc" ? "ascending" : "descending";
+};
+
+const getSortActionLabel = (
+  label: string,
+  sort: CoinTableSortState | null | undefined,
+  key: CoinTableSortKey
+): string => {
+  if (sort?.key !== key) {
+    return `Сортировать по столбцу «${label}» по возрастанию`;
+  }
+
+  if (sort.direction === "asc") {
+    return `Сортировать по столбцу «${label}» по убыванию`;
+  }
+
+  return `Сбросить сортировку по столбцу «${label}»`;
+};
+
 export const CoinTable = ({
   coins,
   onToggleFavorite,
   getFavoriteActionLabel,
   isFavoriteActionPending,
-  actions = []
+  actions = [],
+  sort,
+  onSortChange
 }: CoinTableProps) => {
   const hasActionsColumn = actions.length > 0;
 
@@ -41,12 +108,31 @@ export const CoinTable = ({
       <table className="cw-table">
         <thead>
           <tr>
-            <th scope="col">Название / тикер</th>
-            <th scope="col">Цена</th>
-            <th scope="col">24ч</th>
-            <th scope="col">Капитализация</th>
-            <th scope="col">Объем</th>
-            <th scope="col">Избранное</th>
+            {COIN_TABLE_COLUMNS.map((column) => (
+              <th
+                key={column.key}
+                scope="col"
+                aria-sort={getSortAriaOrder(sort, column.sortKey)}
+              >
+                {column.sortKey && onSortChange ? (
+                  <button
+                    type="button"
+                    className={`cw-table-sort-button ${
+                      sort?.key === column.sortKey ? "cw-table-sort-button-active" : ""
+                    }`}
+                    onClick={() => onSortChange(column.sortKey!)}
+                    aria-label={getSortActionLabel(column.label, sort, column.sortKey)}
+                  >
+                    <span>{column.label}</span>
+                    <span className="cw-table-sort-indicator" aria-hidden="true">
+                      {getSortIndicator(sort, column.sortKey)}
+                    </span>
+                  </button>
+                ) : (
+                  column.label
+                )}
+              </th>
+            ))}
             {hasActionsColumn ? <th scope="col">Действия</th> : null}
           </tr>
         </thead>
@@ -60,10 +146,12 @@ export const CoinTable = ({
 
             return (
               <tr key={coin.symbol}>
-                <td>
-                  <div className="cw-table-primary">{coin.name}</div>
+                <td className="cw-table-cell-coin">
+                  <div className="cw-table-coin-copy">
+                    <div className="cw-table-primary cw-table-coin-name">{coin.name}</div>
+                  </div>
                   <div
-                    className="mt-1 text-xs uppercase tracking-[0.14em] text-text-muted"
+                    className="cw-table-coin-symbol mt-1 text-xs uppercase tracking-[0.14em] text-text-muted"
                     translate="no"
                   >
                     {coin.symbol}

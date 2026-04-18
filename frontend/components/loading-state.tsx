@@ -4,8 +4,8 @@ interface LoadingStateProps {
 }
 
 export const LoadingState = ({
-  title = "Подождите…",
-  message = "Проверяем данные и готовим экран…"
+  title = "Подождите...",
+  message = "Проверяем данные и готовим экран..."
 }: LoadingStateProps) => {
   return (
     <section className="cw-loading-state" role="status" aria-live="polite">

@@ -94,7 +94,7 @@ export const CoinTable = ({
                       disabled={isFavoritePending}
                       aria-label={`${favoriteButtonLabel}: ${coin.symbol}`}
                     >
-                      {isFavoritePending ? "…" : "★"}
+                      {isFavoritePending ? "..." : "★"}
                     </button>
                   ) : (
                     <span
@@ -121,7 +121,7 @@ export const CoinTable = ({
                             disabled={isDisabled || isPending}
                             aria-label={action.getAriaLabel?.(coin) ?? `${action.label}: ${coin.symbol}`}
                           >
-                            {isPending ? action.pendingLabel ?? "…" : action.label}
+                            {isPending ? action.pendingLabel ?? "..." : action.label}
                           </button>
                         );
                       })}

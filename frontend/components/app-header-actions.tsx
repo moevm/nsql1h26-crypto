@@ -1,5 +1,3 @@
-"use client";
-
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import { AppNavigation } from "@/components/app-navigation";
 import { useAuth } from "@/hooks/use-auth";

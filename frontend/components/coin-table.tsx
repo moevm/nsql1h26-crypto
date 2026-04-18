@@ -3,7 +3,7 @@ import type {
   CoinTableSortState,
   WatchlistCoin
 } from "@/types/coins";
-import type { CoinTableAction, CoinTableActionTone } from "@/types/ui";
+import type { CoinTableAction, CoinTableActionTone } from "@/types/coin-table";
 import {
   formatPercentChange,
   formatUsdCompact,

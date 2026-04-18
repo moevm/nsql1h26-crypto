@@ -1,7 +1,8 @@
 import type { WatchlistCoin } from "@/types/coins";
-import type { StatisticsPreset } from "@/types/ui";
+import type { StatisticsPreset } from "@/types/statistics";
+import type { ViewStatus } from "@/types/status";
 
-export type ViewStatus = "loading" | "ready" | "empty" | "error";
+export type { ViewStatus } from "@/types/status";
 
 export interface WatchlistViewState {
   status: ViewStatus;

@@ -1,5 +1,5 @@
 import type { WatchlistCoin } from "@/types/coins";
-import type { StatisticsPreset } from "@/types/ui";
+import type { StatisticsPreset } from "@/types/statistics";
 import { mockCoinCatalog } from "@/utils/mock-coin-catalog";
 
 const mockCoinsBySymbol = new Map(mockCoinCatalog.map((coin) => [coin.symbol, coin]));

@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
+import { AUTH_STATUS } from "@/services/auth/auth-session";
 
 type AuthRouteMode = "root" | "guest-only" | "protected";
 
@@ -14,7 +15,7 @@ export const useAuthRouting = ({ mode }: UseAuthRoutingOptions): boolean => {
   const { status, session } = useAuth();
 
   useEffect(() => {
-    if (status === "checking") {
+    if (status === AUTH_STATUS.CHECKING) {
       return;
     }
 
@@ -33,7 +34,7 @@ export const useAuthRouting = ({ mode }: UseAuthRoutingOptions): boolean => {
     }
   }, [mode, router, session, status]);
 
-  if (status === "checking") {
+  if (status === AUTH_STATUS.CHECKING) {
     return false;
   }
 

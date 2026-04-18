@@ -8,7 +8,11 @@ import {
   useState
 } from "react";
 
-import { restoreAuthState, type AuthStatus } from "@/services/auth/auth-session";
+import {
+  AUTH_STATUS,
+  restoreAuthState,
+  type AuthStatus
+} from "@/services/auth/auth-session";
 import type { AuthSession } from "@/types/auth";
 import { authStorage } from "@/utils/auth-storage";
 
@@ -23,7 +27,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [session, setSessionState] = useState<AuthSession | null>(null);
-  const [status, setStatus] = useState<AuthStatus>("checking");
+  const [status, setStatus] = useState<AuthStatus>(AUTH_STATUS.CHECKING);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,13 +53,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const setSession = useCallback((nextSession: AuthSession) => {
     authStorage.setSession(nextSession);
     setSessionState(nextSession);
-    setStatus("authenticated");
+    setStatus(AUTH_STATUS.AUTHENTICATED);
   }, []);
 
   const clearSession = useCallback(() => {
     authStorage.clearSession();
     setSessionState(null);
-    setStatus("guest");
+    setStatus(AUTH_STATUS.GUEST);
   }, []);
 
   const value = useMemo<AuthContextValue>(

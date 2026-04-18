@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageHead } from "@/components/page-head";
 import { ProtectedPage } from "@/components/protected-page";
 import type { AuthRole } from "@/types/auth";
-import type { AppSection } from "@/types/ui";
+import type { AppSection } from "@/types/app-navigation";
 
 interface AppPageShellProps extends PropsWithChildren {
   activeSection: AppSection;

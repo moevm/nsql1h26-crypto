@@ -1,7 +1,7 @@
 import { CoinTable } from "@/components/coin-table";
 import { ViewStateSection } from "@/components/view-state-section";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
-import type { CoinTableAction } from "@/types/ui";
+import type { CoinTableAction } from "@/types/coin-table";
 import type { ViewStatus } from "@/types/view-state";
 
 interface CoinTableSectionProps {

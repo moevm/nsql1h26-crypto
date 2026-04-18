@@ -20,6 +20,10 @@ interface CreateHttpClientOptions {
   onError?: (error: unknown, options?: ApiRequestOptions) => void;
 }
 
+interface PreparedApiRequestOptions extends Omit<ApiRequestOptions, "body"> {
+  body?: RequestInit["body"];
+}
+
 export class ApiError extends Error {
   status: number;
 
@@ -46,6 +50,39 @@ const buildHeaders = (options?: ApiRequestOptions, contentType?: "application/js
   }
 
   return headers;
+};
+
+const isJsonSerializableBody = (body: ApiRequestOptions["body"]): body is object => {
+  if (body === null || body === undefined || typeof body !== "object") {
+    return false;
+  }
+
+  if (
+    body instanceof ArrayBuffer ||
+    ArrayBuffer.isView(body) ||
+    (typeof Blob !== "undefined" && body instanceof Blob) ||
+    (typeof FormData !== "undefined" && body instanceof FormData) ||
+    (typeof URLSearchParams !== "undefined" && body instanceof URLSearchParams) ||
+    (typeof ReadableStream !== "undefined" && body instanceof ReadableStream)
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+const prepareRequestOptions = (
+  options?: ApiRequestOptions,
+  contentType?: JsonContentType
+): PreparedApiRequestOptions | undefined => {
+  if (!options || contentType !== "application/json" || !isJsonSerializableBody(options.body)) {
+    return options as PreparedApiRequestOptions | undefined;
+  }
+
+  return {
+    ...options,
+    body: JSON.stringify(options.body)
+  };
 };
 
 const parseResponse = async <T>(response: Response): Promise<T> => {
@@ -78,10 +115,12 @@ const request = async <T>(
   options?: ApiRequestOptions,
   contentType?: JsonContentType
 ): Promise<T> => {
-  const response = await fetch(buildUrl(path, options?.params), {
-    ...options,
+  const nextOptions = prepareRequestOptions(options, contentType);
+
+  const response = await fetch(buildUrl(path, nextOptions?.params), {
+    ...nextOptions,
     method,
-    headers: buildHeaders(options, contentType)
+    headers: buildHeaders(nextOptions, contentType)
   });
 
   return parseResponse<T>(response);

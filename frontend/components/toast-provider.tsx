@@ -9,7 +9,7 @@ import {
   useState
 } from "react";
 
-import type { ToastInput, ToastItem } from "@/types/ui";
+import type { ToastInput, ToastItem } from "@/types/toast";
 
 interface ToastContextValue {
   pushToast: (toast: ToastInput) => void;

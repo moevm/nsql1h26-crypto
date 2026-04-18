@@ -45,6 +45,10 @@
   --shadow-panel-lg: 0 32px 80px rgba(15, 23, 42, 0.12);
   --shadow-panel: 0 24px 48px rgba(15, 23, 42, 0.08);
   --shadow-field-focus: 0 0 0 4px rgba(124, 58, 237, 0.16);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
   --gradient-auth: linear-gradient(
     135deg,
     rgba(237, 233, 254, 0.95) 0%,
@@ -65,6 +69,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-page);
   color: var(--color-text-main);
   font-family: "Segoe UI", "Helvetica Neue", sans-serif;

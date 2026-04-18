@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
-import type { AppSection } from "@/types/ui";
+import type { AppSection } from "@/types/app-navigation";
 import { appNavItems } from "@/utils/app-navigation";
 
 interface AppNavigationProps {

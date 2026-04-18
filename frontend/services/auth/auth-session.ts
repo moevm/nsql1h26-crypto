@@ -1,8 +1,10 @@
 import { authService } from "@/services/auth";
 import type { AuthSession } from "@/types/auth";
+import { AUTH_STATUS, type AuthStatus } from "@/types/status";
 import { authStorage } from "@/utils/auth-storage";
 
-export type AuthStatus = "checking" | "authenticated" | "guest";
+export { AUTH_STATUS };
+export type { AuthStatus } from "@/types/status";
 
 interface RestoredAuthState {
   status: AuthStatus;
@@ -14,7 +16,7 @@ export const restoreAuthState = async (): Promise<RestoredAuthState> => {
 
   if (!storedSession) {
     return {
-      status: "guest",
+      status: AUTH_STATUS.GUEST,
       session: null
     };
   }
@@ -31,14 +33,14 @@ export const restoreAuthState = async (): Promise<RestoredAuthState> => {
     authStorage.setSession(nextSession);
 
     return {
-      status: "authenticated",
+      status: AUTH_STATUS.AUTHENTICATED,
       session: nextSession
     };
   } catch {
     authStorage.clearSession();
 
     return {
-      status: "guest",
+      status: AUTH_STATUS.GUEST,
       session: null
     };
   }

@@ -2,7 +2,7 @@ import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import { AppNavigation } from "@/components/app-navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useLogout } from "@/hooks/use-logout";
-import type { AppSection } from "@/types/ui";
+import type { AppSection } from "@/types/app-navigation";
 
 interface AppHeaderActionsProps {
   activeSection: AppSection;

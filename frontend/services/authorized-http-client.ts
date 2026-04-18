@@ -52,3 +52,17 @@ export const registerUnauthorizedHandler = (handler: UnauthorizedHandler) => {
     unauthorizedHandlers.delete(handler);
   };
 };
+
+export const withAuthorization = (
+  token: string,
+  options?: ApiRequestOptions
+): ApiRequestOptions => {
+  const headers = new Headers(options?.headers);
+
+  headers.set("Authorization", `Bearer ${token}`);
+
+  return {
+    ...options,
+    headers
+  };
+};

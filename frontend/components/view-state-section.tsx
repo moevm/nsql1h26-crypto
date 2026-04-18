@@ -3,6 +3,7 @@ import { PropsWithChildren } from "react";
 
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
+import { VIEW_STATUS } from "@/types/status";
 import type { ViewStatus } from "@/types/view-state";
 
 interface ViewStateSectionProps extends PropsWithChildren {
@@ -31,11 +32,11 @@ export const ViewStateSection = ({
   onRetry,
   children
 }: ViewStateSectionProps) => {
-  if (status === "loading") {
+  if (status === VIEW_STATUS.LOADING) {
     return <LoadingState title={loadingTitle} message={loadingMessage} />;
   }
 
-  if (status === "empty") {
+  if (status === VIEW_STATUS.EMPTY) {
     return (
       <EmptyState
         title={emptyTitle}
@@ -46,7 +47,7 @@ export const ViewStateSection = ({
     );
   }
 
-  if (status === "error") {
+  if (status === VIEW_STATUS.ERROR) {
     return <ErrorState title={errorTitle} message={errorMessage} onAction={onRetry} />;
   }
 

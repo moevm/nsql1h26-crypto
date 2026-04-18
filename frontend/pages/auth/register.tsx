@@ -1,7 +1,5 @@
 import { AuthForm } from "@/components/auth-form";
-import { AuthLayout } from "@/components/auth-layout";
-import { LoadingState } from "@/components/loading-state";
-import { PageHead } from "@/components/page-head";
+import { AuthPageShell } from "@/components/auth-page-shell";
 import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { useRegisterForm } from "@/hooks/use-register-form";
 
@@ -19,24 +17,15 @@ export default function RegisterPage() {
     handleSubmit
   } = useRegisterForm();
 
-  if (!isReady) {
-    return (
-      <LoadingState
-        title="Проверяем доступ"
-        message="Открываем приложение"
-      />
-    );
-  }
-
   return (
-    <>
-      <PageHead title="Регистрация | CryptoWatch" description="Страница регистрации CryptoWatch" />
-
-      <AuthLayout
-        eyebrow="Регистрация"
-        title="Регистрация в CryptoWatch"
-        description="Создайте аккаунт"
-      >
+    <AuthPageShell
+      isReady={isReady}
+      headTitle="Регистрация | CryptoWatch"
+      headDescription="Страница регистрации CryptoWatch"
+      eyebrow="Регистрация"
+      title="Регистрация в CryptoWatch"
+      description="Создайте аккаунт"
+    >
         <AuthForm
           title="Создать аккаунт"
           submitLabel="Зарегистрироваться"
@@ -53,7 +42,6 @@ export default function RegisterPage() {
           onPasswordConfirmChange={setPasswordConfirm}
           onSubmit={handleSubmit}
         />
-      </AuthLayout>
-    </>
+    </AuthPageShell>
   );
 }

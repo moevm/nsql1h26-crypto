@@ -21,7 +21,7 @@ export const backendCoinsService: CoinsApi = {
   },
   async addFavorite(symbol: string) {
     const response = await authorizedHttpClient.post<unknown>("/api/coins/favorites", {
-      body: JSON.stringify({ symbol })
+      body: { symbol }
     });
 
     return normalizeCoinsMutationResponse(response);

@@ -4,6 +4,7 @@ interface RangeFieldProps {
   label: string;
   id: string;
   inputType?: "text" | "number" | "date";
+  disabled?: boolean;
   startName?: string;
   endName?: string;
   startPlaceholder?: string;
@@ -18,6 +19,7 @@ export const RangeField = ({
   label,
   id,
   inputType = "text",
+  disabled = false,
   startName = `${id}-from`,
   endName = `${id}-to`,
   startPlaceholder = "От...",
@@ -53,6 +55,7 @@ export const RangeField = ({
         <input
           autoComplete="off"
           className="cw-input"
+          disabled={disabled}
           id={startId}
           inputMode={inputMode}
           name={startName}
@@ -66,6 +69,7 @@ export const RangeField = ({
         <input
           autoComplete="off"
           className="cw-input"
+          disabled={disabled}
           id={endId}
           inputMode={inputMode}
           name={endName}

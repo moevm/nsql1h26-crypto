@@ -1,4 +1,4 @@
-import type { AuthSession, AuthUser } from "@/types/auth";
+import type { AuthSession } from "@/types/auth";
 
 const AUTH_STORAGE_KEY = "cryptowatch.auth.session.v1";
 
@@ -47,24 +47,5 @@ export const authStorage = {
   },
   getToken(): string | null {
     return getStoredSession()?.token ?? null;
-  },
-  syncUser(nextUser: AuthUser): AuthSession | null {
-    const session = getStoredSession();
-
-    if (!session || session.userId !== nextUser.userId) {
-      return null;
-    }
-
-    const nextSession: AuthSession = {
-      ...session,
-      login: nextUser.login,
-      role: nextUser.role,
-      watchlist: [...nextUser.watchlist],
-      favorites: [...nextUser.favorites]
-    };
-
-    setStoredSession(nextSession);
-
-    return nextSession;
   }
 };

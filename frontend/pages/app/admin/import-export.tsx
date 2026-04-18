@@ -1,12 +1,9 @@
 import { AppPageShell } from "@/components/app-page-shell";
-import { useImportExportViewMock } from "@/hooks/use-import-export-view-mock";
+import { useImportExportViewMock } from "@/hooks/mock-views/use-import-export-view-mock";
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import { ViewStateSection } from "@/components/view-state-section";
-import { useToast } from "@/hooks/use-toast";
-import { importExportToastMessages } from "@/utils/toast-mocks";
 
 const ImportExportPageContent = () => {
-  const { pushToast } = useToast();
   const viewState = useImportExportViewMock();
 
   return (
@@ -37,7 +34,7 @@ const ImportExportPageContent = () => {
                 <button
                   className="cw-button-primary mt-4 w-full"
                   type="button"
-                  onClick={() => pushToast(importExportToastMessages.exportStarted)}
+                  disabled
                 >
                   Экспорт
                 </button>
@@ -56,10 +53,7 @@ const ImportExportPageContent = () => {
               status={viewState.status}
               errorTitle="Не удалось загрузить файл"
               errorMessage="Попробуйте выбрать файл еще раз"
-              onRetry={() => {
-                viewState.retry();
-                pushToast(importExportToastMessages.fileSelectPending);
-              }}
+              onRetry={viewState.retry}
             >
               <div>
                 <label className="cw-field-label" htmlFor="import-file">
@@ -70,11 +64,17 @@ const ImportExportPageContent = () => {
                   <p className="mt-3 text-sm leading-6 text-text-main">
                     {viewState.importDescription}
                   </p>
-                  <input className="sr-only" id="import-file" name="import-file" type="file" />
+                  <input
+                    className="sr-only"
+                    disabled
+                    id="import-file"
+                    name="import-file"
+                    type="file"
+                  />
                   <button
                     className="cw-button-secondary mt-5"
                     type="button"
-                    onClick={() => pushToast(importExportToastMessages.fileSelectPending)}
+                    disabled
                   >
                     Выбрать файл
                   </button>
@@ -84,14 +84,14 @@ const ImportExportPageContent = () => {
                   <button
                     className="cw-button-primary opacity-70 sm:flex-1"
                     type="button"
-                    onClick={() => pushToast(importExportToastMessages.importStarted)}
+                    disabled
                   >
                     Импортировать
                   </button>
                   <button
                     className="cw-button-secondary sm:flex-1"
                     type="button"
-                    onClick={() => pushToast(importExportToastMessages.importReset)}
+                    disabled
                   >
                     Сбросить
                   </button>

@@ -15,7 +15,7 @@ type SortOrderForAria = "ascending" | "descending" | "none";
 
 interface CoinTableProps {
   coins: WatchlistCoin[];
-  onToggleFavorite?: (coin: WatchlistCoin) => void;
+  onToggleFavorite?: (coin: WatchlistCoin) => void | Promise<void>;
   getFavoriteActionLabel?: (coin: WatchlistCoin) => string;
   isFavoriteActionPending?: (coin: WatchlistCoin) => boolean;
   actions?: CoinTableAction[];
@@ -178,7 +178,9 @@ export const CoinTable = ({
                       className={`cw-favorite-button ${
                         coin.isFavorite ? "cw-favorite-button-active" : "cw-favorite-button-muted"
                       }`}
-                      onClick={() => onToggleFavorite(coin)}
+                      onClick={() => {
+                        void onToggleFavorite(coin);
+                      }}
                       disabled={isFavoritePending}
                       aria-label={`${favoriteButtonLabel}: ${coin.symbol}`}
                     >

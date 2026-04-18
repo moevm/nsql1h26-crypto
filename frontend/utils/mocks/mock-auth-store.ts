@@ -5,7 +5,7 @@ import {
   seedMockAdminWatchlist,
   seedMockUserFavorites,
   seedMockUserWatchlist
-} from "@/utils/mock-coin-catalog";
+} from "@/utils/mocks/mock-coin-catalog";
 
 interface MockStoredUser extends AuthUser {
   password: string;

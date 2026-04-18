@@ -6,8 +6,6 @@ import {
 } from "@/services/coins/backend-coins-normalizer";
 import type { CoinsApi } from "@/types/coins";
 
-const encodeSymbol = (symbol: string): string => encodeURIComponent(symbol);
-
 export const backendCoinsService: CoinsApi = {
   async getWatchlist() {
     const response = await authorizedHttpClient.get<unknown>("/api/coins/watchlist");
@@ -28,14 +26,14 @@ export const backendCoinsService: CoinsApi = {
   },
   async removeFavorite(symbol: string) {
     const response = await authorizedHttpClient.delete<unknown>(
-      `/api/coins/favorites/${encodeSymbol(symbol)}`
+      `/api/coins/favorites/${encodeURIComponent(symbol)}`
     );
 
     return normalizeCoinsMutationResponse(response);
   },
   async removeFromWatchlist(symbol: string) {
     const response = await authorizedHttpClient.delete<unknown>(
-      `/api/coins/watchlist/${encodeSymbol(symbol)}`
+      `/api/coins/watchlist/${encodeURIComponent(symbol)}`
     );
 
     return normalizeCoinsMutationResponse(response);

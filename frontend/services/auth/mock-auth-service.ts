@@ -9,7 +9,7 @@ import type {
   RegisterResponse,
   VerifyResponse
 } from "@/types/auth";
-import { mockAuthStore, type MockStoredUser } from "@/utils/mock-auth-store";
+import { mockAuthStore, type MockStoredUser } from "@/utils/mocks/mock-auth-store";
 
 const buildSessionResponse = (user: MockStoredUser): LoginResponse => ({
   success: true,

@@ -1,7 +1,7 @@
 import { AppPageShell } from "@/components/app-page-shell";
-import { CoinFiltersPanel } from "@/components/coin-filters-panel";
-import { CoinTableSection } from "@/components/coin-table-section";
-import { useWatchlistView } from "@/hooks/use-watchlist-view";
+import { CoinFiltersPanel } from "@/components/coins/coin-filters-panel";
+import { CoinTableSection } from "@/components/coins/coin-table-section";
+import { useWatchlistView } from "@/hooks/watchlist-view/use-watchlist-view";
 
 const AppHomePageContent = () => {
   const viewState = useWatchlistView();
@@ -16,8 +16,20 @@ const AppHomePageContent = () => {
     >
       <section className="cw-toolbar">
         <div className="cw-toolbar-actions">
-          <button className="cw-button-primary" type="button" disabled>
+          <button
+            className="cw-button-primary"
+            type="button"
+            onClick={viewState.handleAddCoin}
+          >
             Добавить монету
+          </button>
+          <button
+            className="cw-button-secondary"
+            type="button"
+            onClick={() => void viewState.refreshWatchlist()}
+            disabled={viewState.isRefreshPending}
+          >
+            {viewState.isRefreshPending ? "Обновляем..." : "Обновить"}
           </button>
         </div>
       </section>
@@ -33,30 +45,8 @@ const AppHomePageContent = () => {
           rangeIdPrefix="watchlist"
           queryValue={viewState.query}
           onQueryChange={viewState.setQuery}
-          priceRange={{
-            startValue: viewState.priceRange.start,
-            endValue: viewState.priceRange.end,
-            onStartChange: viewState.setPriceStart,
-            onEndChange: viewState.setPriceEnd
-          }}
-          capRange={{
-            startValue: viewState.capRange.start,
-            endValue: viewState.capRange.end,
-            onStartChange: viewState.setCapStart,
-            onEndChange: viewState.setCapEnd
-          }}
-          changeRange={{
-            startValue: viewState.changeRange.start,
-            endValue: viewState.changeRange.end,
-            onStartChange: viewState.setChangeStart,
-            onEndChange: viewState.setChangeEnd
-          }}
-          volumeRange={{
-            startValue: viewState.volumeRange.start,
-            endValue: viewState.volumeRange.end,
-            onStartChange: viewState.setVolumeStart,
-            onEndChange: viewState.setVolumeEnd
-          }}
+          ranges={viewState.ranges}
+          onRangeChange={viewState.setRangeValue}
           footer={
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-text-muted">Фильтры применяются сразу</p>
@@ -81,6 +71,10 @@ const AppHomePageContent = () => {
           onRetry={viewState.retry}
           coins={viewState.coins}
           totalLabel={viewState.totalLabel}
+          onToggleFavorite={viewState.onToggleFavorite}
+          getFavoriteActionLabel={viewState.getFavoriteActionLabel}
+          isFavoriteActionPending={viewState.isFavoriteActionPending}
+          actions={viewState.actions}
           sort={viewState.sort}
           onSortChange={viewState.requestSort}
           emptyTitle={viewState.emptyState.title}

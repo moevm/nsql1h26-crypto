@@ -4,13 +4,6 @@ import type { ViewStatus } from "@/types/status";
 
 export type { ViewStatus } from "@/types/status";
 
-export interface WatchlistViewState {
-  status: ViewStatus;
-  coins: WatchlistCoin[];
-  totalLabel: string;
-  retry: () => void;
-}
-
 export interface FavoritesViewState {
   status: ViewStatus;
   coins: WatchlistCoin[];

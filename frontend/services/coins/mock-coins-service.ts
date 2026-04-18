@@ -1,8 +1,8 @@
 import { ApiError } from "@/services/http-client";
 import type { CoinsApi, CoinsMutationResponse, WatchlistCoin } from "@/types/coins";
 import { authStorage } from "@/utils/auth-storage";
-import { mockCoinCatalog } from "@/utils/mock-coin-catalog";
-import { mockAuthStore, type MockStoredUser } from "@/utils/mock-auth-store";
+import { mockAuthStore, type MockStoredUser } from "@/utils/mocks/mock-auth-store";
+import { mockCoinCatalog } from "@/utils/mocks/mock-coin-catalog";
 
 const mockCoinsBySymbol = new Map(mockCoinCatalog.map((coin) => [coin.symbol, coin]));
 
@@ -52,7 +52,6 @@ const createMutationResponse = (message?: string): CoinsMutationResponse => ({
 
 const saveMockUser = (nextUser: MockStoredUser): MockStoredUser => {
   mockAuthStore.replaceUser(nextUser);
-  authStorage.syncUser(nextUser);
 
   return nextUser;
 };

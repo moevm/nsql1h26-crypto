@@ -1,12 +1,9 @@
 import { AppPageShell } from "@/components/app-page-shell";
-import { RangeField } from "@/components/range-field";
+import { RangeField } from "@/components/coins/range-field";
 import { ViewStateSection } from "@/components/view-state-section";
-import { useStatisticsViewMock } from "@/hooks/use-statistics-view-mock";
-import { useToast } from "@/hooks/use-toast";
-import { statisticsToastMessages } from "@/utils/toast-mocks";
+import { useStatisticsViewMock } from "@/hooks/mock-views/use-statistics-view-mock";
 
 const StatisticsPageContent = () => {
-  const { pushToast } = useToast();
   const viewState = useStatisticsViewMock();
 
   return (
@@ -22,21 +19,21 @@ const StatisticsPageContent = () => {
           <button
             className="cw-button-primary"
             type="button"
-            onClick={() => pushToast(statisticsToastMessages.chartBuilt)}
+            disabled
           >
             Построить
           </button>
           <button
             className="cw-button-secondary"
             type="button"
-            onClick={() => pushToast(statisticsToastMessages.presetSaved)}
+            disabled
           >
             Сохранить настройки
           </button>
           <button
             className="cw-button-ghost"
             type="button"
-            onClick={() => pushToast(statisticsToastMessages.formReset)}
+            disabled
           >
             Сбросить
           </button>
@@ -59,18 +56,19 @@ const StatisticsPageContent = () => {
                   </label>
                   <input
                     className="cw-input"
+                    disabled
                     id="stats-symbols"
                     name="stats-symbols"
                     placeholder="BTC, ETH, SOL..."
                     type="text"
                   />
                 </div>
-                <RangeField id="stats-range" label="Период" inputType="date" />
+                <RangeField id="stats-range" label="Период" inputType="date" disabled />
                 <div>
                   <label className="cw-field-label" htmlFor="stats-aggregation">
                     Агрегация
                   </label>
-                  <select className="cw-input" defaultValue="days" id="stats-aggregation">
+                  <select className="cw-input" defaultValue="days" disabled id="stats-aggregation">
                     <option value="hours">По часам</option>
                     <option value="days">По дням</option>
                     <option value="weeks">По неделям</option>
@@ -80,6 +78,7 @@ const StatisticsPageContent = () => {
                   id="stats-price"
                   label="Цена, USD"
                   inputType="number"
+                  disabled
                   startPlaceholder="Мин."
                   endPlaceholder="Макс."
                 />
@@ -89,6 +88,7 @@ const StatisticsPageContent = () => {
                   </label>
                   <input
                     className="cw-input"
+                    disabled
                     id="stats-volume-min"
                     name="stats-volume-min"
                     placeholder="Например, 1000000..."
@@ -109,10 +109,7 @@ const StatisticsPageContent = () => {
               status={viewState.status}
               errorTitle="Не удалось построить график"
               errorMessage="Проверьте параметры и попробуйте снова"
-              onRetry={() => {
-                viewState.retry();
-                pushToast(statisticsToastMessages.chartBuilt);
-              }}
+              onRetry={viewState.retry}
             >
               <div className="cw-surface overflow-hidden px-5 py-5 sm:px-6">
                 <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -169,14 +166,14 @@ const StatisticsPageContent = () => {
                     <button
                       className="cw-button-secondary"
                       type="button"
-                      onClick={() => pushToast(statisticsToastMessages.presetLoaded(preset.name))}
+                      disabled
                     >
                       Загрузить
                     </button>
                     <button
                       className="cw-button-ghost"
                       type="button"
-                      onClick={() => pushToast(statisticsToastMessages.presetRemoved(preset.name))}
+                      disabled
                     >
                       Удалить
                     </button>

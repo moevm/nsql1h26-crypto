@@ -1,7 +1,4 @@
-import {
-  authorizedHttpClient,
-  withAuthorization
-} from "@/services/authorized-http-client";
+import { authorizedHttpClient } from "@/services/authorized-http-client";
 import { httpClient } from "@/services/http-client";
 import type {
   AuthApi,
@@ -25,19 +22,19 @@ export const backendAuthService: AuthApi = {
     });
   },
   logout(token: string): Promise<LogoutResponse> {
-    return authorizedHttpClient.post<LogoutResponse>(
-      "/api/auth/logout",
-      withAuthorization(token, {
-        handleUnauthorized: false
-      })
-    );
+    return authorizedHttpClient.post<LogoutResponse>("/api/auth/logout", {
+      handleUnauthorized: false,
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   },
   verify(token: string): Promise<VerifyResponse> {
-    return authorizedHttpClient.get<VerifyResponse>(
-      "/api/auth/verify",
-      withAuthorization(token, {
-        handleUnauthorized: false
-      })
-    );
+    return authorizedHttpClient.get<VerifyResponse>("/api/auth/verify", {
+      handleUnauthorized: false,
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
 };

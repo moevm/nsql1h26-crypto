@@ -1,7 +1,7 @@
 import { AppPageShell } from "@/components/app-page-shell";
-import { CoinFiltersPanel } from "@/components/coin-filters-panel";
-import { CoinTableSection } from "@/components/coin-table-section";
-import { useFavoritesViewMock } from "@/hooks/use-favorites-view-mock";
+import { CoinFiltersPanel } from "@/components/coins/coin-filters-panel";
+import { CoinTableSection } from "@/components/coins/coin-table-section";
+import { useFavoritesViewMock } from "@/hooks/mock-views/use-favorites-view-mock";
 
 const FavoritesPageContent = () => {
   const viewState = useFavoritesViewMock();

@@ -1,6 +1,6 @@
 import type { WatchlistCoin } from "@/types/coins";
 import type { StatisticsPreset } from "@/types/statistics";
-import { mockCoinCatalog } from "@/utils/mock-coin-catalog";
+import { mockCoinCatalog } from "@/utils/mocks/mock-coin-catalog";
 
 const mockCoinsBySymbol = new Map(mockCoinCatalog.map((coin) => [coin.symbol, coin]));
 
@@ -16,13 +16,6 @@ const createMockCoin = (symbol: string, isFavorite: boolean): WatchlistCoin => {
     isFavorite
   };
 };
-
-export const watchlistCoins: WatchlistCoin[] = [
-  createMockCoin("BTC", true),
-  createMockCoin("ETH", false),
-  createMockCoin("SOL", true),
-  createMockCoin("ADA", false)
-];
 
 export const favoriteCoins: WatchlistCoin[] = [
   createMockCoin("BTC", true),

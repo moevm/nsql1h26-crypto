@@ -3,8 +3,7 @@ import { PropsWithChildren } from "react";
 
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { VIEW_STATUS } from "@/types/status";
-import type { ViewStatus } from "@/types/view-state";
+import { VIEW_STATUS, type ViewStatus } from "@/types/status";
 
 interface ViewStateSectionProps extends PropsWithChildren {
   status: ViewStatus;

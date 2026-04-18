@@ -9,15 +9,13 @@ import { VIEW_STATUS, type ViewStatus } from "@/types/status";
 
 import type {
   FilterRangeValue,
+  FilterRangesState,
   WatchlistEmptyState
 } from "@/hooks/watchlist-view/watchlist-view-types";
 
 interface WatchlistFilterState {
   query: string;
-  priceRange: FilterRangeValue;
-  capRange: FilterRangeValue;
-  changeRange: FilterRangeValue;
-  volumeRange: FilterRangeValue;
+  ranges: FilterRangesState;
   sort: CoinTableSortState | null;
 }
 
@@ -35,8 +33,6 @@ interface EmptyStateOptions {
   rangeValidationMessage: string | null;
   resetFilters: () => void;
 }
-
-export const DEFAULT_WATCHLIST_ERROR_MESSAGE = "Не удалось загрузить список монет";
 
 export const createEmptyRange = (): FilterRangeValue => ({
   start: "",
@@ -194,7 +190,10 @@ const compareCoins = (
   return (sourceOrder.get(leftCoin.symbol) ?? 0) - (sourceOrder.get(rightCoin.symbol) ?? 0);
 };
 
-export const getCoinsErrorMessage = (error: unknown): string => {
+export const getCoinsErrorMessage = (
+  error: unknown,
+  fallbackMessage = "Не удалось загрузить список монет"
+): string => {
   if (error instanceof ApiError) {
     return error.message;
   }
@@ -203,20 +202,20 @@ export const getCoinsErrorMessage = (error: unknown): string => {
     return error.message;
   }
 
-  return DEFAULT_WATCHLIST_ERROR_MESSAGE;
+  return fallbackMessage;
 };
 
 export const getWatchlistRangeValidationMessage = ({
-  priceRange,
-  capRange,
-  changeRange,
-  volumeRange
-}: Omit<WatchlistFilterState, "query" | "sort">): string | null => {
+  price,
+  cap,
+  change,
+  volume
+}: FilterRangesState): string | null => {
   return (
-    getRangeValidationMessage("Цена", priceRange) ??
-    getRangeValidationMessage("Капитализация", capRange) ??
-    getRangeValidationMessage("Изменение за 24ч", changeRange) ??
-    getRangeValidationMessage("Объем торгов", volumeRange)
+    getRangeValidationMessage("Цена", price) ??
+    getRangeValidationMessage("Капитализация", cap) ??
+    getRangeValidationMessage("Изменение за 24ч", change) ??
+    getRangeValidationMessage("Объем торгов", volume)
   );
 };
 
@@ -227,10 +226,10 @@ export const getVisibleCoins = (
   const filteredCoins = sourceCoins.filter((coin) => {
     return (
       matchesTextFilter(coin, filters.query) &&
-      matchesNumberRange(coin.priceUsd, filters.priceRange) &&
-      matchesNumberRange(coin.marketCapUsd, filters.capRange) &&
-      matchesNumberRange(coin.change24hPercent, filters.changeRange) &&
-      matchesNumberRange(coin.volume24hUsd, filters.volumeRange)
+      matchesNumberRange(coin.priceUsd, filters.ranges.price) &&
+      matchesNumberRange(coin.marketCapUsd, filters.ranges.cap) &&
+      matchesNumberRange(coin.change24hPercent, filters.ranges.change) &&
+      matchesNumberRange(coin.volume24hUsd, filters.ranges.volume)
     );
   });
 
@@ -238,20 +237,21 @@ export const getVisibleCoins = (
     return filteredCoins;
   }
 
+  const activeSort = filters.sort;
   const sourceOrder = new Map(sourceCoins.map((coin, index) => [coin.symbol, index]));
 
   return [...filteredCoins].sort((leftCoin, rightCoin) =>
-    compareCoins(leftCoin, rightCoin, filters.sort as CoinTableSortState, sourceOrder)
+    compareCoins(leftCoin, rightCoin, activeSort, sourceOrder)
   );
 };
 
 export const hasActiveWatchlistFilters = (filters: WatchlistFilterState): boolean => {
   return (
     normalizeText(filters.query).length > 0 ||
-    hasRangeValue(filters.priceRange) ||
-    hasRangeValue(filters.capRange) ||
-    hasRangeValue(filters.changeRange) ||
-    hasRangeValue(filters.volumeRange) ||
+    hasRangeValue(filters.ranges.price) ||
+    hasRangeValue(filters.ranges.cap) ||
+    hasRangeValue(filters.ranges.change) ||
+    hasRangeValue(filters.ranges.volume) ||
     filters.sort !== null
   );
 };

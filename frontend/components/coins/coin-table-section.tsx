@@ -1,8 +1,8 @@
-import { CoinTable } from "@/components/coin-table";
+import { CoinTable } from "@/components/coins/coin-table";
 import { ViewStateSection } from "@/components/view-state-section";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
 import type { CoinTableAction } from "@/types/coin-table";
-import type { ViewStatus } from "@/types/view-state";
+import type { ViewStatus } from "@/types/status";
 
 interface CoinTableSectionProps {
   sectionLabel: string;
@@ -13,7 +13,7 @@ interface CoinTableSectionProps {
   onRetry: () => void;
   coins: WatchlistCoin[];
   totalLabel: string;
-  onToggleFavorite?: (coin: WatchlistCoin) => void;
+  onToggleFavorite?: (coin: WatchlistCoin) => void | Promise<void>;
   getFavoriteActionLabel?: (coin: WatchlistCoin) => string;
   isFavoriteActionPending?: (coin: WatchlistCoin) => boolean;
   actions?: CoinTableAction[];
@@ -62,7 +62,7 @@ export const CoinTableSection = ({
         emptyActionLabel={emptyActionLabel}
         onEmptyAction={onEmptyAction}
       >
-        <>
+        <div>
           <CoinTable
             coins={coins}
             onToggleFavorite={onToggleFavorite}
@@ -76,7 +76,7 @@ export const CoinTableSection = ({
           <div className="cw-pagination">
             <span>{totalLabel}</span>
           </div>
-        </>
+        </div>
       </ViewStateSection>
     </div>
   );

@@ -1,12 +1,13 @@
 import type { ChangeEvent, ReactNode } from "react";
 
-import { RangeField } from "@/components/range-field";
+import { RangeField } from "@/components/coins/range-field";
 
-interface RangeFieldControl {
-  startValue?: string;
-  endValue?: string;
-  onStartChange?: (value: string) => void;
-  onEndChange?: (value: string) => void;
+type CoinFilterRangeKey = "price" | "cap" | "change" | "volume";
+type RangeFieldEdge = "start" | "end";
+
+interface RangeFieldValue {
+  start?: string;
+  end?: string;
 }
 
 interface CoinFiltersPanelProps {
@@ -19,13 +20,22 @@ interface CoinFiltersPanelProps {
   rangeIdPrefix: string;
   queryValue?: string;
   onQueryChange?: (value: string) => void;
-  priceRange?: RangeFieldControl;
-  capRange?: RangeFieldControl;
-  changeRange?: RangeFieldControl;
-  volumeRange?: RangeFieldControl;
+  ranges?: Partial<Record<CoinFilterRangeKey, RangeFieldValue>>;
+  onRangeChange?: (key: CoinFilterRangeKey, edge: RangeFieldEdge, value: string) => void;
   children?: ReactNode;
   footer?: ReactNode;
 }
+
+const RANGE_FIELDS: Array<{
+  key: CoinFilterRangeKey;
+  idSuffix: string;
+  label: string;
+}> = [
+  { key: "price", idSuffix: "price", label: "Цена, USD" },
+  { key: "cap", idSuffix: "cap", label: "Капитализация" },
+  { key: "change", idSuffix: "change", label: "Изменение за 24ч" },
+  { key: "volume", idSuffix: "volume", label: "Объем торгов" }
+];
 
 export const CoinFiltersPanel = ({
   sectionLabel,
@@ -37,10 +47,8 @@ export const CoinFiltersPanel = ({
   rangeIdPrefix,
   queryValue,
   onQueryChange,
-  priceRange,
-  capRange,
-  changeRange,
-  volumeRange,
+  ranges,
+  onRangeChange,
   children,
   footer
 }: CoinFiltersPanelProps) => {
@@ -73,30 +81,26 @@ export const CoinFiltersPanel = ({
         </div>
 
         <div className="cw-filter-grid mt-6">
-          <RangeField
-            id={`${rangeIdPrefix}-price`}
-            label="Цена, USD"
-            inputType="number"
-            {...priceRange}
-          />
-          <RangeField
-            id={`${rangeIdPrefix}-cap`}
-            label="Капитализация"
-            inputType="number"
-            {...capRange}
-          />
-          <RangeField
-            id={`${rangeIdPrefix}-change`}
-            label="Изменение за 24ч"
-            inputType="number"
-            {...changeRange}
-          />
-          <RangeField
-            id={`${rangeIdPrefix}-volume`}
-            label="Объем торгов"
-            inputType="number"
-            {...volumeRange}
-          />
+          {RANGE_FIELDS.map((field) => (
+            <RangeField
+              key={field.key}
+              id={`${rangeIdPrefix}-${field.idSuffix}`}
+              label={field.label}
+              inputType="number"
+              startValue={ranges?.[field.key]?.start}
+              endValue={ranges?.[field.key]?.end}
+              onStartChange={
+                onRangeChange
+                  ? (value) => onRangeChange(field.key, "start", value)
+                  : undefined
+              }
+              onEndChange={
+                onRangeChange
+                  ? (value) => onRangeChange(field.key, "end", value)
+                  : undefined
+              }
+            />
+          ))}
           {children}
         </div>
 

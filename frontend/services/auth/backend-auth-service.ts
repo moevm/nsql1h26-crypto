@@ -1,4 +1,4 @@
-import { authHttpClient } from "@/services/auth-http-client";
+import { authorizedHttpClient } from "@/services/authorized-http-client";
 import { httpClient } from "@/services/http-client";
 import type {
   AuthApi,
@@ -10,31 +10,31 @@ import type {
   VerifyResponse
 } from "@/types/auth";
 
-const createAuthorizationHeader = (token: string): Record<string, string> => ({
-  Authorization: `Bearer ${token}`
-});
-
 export const backendAuthService: AuthApi = {
   register(payload: RegisterRequestPayload): Promise<RegisterResponse> {
     return httpClient.post<RegisterResponse>("/api/auth/register", {
-      body: JSON.stringify(payload)
+      body: payload
     });
   },
   login(payload: LoginRequestPayload): Promise<LoginResponse> {
     return httpClient.post<LoginResponse>("/api/auth/login", {
-      body: JSON.stringify(payload)
+      body: payload
     });
   },
   logout(token: string): Promise<LogoutResponse> {
-    return authHttpClient.post<LogoutResponse>("/api/auth/logout", {
+    return authorizedHttpClient.post<LogoutResponse>("/api/auth/logout", {
       handleUnauthorized: false,
-      headers: createAuthorizationHeader(token)
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
   },
   verify(token: string): Promise<VerifyResponse> {
-    return authHttpClient.get<VerifyResponse>("/api/auth/verify", {
+    return authorizedHttpClient.get<VerifyResponse>("/api/auth/verify", {
       handleUnauthorized: false,
-      headers: createAuthorizationHeader(token)
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
   }
 };

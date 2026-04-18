@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { FormEvent } from "react";
 
@@ -101,7 +99,7 @@ export const AuthForm = ({
           label="Логин"
           type="text"
           autoComplete="username"
-          placeholder="Введите логин"
+          placeholder="Введите логин..."
           value={login}
           error={errors.login}
           onChange={onLoginChange}
@@ -112,7 +110,7 @@ export const AuthForm = ({
           label="Пароль"
           type="password"
           autoComplete="current-password"
-          placeholder="Введите пароль"
+          placeholder="Введите пароль..."
           value={password}
           error={errors.password}
           onChange={onPasswordChange}
@@ -124,7 +122,7 @@ export const AuthForm = ({
             label="Подтверждение пароля"
             type="password"
             autoComplete="new-password"
-            placeholder="Повторите пароль"
+            placeholder="Повторите пароль..."
             value={passwordConfirm}
             error={errors.passwordConfirm}
             onChange={(value) => onPasswordConfirmChange?.(value)}

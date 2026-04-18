@@ -1,5 +1,3 @@
-"use client";
-
 import { PropsWithChildren } from "react";
 
 import { ErrorState } from "@/components/error-state";
@@ -20,8 +18,8 @@ export const ProtectedPage = ({ children, requiredRole }: ProtectedPageProps) =>
   if (!isReady) {
     return (
       <LoadingState
-        title="Проверяем доступ"
-        message="Открываем нужный раздел"
+        title="Проверяем доступ..."
+        message="Открываем нужный раздел..."
       />
     );
   }

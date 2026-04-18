@@ -1,17 +1,12 @@
-import type { FavoriteRow, StatisticsPreset, WatchlistRow } from "@/types/ui";
+import type { WatchlistCoin } from "@/types/coins";
+import type { StatisticsPreset } from "@/types/statistics";
+import type { ViewStatus } from "@/types/status";
 
-export type ViewStatus = "ready" | "error";
-
-export interface WatchlistViewState {
-  status: ViewStatus;
-  rows: WatchlistRow[];
-  totalLabel: string;
-  retry: () => void;
-}
+export type { ViewStatus } from "@/types/status";
 
 export interface FavoritesViewState {
   status: ViewStatus;
-  rows: FavoriteRow[];
+  coins: WatchlistCoin[];
   totalLabel: string;
   retry: () => void;
 }

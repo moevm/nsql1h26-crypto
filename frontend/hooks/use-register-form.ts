@@ -1,10 +1,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
+import { useAuthSubmitState } from "@/hooks/use-auth-submit-state";
 import { useToast } from "@/hooks/use-toast";
 import type { AuthFormErrors } from "@/services/auth/auth-validation";
 import { validateRegisterPayload } from "@/services/auth/auth-validation";
-import { ApiError } from "@/services/http-client";
 import { authService } from "@/services/auth";
 
 interface UseRegisterFormResult {
@@ -25,8 +25,7 @@ export const useRegisterForm = (): UseRegisterFormResult => {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [errors, setErrors] = useState<AuthFormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { errors, isSubmitting, setErrors, runSubmit } = useAuthSubmitState();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,25 +42,14 @@ export const useRegisterForm = (): UseRegisterFormResult => {
       return;
     }
 
-    setErrors({});
-    setIsSubmitting(true);
-
-    try {
+    await runSubmit(async () => {
       await authService.register(payload);
       pushToast({
         type: "success",
         message: "Регистрация прошла успешно"
       });
       await router.push("/auth/login");
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setErrors({ form: error.message });
-      } else {
-        setErrors({ form: "Не удалось завершить регистрацию" });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, "Не удалось завершить регистрацию");
   };
 
   return {

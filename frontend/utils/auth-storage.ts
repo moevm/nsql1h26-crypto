@@ -4,6 +4,14 @@ const AUTH_STORAGE_KEY = "cryptowatch.auth.session.v1";
 
 const isBrowser = (): boolean => typeof window !== "undefined";
 
+const setStoredSession = (session: AuthSession): void => {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+};
+
 const getStoredSession = (): AuthSession | null => {
   if (!isBrowser()) {
     return null;
@@ -28,11 +36,7 @@ export const authStorage = {
     return getStoredSession();
   },
   setSession(session: AuthSession): void {
-    if (!isBrowser()) {
-      return;
-    }
-
-    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    setStoredSession(session);
   },
   clearSession(): void {
     if (!isBrowser()) {

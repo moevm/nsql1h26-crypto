@@ -1,7 +1,5 @@
 import { AuthForm } from "@/components/auth-form";
-import { AuthLayout } from "@/components/auth-layout";
-import { LoadingState } from "@/components/loading-state";
-import { PageHead } from "@/components/page-head";
+import { AuthPageShell } from "@/components/auth-page-shell";
 import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { useLoginForm } from "@/hooks/use-login-form";
 
@@ -10,24 +8,15 @@ export default function LoginPage() {
   const { login, password, errors, isSubmitting, setLogin, setPassword, handleSubmit } =
     useLoginForm();
 
-  if (!isReady) {
-    return (
-      <LoadingState
-        title="Проверяем доступ"
-        message="Открываем приложение"
-      />
-    );
-  }
-
   return (
-    <>
-      <PageHead title="Вход | CryptoWatch" description="Страница входа CryptoWatch" />
-
-      <AuthLayout
-        eyebrow="Вход"
-        title="Вход в CryptoWatch"
-        description="Введите логин и пароль"
-      >
+    <AuthPageShell
+      isReady={isReady}
+      headTitle="Вход | CryptoWatch"
+      headDescription="Страница входа CryptoWatch"
+      eyebrow="Вход"
+      title="Вход в CryptoWatch"
+      description="Введите логин и пароль"
+    >
         <AuthForm
           title="Войти"
           submitLabel="Войти"
@@ -42,7 +31,6 @@ export default function LoginPage() {
           onPasswordChange={setPassword}
           onSubmit={handleSubmit}
         />
-      </AuthLayout>
-    </>
+    </AuthPageShell>
   );
 }

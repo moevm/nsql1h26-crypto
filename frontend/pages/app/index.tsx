@@ -1,148 +1,92 @@
-import { AppLayout } from "@/components/app-layout";
-import { CoinTable } from "@/components/coin-table";
-import { PageHead } from "@/components/page-head";
-import { ProtectedPage } from "@/components/protected-page";
-import { RangeField } from "@/components/range-field";
-import { ViewStateSection } from "@/components/view-state-section";
-import { useToast } from "@/hooks/use-toast";
-import { useWatchlistViewMock } from "@/hooks/use-watchlist-view-mock";
-import { watchlistToastMessages } from "@/utils/toast-mocks";
+import { AppPageShell } from "@/components/app-page-shell";
+import { CoinFiltersPanel } from "@/components/coins/coin-filters-panel";
+import { CoinTableSection } from "@/components/coins/coin-table-section";
+import { useWatchlistView } from "@/hooks/watchlist-view/use-watchlist-view";
 
 const AppHomePageContent = () => {
-  const { pushToast } = useToast();
-  const viewState = useWatchlistViewMock();
+  const viewState = useWatchlistView();
 
   return (
-    <>
-      <PageHead 
-        title="Монеты | CryptoWatch" 
-        description="Главная страница watchlist" 
-      />
+    <AppPageShell
+      activeSection="coins"
+      headTitle="Монеты | CryptoWatch"
+      headDescription="Главная страница watchlist"
+      title="Список отслеживаемых монет"
+      description="Поиск, фильтр, таблица"
+    >
+      <section className="cw-toolbar">
+        <div className="cw-toolbar-actions">
+          <button
+            className="cw-button-primary"
+            type="button"
+            onClick={viewState.handleAddCoin}
+          >
+            Добавить монету
+          </button>
+          <button
+            className="cw-button-secondary"
+            type="button"
+            onClick={() => void viewState.refreshWatchlist()}
+            disabled={viewState.isRefreshPending}
+          >
+            {viewState.isRefreshPending ? "Обновляем..." : "Обновить"}
+          </button>
+        </div>
+      </section>
 
-      <AppLayout
-        activeSection="coins"
-        title="Список отслеживаемых монет"
-        description="Поиск, фильтр, таблица"
-      >
-        <section className="cw-toolbar">
-          <div className="cw-toolbar-actions">
-            <button
-              className="cw-button-primary"
-              type="button"
-              onClick={() => pushToast(watchlistToastMessages.addCoinPending)}
-            >
-              Добавить монету
-            </button>
-            <button
-              className="cw-button-secondary"
-              type="button"
-              onClick={() => pushToast(watchlistToastMessages.comparePending)}
-            >
-              Сравнить
-            </button>
-          </div>
-        </section>
-
-        <section className="mt-8 space-y-6">
-          <div>
-            <div className="cw-section-label">Поиск и фильтр</div>
-            <div className="cw-panel-muted">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div className="flex-1">
-                  <label className="cw-field-label" htmlFor="watchlist-query">
-                    Глобальный поиск
-                  </label>
-                  <input
-                    className="cw-input"
-                    id="watchlist-query"
-                    name="query"
-                    placeholder="Название или тикер"
-                    type="search"
-                  />
-                </div>
-                <div className="lg:pt-7">
-                  <button
-                    className="cw-button-secondary"
-                    type="button"
-                    onClick={() => pushToast(watchlistToastMessages.filtersShown)}
-                  >
-                    Фильтры
-                  </button>
-                </div>
-              </div>
+      <section className="mt-8 space-y-6">
+        <CoinFiltersPanel
+          sectionLabel="Поиск и фильтр"
+          title="Поиск и диапазоны"
+          queryId="watchlist-query"
+          queryName="query"
+          queryLabel="Глобальный поиск"
+          queryPlaceholder="Название или тикер..."
+          rangeIdPrefix="watchlist"
+          queryValue={viewState.query}
+          onQueryChange={viewState.setQuery}
+          ranges={viewState.ranges}
+          onRangeChange={viewState.setRangeValue}
+          footer={
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-text-muted">Фильтры применяются сразу</p>
+              <button
+                className="cw-button-secondary"
+                type="button"
+                onClick={viewState.resetFilters}
+                disabled={!viewState.hasActiveFilters}
+              >
+                Сбросить фильтры
+              </button>
             </div>
-          </div>
+          }
+        />
 
-          <div>
-            <div className="cw-section-label">Расширенный фильтр</div>
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="cw-card-title">Диапазоны</h2>
-              <div className="flex gap-3">
-                <button
-                  className="cw-button-primary"
-                  type="button"
-                  onClick={() => pushToast(watchlistToastMessages.filtersApplied)}
-                >
-                  Применить
-                </button>
-                <button
-                  className="cw-button-secondary"
-                  type="button"
-                  onClick={() => pushToast(watchlistToastMessages.filtersReset)}
-                >
-                  Сбросить
-                </button>
-              </div>
-            </div>
-
-            <div className="cw-filter-grid">
-              <RangeField id="price-min" label="Цена, USD" />
-              <RangeField id="cap-min" label="Капитализация" />
-              <RangeField id="change-min" label="Изменение за 24ч" />
-              <RangeField id="volume-min" label="Объем торгов" />
-            </div>
-          </div>
-
-          <div>
-            <div className="cw-section-label">Таблица монет</div>
-            <div className="mb-4">
-              <h2 className="cw-card-title">Watchlist</h2>
-            </div>
-
-            <ViewStateSection
-              status={viewState.status}
-              errorTitle="Не удалось загрузить список"
-              errorMessage="Попробуйте обновить данные еще раз"
-              onRetry={() => {
-                viewState.retry();
-                pushToast(watchlistToastMessages.filtersShown);
-              }}
-            >
-              <>
-                <CoinTable rows={viewState.rows} />
-
-                <div className="cw-pagination">
-                  <span>{viewState.totalLabel}</span>
-                  <div className="flex gap-2">
-                    <span className="cw-page-pill cw-page-pill-active">1</span>
-                    <span className="cw-page-pill">2</span>
-                    <span className="cw-page-pill">3</span>
-                    <span className="cw-page-pill">...</span>
-                  </div>
-                </div>
-              </>
-            </ViewStateSection>
-          </div>
-        </section>
-      </AppLayout>
-    </>
+        <CoinTableSection
+          sectionLabel="Таблица монет"
+          title="Watchlist"
+          status={viewState.status}
+          errorTitle="Не удалось загрузить список"
+          errorMessage={viewState.errorMessage}
+          onRetry={viewState.retry}
+          coins={viewState.coins}
+          totalLabel={viewState.totalLabel}
+          onToggleFavorite={viewState.onToggleFavorite}
+          getFavoriteActionLabel={viewState.getFavoriteActionLabel}
+          isFavoriteActionPending={viewState.isFavoriteActionPending}
+          actions={viewState.actions}
+          sort={viewState.sort}
+          onSortChange={viewState.requestSort}
+          emptyTitle={viewState.emptyState.title}
+          emptyMessage={viewState.emptyState.message}
+          emptyActionLabel={viewState.emptyState.actionLabel}
+          onEmptyAction={viewState.emptyState.onAction}
+        />
+      </section>
+    </AppPageShell>
   );
 };
 
 export default function AppHomePage() {
-  return (
-    <ProtectedPage>
-      <AppHomePageContent />
-    </ProtectedPage>
-  );
+  return <AppHomePageContent />;
 }

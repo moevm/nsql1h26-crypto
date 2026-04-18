@@ -2,7 +2,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
 import { useAuth } from "@/hooks/use-auth";
-import { ApiError } from "@/services/http-client";
+import { useAuthSubmitState } from "@/hooks/use-auth-submit-state";
 import { authService } from "@/services/auth";
 import type { AuthFormErrors } from "@/services/auth/auth-validation";
 import { validateLoginPayload } from "@/services/auth/auth-validation";
@@ -22,8 +22,7 @@ export const useLoginForm = (): UseLoginFormResult => {
   const { setSession } = useAuth();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<AuthFormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { errors, isSubmitting, setErrors, runSubmit } = useAuthSubmitState();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,23 +38,12 @@ export const useLoginForm = (): UseLoginFormResult => {
       return;
     }
 
-    setErrors({});
-    setIsSubmitting(true);
-
-    try {
+    await runSubmit(async () => {
       const response = await authService.login(payload);
 
       setSession(response);
       await router.push("/app");
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setErrors({ form: error.message });
-      } else {
-        setErrors({ form: "Не удалось войти. Попробуйте еще раз." });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, "Не удалось войти. Попробуйте еще раз.");
   };
 
   return {

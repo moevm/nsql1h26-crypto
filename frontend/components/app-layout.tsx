@@ -1,7 +1,7 @@
 import { PropsWithChildren } from "react";
 
 import { AppHeaderActions } from "@/components/app-header-actions";
-import type { AppSection } from "@/types/ui";
+import type { AppSection } from "@/types/app-navigation";
 
 interface AppLayoutProps extends PropsWithChildren {
   activeSection: AppSection;

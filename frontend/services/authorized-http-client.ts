@@ -1,7 +1,7 @@
 import type { ApiRequestOptions } from "@/types/api";
 import { authStorage } from "@/utils/auth-storage";
 
-import { ApiError, httpClient } from "@/services/http-client";
+import { ApiError, createHttpClient } from "@/services/http-client";
 
 type UnauthorizedHandler = () => void;
 
@@ -32,35 +32,18 @@ const shouldHandleUnauthorized = (error: unknown, options?: ApiRequestOptions): 
   return error instanceof ApiError && error.status === 401;
 };
 
-const withUnauthorizedHandling = async <T>(
-  request: Promise<T>,
-  options?: ApiRequestOptions
-): Promise<T> => {
-  try {
-    return await request;
-  } catch (error) {
-    if (shouldHandleUnauthorized(error, options)) {
-      unauthorizedHandlers.forEach((handler) => {
-        handler();
-      });
-    }
-
-    throw error;
+const handleUnauthorizedError = (error: unknown, options?: ApiRequestOptions): void => {
+  if (shouldHandleUnauthorized(error, options)) {
+    unauthorizedHandlers.forEach((handler) => {
+      handler();
+    });
   }
 };
 
-export const authHttpClient = {
-  get<T>(path: string, options?: ApiRequestOptions): Promise<T> {
-    const nextOptions = buildAuthorizedOptions(options);
-
-    return withUnauthorizedHandling(httpClient.get<T>(path, nextOptions), nextOptions);
-  },
-  post<T>(path: string, options?: ApiRequestOptions): Promise<T> {
-    const nextOptions = buildAuthorizedOptions(options);
-
-    return withUnauthorizedHandling(httpClient.post<T>(path, nextOptions), nextOptions);
-  }
-};
+export const authorizedHttpClient = createHttpClient({
+  prepareOptions: buildAuthorizedOptions,
+  onError: handleUnauthorizedError
+});
 
 export const registerUnauthorizedHandler = (handler: UnauthorizedHandler) => {
   unauthorizedHandlers.add(handler);

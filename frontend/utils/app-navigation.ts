@@ -1,4 +1,5 @@
-import type { AppNavItem } from "@/types/ui";
+import { AUTH_ROLES } from "@/services/auth/auth-roles";
+import type { AppNavItem } from "@/types/app-navigation";
 
 export const appNavItems: AppNavItem[] = [
   { key: "coins", label: "Монеты", href: "/app" },
@@ -8,6 +9,6 @@ export const appNavItems: AppNavItem[] = [
     key: "importExport",
     label: "Импорт / экспорт",
     href: "/app/admin/import-export",
-    requiredRole: "ROLE_ADMIN"
+    requiredRole: AUTH_ROLES.ADMIN
   }
 ];

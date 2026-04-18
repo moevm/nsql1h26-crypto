@@ -16,7 +16,7 @@ export const validateLoginPayload = (payload: LoginRequestPayload): AuthFormErro
     errors.login = "Введите логин";
   }
 
-  if (!payload.password) {
+  if (!payload.password.trim()) {
     errors.password = "Введите пароль";
   }
 
@@ -36,7 +36,7 @@ export const validateRegisterPayload = (
     errors.password = "Пароль: 8+ символов, цифра, спецсимвол, без пробелов";
   }
 
-  if (!payload.passwordConfirm) {
+  if (!payload.passwordConfirm.trim()) {
     errors.passwordConfirm = "Подтвердите пароль";
   } else if (payload.password !== payload.passwordConfirm) {
     errors.passwordConfirm = "Пароли не совпадают!";

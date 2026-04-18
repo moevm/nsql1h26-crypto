@@ -9,7 +9,7 @@ import type {
   RegisterResponse,
   VerifyResponse
 } from "@/types/auth";
-import { mockAuthStore, type MockStoredUser } from "@/utils/mock-auth-store";
+import { mockAuthStore, type MockStoredUser } from "@/utils/mocks/mock-auth-store";
 
 const buildSessionResponse = (user: MockStoredUser): LoginResponse => ({
   success: true,
@@ -17,8 +17,8 @@ const buildSessionResponse = (user: MockStoredUser): LoginResponse => ({
   userId: user.userId,
   login: user.login,
   role: user.role,
-  watchlist: user.watchlist,
-  favorites: user.favorites
+  watchlist: [...user.watchlist],
+  favorites: [...user.favorites]
 });
 
 const throwApiError = (status: number, message: string): never => {
@@ -71,18 +71,11 @@ export const mockAuthService: AuthApi = {
     };
   },
   async verify(token: string): Promise<VerifyResponse> {
-    const tokenPayload = mockAuthStore.parseToken(token);
-
-    if (!tokenPayload) {
+    if (!mockAuthStore.parseToken(token)) {
       return throwApiError(401, "Invalid token");
     }
 
-    const user = mockAuthStore.readUsers().find(
-      (entry) =>
-        entry.userId === tokenPayload.userId &&
-        entry.login === tokenPayload.login &&
-        entry.role === tokenPayload.role
-    );
+    const user = mockAuthStore.findUserByToken(token);
 
     if (!user) {
       return throwApiError(401, "User not found");

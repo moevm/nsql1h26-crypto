@@ -1,5 +1,11 @@
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import type { AuthRole, AuthUser } from "@/types/auth";
+import {
+  seedMockAdminFavorites,
+  seedMockAdminWatchlist,
+  seedMockUserFavorites,
+  seedMockUserWatchlist
+} from "@/utils/mocks/mock-coin-catalog";
 
 interface MockStoredUser extends AuthUser {
   password: string;
@@ -13,16 +19,16 @@ const seedUsers: MockStoredUser[] = [
     login: "user",
     password: "User123!",
     role: AUTH_ROLES.USER,
-    watchlist: [],
-    favorites: []
+    watchlist: seedMockUserWatchlist,
+    favorites: seedMockUserFavorites
   },
   {
     userId: "mock-admin-1",
     login: "admin",
     password: "Admin123!",
     role: AUTH_ROLES.ADMIN,
-    watchlist: [],
-    favorites: []
+    watchlist: seedMockAdminWatchlist,
+    favorites: seedMockAdminFavorites
   }
 ];
 
@@ -78,6 +84,30 @@ export const mockAuthStore = {
     }
 
     return { userId, login, role };
+  },
+  findUserByToken(token: string): MockStoredUser | null {
+    const tokenPayload = this.parseToken(token);
+
+    if (!tokenPayload) {
+      return null;
+    }
+
+    return (
+      this.readUsers().find(
+        (entry) =>
+          entry.userId === tokenPayload.userId &&
+          entry.login === tokenPayload.login &&
+          entry.role === tokenPayload.role
+      ) ?? null
+    );
+  },
+  replaceUser(nextUser: MockStoredUser): MockStoredUser {
+    const users = this.readUsers();
+    const nextUsers = users.map((user) => (user.userId === nextUser.userId ? nextUser : user));
+
+    this.writeUsers(nextUsers);
+
+    return nextUser;
   }
 };
 

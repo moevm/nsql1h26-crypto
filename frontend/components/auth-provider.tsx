@@ -1,23 +1,24 @@
-"use client";
-
 import {
   createContext,
   PropsWithChildren,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState
 } from "react";
 
-import { restoreAuthState, type AuthStatus } from "@/services/auth/auth-session";
-import type { AuthSession } from "@/types/auth";
+import {
+  AUTH_STATUS,
+  restoreAuthState,
+  type AuthStatus
+} from "@/services/auth/auth-session";
+import type { AuthSession, AuthUser } from "@/types/auth";
 import { authStorage } from "@/utils/auth-storage";
 
 interface AuthContextValue {
   status: AuthStatus;
   session: AuthSession | null;
   setSession: (session: AuthSession) => void;
+  syncSessionUser: (user: AuthUser) => AuthSession | null;
   clearSession: () => void;
 }
 
@@ -25,7 +26,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [session, setSessionState] = useState<AuthSession | null>(null);
-  const [status, setStatus] = useState<AuthStatus>("checking");
+  const [status, setStatus] = useState<AuthStatus>(AUTH_STATUS.CHECKING);
 
   useEffect(() => {
     let isMounted = true;
@@ -48,27 +49,46 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
   }, []);
 
-  const setSession = useCallback((nextSession: AuthSession) => {
+  const setSession = (nextSession: AuthSession) => {
     authStorage.setSession(nextSession);
     setSessionState(nextSession);
-    setStatus("authenticated");
-  }, []);
+    setStatus(AUTH_STATUS.AUTHENTICATED);
+  };
 
-  const clearSession = useCallback(() => {
+  const syncSessionUser = (nextUser: AuthUser) => {
+    if (!session || session.userId !== nextUser.userId) {
+      return null;
+    }
+
+    const nextSession: AuthSession = {
+      ...session,
+      login: nextUser.login,
+      role: nextUser.role,
+      watchlist: [...nextUser.watchlist],
+      favorites: [...nextUser.favorites]
+    };
+
+    authStorage.setSession(nextSession);
+
+    setSessionState(nextSession);
+    setStatus(AUTH_STATUS.AUTHENTICATED);
+
+    return nextSession;
+  };
+
+  const clearSession = () => {
     authStorage.clearSession();
     setSessionState(null);
-    setStatus("guest");
-  }, []);
+    setStatus(AUTH_STATUS.GUEST);
+  };
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      status,
-      session,
-      setSession,
-      clearSession
-    }),
-    [clearSession, session, setSession, status]
-  );
+  const value: AuthContextValue = {
+    status,
+    session,
+    setSession,
+    syncSessionUser,
+    clearSession
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

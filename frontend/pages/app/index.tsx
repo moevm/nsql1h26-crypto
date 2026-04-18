@@ -4,12 +4,9 @@ import { PageHead } from "@/components/page-head";
 import { ProtectedPage } from "@/components/protected-page";
 import { RangeField } from "@/components/range-field";
 import { ViewStateSection } from "@/components/view-state-section";
-import { useToast } from "@/hooks/use-toast";
 import { useWatchlistViewMock } from "@/hooks/use-watchlist-view-mock";
-import { watchlistToastMessages } from "@/utils/toast-mocks";
 
 const AppHomePageContent = () => {
-  const { pushToast } = useToast();
   const viewState = useWatchlistViewMock();
 
   return (
@@ -29,16 +26,9 @@ const AppHomePageContent = () => {
             <button
               className="cw-button-primary"
               type="button"
-              onClick={() => pushToast(watchlistToastMessages.addCoinPending)}
+              disabled
             >
               Добавить монету
-            </button>
-            <button
-              className="cw-button-secondary"
-              type="button"
-              onClick={() => pushToast(watchlistToastMessages.comparePending)}
-            >
-              Сравнить
             </button>
           </div>
         </section>
@@ -60,15 +50,6 @@ const AppHomePageContent = () => {
                     type="search"
                   />
                 </div>
-                <div className="lg:pt-7">
-                  <button
-                    className="cw-button-secondary"
-                    type="button"
-                    onClick={() => pushToast(watchlistToastMessages.filtersShown)}
-                  >
-                    Фильтры
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -77,29 +58,13 @@ const AppHomePageContent = () => {
             <div className="cw-section-label">Расширенный фильтр</div>
             <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="cw-card-title">Диапазоны</h2>
-              <div className="flex gap-3">
-                <button
-                  className="cw-button-primary"
-                  type="button"
-                  onClick={() => pushToast(watchlistToastMessages.filtersApplied)}
-                >
-                  Применить
-                </button>
-                <button
-                  className="cw-button-secondary"
-                  type="button"
-                  onClick={() => pushToast(watchlistToastMessages.filtersReset)}
-                >
-                  Сбросить
-                </button>
-              </div>
             </div>
 
             <div className="cw-filter-grid">
-              <RangeField id="price-min" label="Цена, USD" />
-              <RangeField id="cap-min" label="Капитализация" />
-              <RangeField id="change-min" label="Изменение за 24ч" />
-              <RangeField id="volume-min" label="Объем торгов" />
+              <RangeField id="price" label="Цена, USD" inputType="number" />
+              <RangeField id="cap" label="Капитализация" inputType="number" />
+              <RangeField id="change" label="Изменение за 24ч" inputType="number" />
+              <RangeField id="volume" label="Объем торгов" inputType="number" />
             </div>
           </div>
 
@@ -113,22 +78,13 @@ const AppHomePageContent = () => {
               status={viewState.status}
               errorTitle="Не удалось загрузить список"
               errorMessage="Попробуйте обновить данные еще раз"
-              onRetry={() => {
-                viewState.retry();
-                pushToast(watchlistToastMessages.filtersShown);
-              }}
+              onRetry={viewState.retry}
             >
               <>
-                <CoinTable rows={viewState.rows} />
+                <CoinTable coins={viewState.coins} />
 
                 <div className="cw-pagination">
                   <span>{viewState.totalLabel}</span>
-                  <div className="flex gap-2">
-                    <span className="cw-page-pill cw-page-pill-active">1</span>
-                    <span className="cw-page-pill">2</span>
-                    <span className="cw-page-pill">3</span>
-                    <span className="cw-page-pill">...</span>
-                  </div>
                 </div>
               </>
             </ViewStateSection>

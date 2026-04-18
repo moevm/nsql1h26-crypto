@@ -1,6 +1,6 @@
 import type { WatchlistViewState } from "@/types/view-state";
 import { useDemoErrorState } from "@/hooks/use-demo-error-state";
-import { watchlistRows } from "@/utils/ui-mocks";
+import { watchlistCoins } from "@/utils/ui-mocks";
 
 const watchlistTotalLabel = "Показано 1-4 из 24 монет";
 
@@ -9,7 +9,7 @@ export const useWatchlistViewMock = (): WatchlistViewState => {
 
   return {
     status: hasDemoError ? "error" : "ready",
-    rows: watchlistRows,
+    coins: watchlistCoins,
     totalLabel: watchlistTotalLabel,
     retry: () => {}
   };

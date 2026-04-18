@@ -1,69 +1,33 @@
-import type { FavoriteRow, StatisticsPreset, WatchlistRow } from "@/types/ui";
+import type { WatchlistCoin } from "@/types/coins";
+import type { StatisticsPreset } from "@/types/ui";
+import { mockCoinCatalog } from "@/utils/mock-coin-catalog";
 
-export const watchlistRows: WatchlistRow[] = [
-  {
-    symbol: "BTC",
-    name: "Bitcoin",
-    price: "$67,245.00",
-    change: "+2.4%",
-    cap: "$1.32T",
-    volume: "$28.1B",
-    favorite: true
-  },
-  {
-    symbol: "ETH",
-    name: "Ethereum",
-    price: "$3,521.40",
-    change: "-1.1%",
-    cap: "$423B",
-    volume: "$15.4B",
-    favorite: false
-  },
-  {
-    symbol: "SOL",
-    name: "Solana",
-    price: "$148.92",
-    change: "+5.7%",
-    cap: "$64B",
-    volume: "$3.2B",
-    favorite: true
-  },
-  {
-    symbol: "ADA",
-    name: "Cardano",
-    price: "$0.62",
-    change: "+0.8%",
-    cap: "$22B",
-    volume: "$890M",
-    favorite: false
+const mockCoinsBySymbol = new Map(mockCoinCatalog.map((coin) => [coin.symbol, coin]));
+
+const createMockCoin = (symbol: string, isFavorite: boolean): WatchlistCoin => {
+  const coin = mockCoinsBySymbol.get(symbol);
+
+  if (!coin) {
+    throw new Error(`Missing mock coin catalog entry for ${symbol}`);
   }
+
+  return {
+    ...coin,
+    isFavorite
+  };
+};
+
+export const watchlistCoins: WatchlistCoin[] = [
+  createMockCoin("BTC", true),
+  createMockCoin("ETH", false),
+  createMockCoin("SOL", true),
+  createMockCoin("ADA", false)
 ];
 
-export const favoriteRows: FavoriteRow[] = [
-  {
-    symbol: "BTC",
-    name: "Bitcoin",
-    price: "$67,245.00",
-    change: "+2.4%",
-    cap: "$1.32T",
-    volume: "$28.1B"
-  },
-  {
-    symbol: "SOL",
-    name: "Solana",
-    price: "$148.92",
-    change: "+5.7%",
-    cap: "$64B",
-    volume: "$3.2B"
-  },
-  {
-    symbol: "LINK",
-    name: "Chainlink",
-    price: "$18.14",
-    change: "-0.4%",
-    cap: "$10.9B",
-    volume: "$410M"
-  }
+export const favoriteCoins: WatchlistCoin[] = [
+  createMockCoin("BTC", true),
+  createMockCoin("SOL", true),
+  createMockCoin("LINK", true)
 ];
 
 export const statisticsPresets: StatisticsPreset[] = [

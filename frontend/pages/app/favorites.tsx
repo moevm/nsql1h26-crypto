@@ -5,11 +5,8 @@ import { PageHead } from "@/components/page-head";
 import { ProtectedPage } from "@/components/protected-page";
 import { RangeField } from "@/components/range-field";
 import { ViewStateSection } from "@/components/view-state-section";
-import { useToast } from "@/hooks/use-toast";
-import { favoritesToastMessages } from "@/utils/toast-mocks";
 
 const FavoritesPageContent = () => {
-  const { pushToast } = useToast();
   const viewState = useFavoritesViewMock();
 
   return (
@@ -24,25 +21,6 @@ const FavoritesPageContent = () => {
         title="Избранные монеты"
         description="Поиск, фильтр и список избранного"
       >
-        <section className="cw-toolbar">
-          <div className="cw-toolbar-actions">
-            <button
-              className="cw-button-primary"
-              type="button"
-              onClick={() => pushToast(favoritesToastMessages.filtersApplied)}
-            >
-              Применить фильтр
-            </button>
-            <button
-              className="cw-button-secondary"
-              type="button"
-              onClick={() => pushToast(favoritesToastMessages.filtersReset)}
-            >
-              Сбросить
-            </button>
-          </div>
-        </section>
-
         <section className="mt-8 space-y-8">
           <div>
             <div className="cw-section-label">Панель фильтров</div>
@@ -63,10 +41,10 @@ const FavoritesPageContent = () => {
               </div>
 
               <div className="cw-filter-grid mt-6">
-                <RangeField id="favorites-price-min" label="Цена, USD" />
-                <RangeField id="favorites-cap-min" label="Капитализация" />
-                <RangeField id="favorites-change-min" label="Изменение за 24ч" />
-                <RangeField id="favorites-volume-min" label="Объем торгов" />
+                <RangeField id="favorites-price" label="Цена, USD" inputType="number" />
+                <RangeField id="favorites-cap" label="Капитализация" inputType="number" />
+                <RangeField id="favorites-change" label="Изменение за 24ч" inputType="number" />
+                <RangeField id="favorites-volume" label="Объем торгов" inputType="number" />
                 <div>
                   <label className="cw-field-label" htmlFor="favorites-sort">
                     Сортировка
@@ -91,21 +69,13 @@ const FavoritesPageContent = () => {
               status={viewState.status}
               errorTitle="Не удалось загрузить избранное"
               errorMessage="Попробуйте повторить запрос"
-              onRetry={() => {
-                viewState.retry();
-                pushToast(favoritesToastMessages.filtersApplied);
-              }}
+              onRetry={viewState.retry}
             >
               <>
-                <CoinTable rows={viewState.rows} />
+                <CoinTable coins={viewState.coins} />
 
                 <div className="cw-pagination">
                   <span>{viewState.totalLabel}</span>
-                  <div className="flex gap-2">
-                    <span className="cw-page-pill cw-page-pill-active">1</span>
-                    <span className="cw-page-pill">2</span>
-                    <span className="cw-page-pill">3</span>
-                  </div>
                 </div>
               </>
             </ViewStateSection>

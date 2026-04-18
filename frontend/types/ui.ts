@@ -1,4 +1,5 @@
 import type { AuthRole } from "@/types/auth";
+import type { WatchlistCoin } from "@/types/coins";
 
 export type AppSection = "coins" | "favorites" | "statistics" | "importExport";
 
@@ -9,23 +10,17 @@ export interface AppNavItem {
   requiredRole?: AuthRole;
 }
 
-export interface WatchlistRow {
-  symbol: string;
-  name: string;
-  price: string;
-  change: string;
-  cap: string;
-  volume: string;
-  favorite: boolean;
-}
+export type CoinTableActionTone = "secondary" | "ghost" | "danger";
 
-export interface FavoriteRow {
-  symbol: string;
-  name: string;
-  price: string;
-  change: string;
-  cap: string;
-  volume: string;
+export interface CoinTableAction {
+  key: string;
+  label: string;
+  tone?: CoinTableActionTone;
+  onClick: (coin: WatchlistCoin) => void;
+  getAriaLabel?: (coin: WatchlistCoin) => string;
+  isDisabled?: (coin: WatchlistCoin) => boolean;
+  isPending?: (coin: WatchlistCoin) => boolean;
+  pendingLabel?: string;
 }
 
 export interface StatisticsPreset {

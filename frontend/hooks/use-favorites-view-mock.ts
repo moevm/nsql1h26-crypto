@@ -1,6 +1,6 @@
 import type { FavoritesViewState } from "@/types/view-state";
 import { useDemoErrorState } from "@/hooks/use-demo-error-state";
-import { favoriteRows } from "@/utils/ui-mocks";
+import { favoriteCoins } from "@/utils/ui-mocks";
 
 const favoritesTotalLabel = "Показано 1-3 из 11 избранных монет";
 
@@ -9,7 +9,7 @@ export const useFavoritesViewMock = (): FavoritesViewState => {
 
   return {
     status: hasDemoError ? "error" : "ready",
-    rows: favoriteRows,
+    coins: favoriteCoins,
     totalLabel: favoritesTotalLabel,
     retry: () => {}
   };

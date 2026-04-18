@@ -71,7 +71,7 @@ const StatisticsPageContent = () => {
                       type="text"
                     />
                   </div>
-                  <RangeField id="stats-from" label="Период" />
+                  <RangeField id="stats-range" label="Период" inputType="date" />
                   <div>
                     <label className="cw-field-label" htmlFor="stats-aggregation">
                       Агрегация
@@ -83,8 +83,9 @@ const StatisticsPageContent = () => {
                     </select>
                   </div>
                   <RangeField
-                    id="stats-price-min"
+                    id="stats-price"
                     label="Цена, USD"
+                    inputType="number"
                     startPlaceholder="Мин."
                     endPlaceholder="Макс."
                   />

@@ -61,8 +61,20 @@ export const AddCoinModal = ({
     setFormError(null);
   }, [open]);
 
+  const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    onClose();
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+     if (isSubmitting) {
+      return;
+    }
 
     const nextSymbolError = getTickerError(symbol);
 
@@ -78,6 +90,9 @@ export const AddCoinModal = ({
 
     try {
       await onSubmit(normalizeTicker(symbol));
+      setSymbol("");
+      setFormError(null);
+      inputRef.current?.focus();
     } catch (error) {
       setFormError(getSubmitErrorMessage(error));
       inputRef.current?.focus();
@@ -89,7 +104,7 @@ export const AddCoinModal = ({
       open={open}
       title="Добавить монету"
       description="Введите тикер"
-      onClose={onClose}
+      onClose={handleClose}
       initialFocusRef={inputRef}
       restoreFocusRef={restoreFocusRef}
     >
@@ -137,7 +152,7 @@ export const AddCoinModal = ({
           <button
             className="cw-button-secondary"
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
             Отмена

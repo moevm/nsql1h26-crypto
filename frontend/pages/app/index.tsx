@@ -4,12 +4,14 @@ import { AppPageShell } from "@/components/app-page-shell";
 import { AddCoinModal } from "@/components/coins/add-coin-modal";
 import { CoinFiltersPanel } from "@/components/coins/coin-filters-panel";
 import { CoinTableSection } from "@/components/coins/coin-table-section";
-import { useToast } from "@/hooks/use-toast";
+import { useAddCoinFlow } from "@/hooks/watchlist-view/use-add-coin-flow";
 import { useWatchlistView } from "@/hooks/watchlist-view/use-watchlist-view";
 
 const AppHomePageContent = () => {
   const viewState = useWatchlistView();
-  const { pushToast } = useToast();
+  const addCoinFlow = useAddCoinFlow({
+    reloadWatchlist: viewState.reloadWatchlist
+  });
   const [isAddCoinModalOpen, setIsAddCoinModalOpen] = useState(false);
   const addCoinButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -105,12 +107,8 @@ const AppHomePageContent = () => {
       <AddCoinModal
         open={isAddCoinModalOpen}
         onClose={closeAddCoinModal}
-        onSubmit={async () => {
-          pushToast({
-            type: "info",
-            message: "Форма готова"
-          });
-        }}
+        isSubmitting={addCoinFlow.isSubmitting}
+        onSubmit={addCoinFlow.submitCoin}
         restoreFocusRef={addCoinButtonRef}
       />
     </>

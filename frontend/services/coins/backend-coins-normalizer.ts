@@ -3,6 +3,7 @@ import type {
   AddToWatchlistCoinInfo,
   AddToWatchlistResponse,
   CoinsMutationResponse,
+  FavoritesResponse,
   RefreshWatchlistResponse,
   WatchlistCoin,
   WatchlistResponse
@@ -110,6 +111,39 @@ const normalizeAddToWatchlistCoin = (payload: unknown): AddToWatchlistCoinInfo =
   };
 };
 
+interface NormalizedCoinCollectionPayload {
+  coins: WatchlistCoin[];
+  totalCount: number;
+  hasMore: boolean;
+  pageNo: number;
+  pageSize: number;
+}
+
+const normalizeCoinCollectionPayload = (payload: unknown): NormalizedCoinCollectionPayload => {
+  if (!isRecord(payload)) {
+    throw createShapeError("payload");
+  }
+
+  const rawCoins = payload.coins;
+
+  if (!Array.isArray(rawCoins)) {
+    throw createShapeError("coins");
+  }
+
+  const coins = rawCoins.map(normalizeCoin);
+  const totalCount = parseNumber(payload.totalCount);
+  const pageNo = parseNumber(payload.pageNo);
+  const pageSize = parseNumber(payload.pageSize);
+
+  return {
+    coins,
+    totalCount: totalCount ?? coins.length,
+    hasMore: parseBoolean(payload.hasMore) ?? false,
+    pageNo: pageNo ?? 0,
+    pageSize: pageSize ?? coins.length
+  };
+};
+
 export const normalizeCoinsMutationResponse = (payload: unknown): CoinsMutationResponse => {
   if (!isRecord(payload)) {
     return { success: true };
@@ -137,25 +171,26 @@ export const normalizeAddToWatchlistResponse = (payload: unknown): AddToWatchlis
 };
 
 export const normalizeWatchlistResponse = (payload: unknown): WatchlistResponse => {
-  if (!isRecord(payload)) {
-    throw createShapeError("payload");
-  }
-
-  const rawCoins = payload.coins;
-
-  if (!Array.isArray(rawCoins)) {
-    throw createShapeError("coins");
-  }
-
-  const coins = rawCoins.map(normalizeCoin);
-  const totalCount = parseNumber(payload.totalCount);
-  const hasMore = parseBoolean(payload.hasMore) ?? false;
+  const normalizedCollection = normalizeCoinCollectionPayload(payload);
+  const updatedAt = isRecord(payload) ? parseIsoDateString(payload.updatedAt) : null;
 
   return {
-    coins,
-    totalCount: totalCount ?? coins.length,
-    hasMore,
-    updatedAt: parseIsoDateString(payload.updatedAt)
+    coins: normalizedCollection.coins,
+    totalCount: normalizedCollection.totalCount,
+    hasMore: normalizedCollection.hasMore,
+    updatedAt
+  };
+};
+
+export const normalizeFavoritesResponse = (payload: unknown): FavoritesResponse => {
+  const normalizedCollection = normalizeCoinCollectionPayload(payload);
+
+  return {
+    coins: normalizedCollection.coins,
+    totalCount: normalizedCollection.totalCount,
+    pageNo: normalizedCollection.pageNo,
+    pageSize: normalizedCollection.pageSize,
+    hasMore: normalizedCollection.hasMore
   };
 };
 

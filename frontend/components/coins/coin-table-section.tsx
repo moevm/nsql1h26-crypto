@@ -1,7 +1,7 @@
 import { CoinTable } from "@/components/coins/coin-table";
 import { ViewStateSection } from "@/components/view-state-section";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
-import type { CoinTableAction } from "@/types/coin-table";
+import type { CoinTableAction, CoinTablePagination } from "@/types/coin-table";
 import type { ViewStatus } from "@/types/status";
 
 interface CoinTableSectionProps {
@@ -19,6 +19,8 @@ interface CoinTableSectionProps {
   actions?: CoinTableAction[];
   sort?: CoinTableSortState | null;
   onSortChange?: (key: CoinTableSortKey) => void;
+  sortableColumns?: readonly CoinTableSortKey[];
+  pagination?: CoinTablePagination;
   emptyTitle?: string;
   emptyMessage?: string;
   emptyActionLabel?: string;
@@ -40,11 +42,41 @@ export const CoinTableSection = ({
   actions,
   sort,
   onSortChange,
+  sortableColumns,
+  pagination,
   emptyTitle,
   emptyMessage,
   emptyActionLabel,
   onEmptyAction
 }: CoinTableSectionProps) => {
+  const paginationControls = pagination ? (
+    <div className="flex items-center gap-3">
+      <button
+        className="cw-button-secondary"
+        type="button"
+        onClick={pagination.onPrevious}
+        disabled={!pagination.canGoPrevious || pagination.isPending}
+        aria-label="Предыдущая страница"
+      >
+        Назад
+      </button>
+
+      <span className="text-sm text-text-muted">
+        Страница {pagination.currentPage} из {pagination.totalPages}
+      </span>
+
+      <button
+        className="cw-button-secondary"
+        type="button"
+        onClick={pagination.onNext}
+        disabled={!pagination.canGoNext || pagination.isPending}
+        aria-label="Следующая страница"
+      >
+        Вперёд
+      </button>
+    </div>
+  ) : null;
+
   return (
     <div>
       <div className="cw-section-label">{sectionLabel}</div>
@@ -71,10 +103,12 @@ export const CoinTableSection = ({
             actions={actions}
             sort={sort}
             onSortChange={onSortChange}
+            sortableColumns={sortableColumns}
           />
 
-          <div className="cw-pagination">
+          <div className="cw-pagination gap-4">
             <span>{totalLabel}</span>
+            {paginationControls}
           </div>
         </div>
       </ViewStateSection>

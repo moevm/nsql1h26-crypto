@@ -12,3 +12,13 @@ export interface CoinTableAction {
   isPending?: (coin: WatchlistCoin) => boolean;
   pendingLabel?: string;
 }
+
+export interface CoinTablePagination {
+  currentPage: number;
+  totalPages: number;
+  canGoPrevious: boolean;
+  canGoNext: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+  isPending?: boolean;
+}

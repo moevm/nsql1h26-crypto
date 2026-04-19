@@ -1,16 +1,13 @@
 import type { CoinTableAction } from "@/types/coin-table";
-import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
+import type {
+  CoinFilterRangeEdge,
+  CoinFilterRangeKey,
+  CoinFilterRangesState,
+  CoinTableSortKey,
+  CoinTableSortState,
+  WatchlistCoin
+} from "@/types/coins";
 import type { ViewStatus } from "@/types/status";
-
-export interface FilterRangeValue {
-  start: string;
-  end: string;
-}
-
-export type FilterRangeKey = "price" | "cap" | "change" | "volume";
-export type FilterRangeEdge = keyof FilterRangeValue;
-
-export type FilterRangesState = Record<FilterRangeKey, FilterRangeValue>;
 
 export interface WatchlistEmptyState {
   title: string;
@@ -27,8 +24,8 @@ export interface UseWatchlistViewResult {
   emptyState: WatchlistEmptyState;
   query: string;
   setQuery: (value: string) => void;
-  ranges: FilterRangesState;
-  setRangeValue: (key: FilterRangeKey, edge: FilterRangeEdge, value: string) => void;
+  ranges: CoinFilterRangesState;
+  setRangeValue: (key: CoinFilterRangeKey, edge: CoinFilterRangeEdge, value: string) => void;
   hasActiveFilters: boolean;
   resetFilters: () => void;
   sort: CoinTableSortState | null;

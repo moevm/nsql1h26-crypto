@@ -12,16 +12,18 @@ import {
   getWatchlistRangeValidationMessage,
   hasActiveWatchlistFilters
 } from "@/hooks/watchlist-view/watchlist-view-helpers";
-import type {
-  FilterRangeEdge,
-  FilterRangeKey,
-  FilterRangesState,
-  UseWatchlistViewResult
-} from "@/hooks/watchlist-view/watchlist-view-types";
 import { coinsService } from "@/services/coins/coins-service";
 import type { CoinTableAction } from "@/types/coin-table";
-import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
+import type {
+  CoinFilterRangeEdge,
+  CoinFilterRangeKey,
+  CoinFilterRangesState,
+  CoinTableSortKey,
+  CoinTableSortState,
+  WatchlistCoin
+} from "@/types/coins";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
+import type { UseWatchlistViewResult } from "@/hooks/watchlist-view/watchlist-view-types";
 
 const WATCHLIST_PAGE_SIZE = 1000;
 
@@ -29,7 +31,7 @@ const getLoadedStatus = (coinsCount: number, totalCount: number): ViewStatus => 
   return coinsCount === 0 || totalCount === 0 ? VIEW_STATUS.EMPTY : VIEW_STATUS.READY;
 };
 
-const createEmptyRanges = (): FilterRangesState => ({
+const createEmptyRanges = (): CoinFilterRangesState => ({
   price: createEmptyRange(),
   cap: createEmptyRange(),
   change: createEmptyRange(),
@@ -56,7 +58,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
   const [status, setStatus] = useState<ViewStatus>(VIEW_STATUS.LOADING);
   const [errorMessage, setErrorMessage] = useState("Не удалось загрузить список монет");
   const [query, setQuery] = useState("");
-  const [ranges, setRanges] = useState<FilterRangesState>(createEmptyRanges);
+  const [ranges, setRanges] = useState<CoinFilterRangesState>(createEmptyRanges);
   const [sort, setSort] = useState<CoinTableSortState | null>(null);
   const [isRefreshPending, setIsRefreshPending] = useState(false);
   const [favoritePendingSymbols, setFavoritePendingSymbols] = useState<string[]>([]);
@@ -159,7 +161,11 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     setSort(null);
   };
 
-  const setRangeValue = (key: FilterRangeKey, edge: FilterRangeEdge, value: string) => {
+  const setRangeValue = (
+    key: CoinFilterRangeKey,
+    edge: CoinFilterRangeEdge,
+    value: string
+  ) => {
     setRanges((currentRanges) => ({
       ...currentRanges,
       [key]: {

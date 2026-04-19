@@ -4,6 +4,7 @@ import type {
   WatchlistCoin
 } from "@/types/coins";
 import type { CoinTableAction, CoinTableActionTone } from "@/types/coin-table";
+import { DEFAULT_COIN_TABLE_SORTABLE_COLUMNS } from "@/utils/coin-table-sorting";
 import {
   formatPercentChange,
   formatUsdCompact,
@@ -21,6 +22,7 @@ interface CoinTableProps {
   actions?: CoinTableAction[];
   sort?: CoinTableSortState | null;
   onSortChange?: (key: CoinTableSortKey) => void;
+  sortableColumns?: readonly CoinTableSortKey[];
 }
 
 interface CoinTableColumn {
@@ -99,9 +101,11 @@ export const CoinTable = ({
   isFavoriteActionPending,
   actions = [],
   sort,
-  onSortChange
+  onSortChange,
+  sortableColumns = DEFAULT_COIN_TABLE_SORTABLE_COLUMNS
 }: CoinTableProps) => {
   const hasActionsColumn = actions.length > 0;
+  const enabledSortKeys = new Set(sortableColumns);
 
   return (
     <div className="cw-table-wrap">
@@ -114,7 +118,7 @@ export const CoinTable = ({
                 scope="col"
                 aria-sort={getSortAriaOrder(sort, column.sortKey)}
               >
-                {column.sortKey && onSortChange ? (
+                {column.sortKey && onSortChange && enabledSortKeys.has(column.sortKey) ? (
                   <button
                     type="button"
                     className={`cw-table-sort-button ${

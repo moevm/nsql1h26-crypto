@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type {
   CoinTableSortKey,
   CoinTableSortState,
@@ -16,6 +18,7 @@ type SortOrderForAria = "ascending" | "descending" | "none";
 
 interface CoinTableProps {
   coins: WatchlistCoin[];
+  getCoinHref?: (coin: WatchlistCoin) => string;
   onToggleFavorite?: (coin: WatchlistCoin) => void | Promise<void>;
   getFavoriteActionLabel?: (coin: WatchlistCoin) => string;
   isFavoriteActionPending?: (coin: WatchlistCoin) => boolean;
@@ -96,6 +99,7 @@ const getSortActionLabel = (
 
 export const CoinTable = ({
   coins,
+  getCoinHref,
   onToggleFavorite,
   getFavoriteActionLabel,
   isFavoriteActionPending,
@@ -105,7 +109,6 @@ export const CoinTable = ({
   sortableColumns = DEFAULT_COIN_TABLE_SORTABLE_COLUMNS
 }: CoinTableProps) => {
   const hasActionsColumn = actions.length > 0;
-  const enabledSortKeys = new Set(sortableColumns);
 
   return (
     <div className="cw-table-wrap">
@@ -118,7 +121,7 @@ export const CoinTable = ({
                 scope="col"
                 aria-sort={getSortAriaOrder(sort, column.sortKey)}
               >
-                {column.sortKey && onSortChange && enabledSortKeys.has(column.sortKey) ? (
+                {column.sortKey && onSortChange && sortableColumns.includes(column.sortKey) ? (
                   <button
                     type="button"
                     className={`cw-table-sort-button ${
@@ -143,23 +146,41 @@ export const CoinTable = ({
         <tbody>
           {coins.map((coin) => {
             const changeTone = getPercentChangeTone(coin.change24hPercent);
+            const coinHref = getCoinHref?.(coin);
             const favoriteButtonLabel =
               getFavoriteActionLabel?.(coin) ??
               (coin.isFavorite ? "Убрать из избранного" : "Добавить в избранное");
             const isFavoritePending = isFavoriteActionPending?.(coin) ?? false;
+            const coinCopy = (
+              <>
+                <div className="cw-table-coin-copy">
+                  <div
+                    className={`cw-table-primary cw-table-coin-name ${
+                      coinHref ? "cw-link" : ""
+                    }`}
+                  >
+                    {coin.name}
+                  </div>
+                </div>
+                <div
+                  className="cw-table-coin-symbol mt-1 text-xs uppercase tracking-[0.14em] text-text-muted"
+                  translate="no"
+                >
+                  {coin.symbol}
+                </div>
+              </>
+            );
 
             return (
               <tr key={coin.symbol}>
                 <td className="cw-table-cell-coin">
-                  <div className="cw-table-coin-copy">
-                    <div className="cw-table-primary cw-table-coin-name">{coin.name}</div>
-                  </div>
-                  <div
-                    className="cw-table-coin-symbol mt-1 text-xs uppercase tracking-[0.14em] text-text-muted"
-                    translate="no"
-                  >
-                    {coin.symbol}
-                  </div>
+                  {coinHref ? (
+                    <Link href={coinHref} className="block" aria-label={`Открыть ${coin.symbol}`}>
+                      {coinCopy}
+                    </Link>
+                  ) : (
+                    coinCopy
+                  )}
                 </td>
                 <td className="cw-table-primary">{formatUsdPrice(coin.priceUsd)}</td>
                 <td

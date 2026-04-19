@@ -1,11 +1,11 @@
 import { PropsWithChildren } from "react";
 
-import { ErrorState } from "@/components/error-state";
-import { LoadingState } from "@/components/loading-state";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthRouting } from "@/hooks/use-auth-routing";
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
 import type { AuthRole } from "@/types/auth";
+import { ErrorState } from "@/components/view-state/error-state";
+import { LoadingState } from "@/components/view-state/loading-state";
 
 interface ProtectedPageProps extends PropsWithChildren {
   requiredRole?: AuthRole;

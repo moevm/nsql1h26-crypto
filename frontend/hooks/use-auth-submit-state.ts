@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { AuthFormErrors } from "@/services/auth/auth-validation";
-import { ApiError } from "@/services/http-client";
+import { ApiError } from "@/services/http/http-client";
 
 interface UseAuthSubmitStateResult {
   errors: AuthFormErrors;

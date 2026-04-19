@@ -1,4 +1,4 @@
-import { authorizedHttpClient } from "@/services/authorized-http-client";
+import { authorizedHttpClient } from "@/services/http/authorized-http-client";
 import {
   normalizeAddToWatchlistResponse,
   normalizeCoinsMutationResponse,

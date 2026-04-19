@@ -6,6 +6,10 @@ import { CoinFiltersPanel } from "@/components/coins/coin-filters-panel";
 import { CoinTableSection } from "@/components/coins/coin-table-section";
 import { useAddCoinFlow } from "@/hooks/watchlist-view/use-add-coin-flow";
 import { useWatchlistView } from "@/hooks/watchlist-view/use-watchlist-view";
+import type { WatchlistCoin } from "@/types/coins";
+
+const getWatchlistCoinHref = (coin: WatchlistCoin) =>
+  `/app/coins/${encodeURIComponent(coin.symbol)}?from=watchlist`;
 
 const AppHomePageContent = () => {
   const viewState = useWatchlistView();
@@ -90,6 +94,7 @@ const AppHomePageContent = () => {
             onRetry={viewState.retry}
             coins={viewState.coins}
             totalLabel={viewState.totalLabel}
+            getCoinHref={getWatchlistCoinHref}
             onToggleFavorite={viewState.onToggleFavorite}
             getFavoriteActionLabel={viewState.getFavoriteActionLabel}
             isFavoriteActionPending={viewState.isFavoriteActionPending}

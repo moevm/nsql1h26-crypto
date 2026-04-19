@@ -1,7 +1,7 @@
 import type { ApiRequestOptions } from "@/types/api";
 import { authStorage } from "@/utils/auth-storage";
 
-import { ApiError, createHttpClient } from "@/services/http-client";
+import { ApiError, createHttpClient } from "@/services/http/http-client";
 
 type UnauthorizedHandler = () => void;
 

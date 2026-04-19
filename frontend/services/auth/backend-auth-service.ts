@@ -1,5 +1,5 @@
-import { authorizedHttpClient } from "@/services/authorized-http-client";
-import { httpClient } from "@/services/http-client";
+import { authorizedHttpClient } from "@/services/http/authorized-http-client";
+import { httpClient } from "@/services/http/http-client";
 import type {
   AuthApi,
   LoginRequestPayload,

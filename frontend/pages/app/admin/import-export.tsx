@@ -1,7 +1,7 @@
 import { AppPageShell } from "@/components/app-page-shell";
+import { ViewStateSection } from "@/components/view-state/view-state-section";
 import { useImportExportViewMock } from "@/hooks/mock-views/use-import-export-view-mock";
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
-import { ViewStateSection } from "@/components/view-state-section";
 
 const ImportExportPageContent = () => {
   const viewState = useImportExportViewMock();

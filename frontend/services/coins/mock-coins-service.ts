@@ -1,4 +1,4 @@
-import { ApiError } from "@/services/http-client";
+import { ApiError } from "@/services/http/http-client";
 import type {
   AddToWatchlistResponse,
   CoinsApi,

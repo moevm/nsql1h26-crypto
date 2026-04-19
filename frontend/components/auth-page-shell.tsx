@@ -1,8 +1,8 @@
 import { PropsWithChildren } from "react";
 
 import { AuthLayout } from "@/components/auth-layout";
-import { LoadingState } from "@/components/loading-state";
 import { PageHead } from "@/components/page-head";
+import { LoadingState } from "@/components/view-state/loading-state";
 
 interface AuthPageShellProps extends PropsWithChildren {
   isReady: boolean;

@@ -30,7 +30,9 @@ export interface UseFavoritesViewResult {
   resetFilters: () => void;
   sort: CoinTableSortState | null;
   requestSort: (key: CoinTableSortKey) => void;
+  onToggleFavorite: (coin: WatchlistCoin) => Promise<void>;
+  getFavoriteActionLabel: (coin: WatchlistCoin) => string;
+  isFavoriteActionPending: (coin: WatchlistCoin) => boolean;
   pagination: CoinTablePagination;
-  isPaginationPending: boolean;
   retry: () => void;
 }

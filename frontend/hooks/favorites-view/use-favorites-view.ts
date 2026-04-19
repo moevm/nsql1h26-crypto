@@ -1,70 +1,49 @@
 import { useEffect, useRef, useState } from "react";
 
+import { useToastContext } from "@/components/toast-provider";
+import { getCoinsErrorMessage } from "@/hooks/watchlist-view/watchlist-view-helpers";
+import { useFavoritesControls } from "@/hooks/favorites-view/use-favorites-controls";
 import {
-  getCoinsErrorMessage,
-  getNextSortState,
-  getWatchlistRangeValidationMessage,
-  hasActiveWatchlistFilters
-} from "@/hooks/watchlist-view/watchlist-view-helpers";
-import {
-  createEmptyFavoritesRanges,
-  FAVORITES_FILTER_DEBOUNCE_MS,
   FAVORITES_PAGE_SIZE,
   getFavoritesEmptyState,
   getFavoritesRequestParams,
   getFavoritesTotalLabel,
   matchesFavoritesTextQuery,
-  normalizeFavoritesQuery,
   paginateFavoritesCoins
 } from "@/hooks/favorites-view/favorites-view-helpers";
+import { useAuth } from "@/hooks/use-auth";
 import type { UseFavoritesViewResult } from "@/hooks/favorites-view/favorites-view-types";
 import { coinsService } from "@/services/coins/coins-service";
-import type {
-  CoinFilterRangeEdge,
-  CoinFilterRangeKey,
-  CoinFilterRangesState,
-  CoinTableSortKey,
-  CoinTableSortState,
-  WatchlistCoin
-} from "@/types/coins";
+import type { WatchlistCoin } from "@/types/coins";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
 
 export const useFavoritesView = (): UseFavoritesViewResult => {
+  const { session, syncSessionUser } = useAuth();
+  const { pushToast } = useToastContext();
+  const {
+    query,
+    setQuery,
+    ranges,
+    setRangeValue,
+    sort,
+    requestSort,
+    pageNo,
+    setPageNo,
+    debouncedRanges,
+    normalizedQuery,
+    rangeValidationMessage,
+    hasActiveFilters,
+    resetFilters
+  } = useFavoritesControls();
   const latestRequestIdRef = useRef(0);
   const hasLoadedOnceRef = useRef(false);
   const [status, setStatus] = useState<ViewStatus>(VIEW_STATUS.LOADING);
   const [errorMessage, setErrorMessage] = useState("Не удалось загрузить избранное");
-  const [query, setQueryState] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [ranges, setRanges] = useState<CoinFilterRangesState>(createEmptyFavoritesRanges);
-  const [debouncedRanges, setDebouncedRanges] = useState<CoinFilterRangesState>(
-    createEmptyFavoritesRanges
-  );
-  const [sort, setSort] = useState<CoinTableSortState | null>(null);
-  const [pageNo, setPageNo] = useState(0);
   const [reloadNonce, setReloadNonce] = useState(0);
   const [isPaginationPending, setIsPaginationPending] = useState(false);
+  const [favoritePendingSymbols, setFavoritePendingSymbols] = useState<string[]>([]);
   const [fetchedCoins, setFetchedCoins] = useState<WatchlistCoin[]>([]);
   const [fetchedTotalCount, setFetchedTotalCount] = useState(0);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedQuery(query);
-      setDebouncedRanges(ranges);
-    }, FAVORITES_FILTER_DEBOUNCE_MS);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [query, ranges]);
-
-  const rangeValidationMessage = getWatchlistRangeValidationMessage(debouncedRanges);
-  const normalizedQuery = normalizeFavoritesQuery(debouncedQuery);
-  const hasActiveFilters = hasActiveWatchlistFilters({
-    query,
-    ranges,
-    sort
-  });
   const requestParams = getFavoritesRequestParams({
     pageNo,
     sort,
@@ -173,19 +152,65 @@ export const useFavoritesView = (): UseFavoritesViewResult => {
         ? VIEW_STATUS.EMPTY
         : VIEW_STATUS.READY;
 
-  const resetFilters = () => {
-    setQueryState("");
-    setRanges(createEmptyFavoritesRanges());
-    setSort(null);
-    setPageNo(0);
-  };
-
   const emptyState = getFavoritesEmptyState({
     totalCount,
     hasActiveFilters,
     rangeValidationMessage,
     resetFilters
   });
+
+  const handleRemoveFavorite = async (coin: WatchlistCoin) => {
+    if (!coin.isFavorite || favoritePendingSymbols.includes(coin.symbol)) {
+      return;
+    }
+
+    const shouldGoToPreviousPage = pageNo > 0 && visibleCoins.length <= 1;
+
+    setFavoritePendingSymbols((currentSymbols) =>
+      currentSymbols.includes(coin.symbol) ? currentSymbols : [...currentSymbols, coin.symbol]
+    );
+
+    try {
+      const response = await coinsService.removeFavorite(coin.symbol);
+
+      if (!response.success) {
+        throw new Error(response.message ?? "Не удалось удалить монету из избранного");
+      }
+
+      setFetchedCoins((currentCoins) =>
+        currentCoins.filter((currentCoin) => currentCoin.symbol !== coin.symbol)
+      );
+      setFetchedTotalCount((currentCount) => Math.max(0, currentCount - 1));
+
+      if (session) {
+        syncSessionUser({
+          ...session,
+          watchlist: session.watchlist,
+          favorites: session.favorites.filter((favoriteSymbol) => favoriteSymbol !== coin.symbol)
+        });
+      }
+
+      if (shouldGoToPreviousPage) {
+        setPageNo((currentPageNo) => Math.max(0, currentPageNo - 1));
+      }
+
+      setReloadNonce((currentValue) => currentValue + 1);
+
+      pushToast({
+        type: "success",
+        message: `${coin.symbol} удалена из избранного`
+      });
+    } catch (error) {
+      pushToast({
+        type: "error",
+        message: getCoinsErrorMessage(error, "Не удалось удалить монету из избранного")
+      });
+    } finally {
+      setFavoritePendingSymbols((currentSymbols) =>
+        currentSymbols.filter((currentSymbol) => currentSymbol !== coin.symbol)
+      );
+    }
+  };
 
   return {
     status: derivedStatus,
@@ -194,28 +219,18 @@ export const useFavoritesView = (): UseFavoritesViewResult => {
     errorMessage,
     emptyState,
     query,
-    setQuery: (value: string) => {
-      setQueryState(value);
-      setPageNo(0);
-    },
+    setQuery,
     ranges,
-    setRangeValue: (key: CoinFilterRangeKey, edge: CoinFilterRangeEdge, value: string) => {
-      setRanges((currentRanges) => ({
-        ...currentRanges,
-        [key]: {
-          ...currentRanges[key],
-          [edge]: value
-        }
-      }));
-      setPageNo(0);
-    },
+    setRangeValue,
     hasActiveFilters,
     resetFilters,
     sort,
-    requestSort: (key: CoinTableSortKey) => {
-      setSort((currentSort) => getNextSortState(currentSort, key));
-      setPageNo(0);
-    },
+    requestSort,
+    onToggleFavorite: handleRemoveFavorite,
+    getFavoriteActionLabel: (coin: WatchlistCoin) =>
+      coin.isFavorite ? "Убрать из избранного" : "Добавить в избранное",
+    isFavoriteActionPending: (coin: WatchlistCoin) =>
+      favoritePendingSymbols.includes(coin.symbol),
     pagination: {
       currentPage: pageNo + 1,
       totalPages,
@@ -229,7 +244,6 @@ export const useFavoritesView = (): UseFavoritesViewResult => {
       },
       isPending: isPaginationPending
     },
-    isPaginationPending,
     retry: () => {
       setReloadNonce((currentValue) => currentValue + 1);
     }

@@ -2,9 +2,13 @@ import { AppPageShell } from "@/components/app-page-shell";
 import { CoinFiltersPanel } from "@/components/coins/coin-filters-panel";
 import { CoinTableSection } from "@/components/coins/coin-table-section";
 import { useFavoritesView } from "@/hooks/favorites-view/use-favorites-view";
+import type { WatchlistCoin } from "@/types/coins";
 import { FAVORITES_COIN_TABLE_SORTABLE_COLUMNS } from "@/utils/coin-table-sorting";
 
-const FavoritesPageContent = () => {
+const getFavoriteCoinHref = (coin: WatchlistCoin) =>
+  `/app/coins/${encodeURIComponent(coin.symbol)}?from=favorites`;
+
+export default function FavoritesPage() {
   const viewState = useFavoritesView();
 
   return (
@@ -13,7 +17,7 @@ const FavoritesPageContent = () => {
       headTitle="Избранное | CryptoWatch"
       headDescription="Страница избранных монет"
       title="Избранные монеты"
-      description="Поиск, фильтр и список избранного"
+      description="Фильтры, сортировка и список"
     >
       <section className="mt-8 space-y-8">
         <CoinFiltersPanel
@@ -31,7 +35,7 @@ const FavoritesPageContent = () => {
           footer={
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-text-muted">
-                Фильтры применяются автоматически. Поиск по названию работает после загрузки списка.
+                Фильтры применяются автоматически. Поиск работает по загруженному списку.
               </p>
               <button
                 className="cw-button-secondary"
@@ -54,6 +58,10 @@ const FavoritesPageContent = () => {
           onRetry={viewState.retry}
           coins={viewState.coins}
           totalLabel={viewState.totalLabel}
+          getCoinHref={getFavoriteCoinHref}
+          onToggleFavorite={viewState.onToggleFavorite}
+          getFavoriteActionLabel={viewState.getFavoriteActionLabel}
+          isFavoriteActionPending={viewState.isFavoriteActionPending}
           sort={viewState.sort}
           onSortChange={viewState.requestSort}
           sortableColumns={FAVORITES_COIN_TABLE_SORTABLE_COLUMNS}
@@ -66,8 +74,4 @@ const FavoritesPageContent = () => {
       </section>
     </AppPageShell>
   );
-};
-
-export default function FavoritesPage() {
-  return <FavoritesPageContent />;
 }

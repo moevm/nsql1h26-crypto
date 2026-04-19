@@ -4,6 +4,7 @@ import { createQueryString } from "@/utils/query-string";
 type HttpMethod = "GET" | "POST" | "DELETE";
 
 type JsonContentType = "application/json";
+type RequestContentType = JsonContentType | undefined;
 
 const METHOD_CONTENT_TYPES: Partial<Record<HttpMethod, JsonContentType>> = {
   POST: "application/json"
@@ -40,12 +41,18 @@ const buildUrl = (path: string, params?: ApiRequestOptions["params"]): string =>
   return `${normalizedPath}${createQueryString(params)}`;
 };
 
-const buildHeaders = (options?: ApiRequestOptions, contentType?: "application/json"): HeadersInit => {
+const getDeclaredContentType = (options?: ApiRequestOptions): string | null => {
+  const headers = new Headers(options?.headers);
+
+  return headers.get("Content-Type");
+};
+
+const buildHeaders = (options?: ApiRequestOptions, contentType?: RequestContentType): HeadersInit => {
   const headers = new Headers(options?.headers);
 
   headers.set("Accept", "application/json");
 
-  if (contentType) {
+  if (contentType && !headers.has("Content-Type")) {
     headers.set("Content-Type", contentType);
   }
 
@@ -73,7 +80,7 @@ const isJsonSerializableBody = (body: ApiRequestOptions["body"]): body is object
 
 const prepareRequestOptions = (
   options?: ApiRequestOptions,
-  contentType?: JsonContentType
+  contentType?: RequestContentType
 ): PreparedApiRequestOptions | undefined => {
   if (!options || contentType !== "application/json" || !isJsonSerializableBody(options.body)) {
     return options as PreparedApiRequestOptions | undefined;
@@ -83,6 +90,24 @@ const prepareRequestOptions = (
     ...options,
     body: JSON.stringify(options.body)
   };
+};
+
+const getRequestContentType = (
+  method: HttpMethod,
+  options?: ApiRequestOptions
+): RequestContentType => {
+  const declaredContentType = getDeclaredContentType(options);
+
+  if (declaredContentType) {
+    return declaredContentType.toLowerCase() === "application/json"
+      ? "application/json"
+      : undefined;
+  }
+
+  return METHOD_CONTENT_TYPES[method] === "application/json" &&
+    isJsonSerializableBody(options?.body)
+    ? "application/json"
+    : undefined;
 };
 
 const parseResponse = async <T>(response: Response): Promise<T> => {
@@ -109,12 +134,8 @@ const parseResponse = async <T>(response: Response): Promise<T> => {
   return (await response.json()) as T;
 };
 
-const request = async <T>(
-  method: HttpMethod,
-  path: string,
-  options?: ApiRequestOptions,
-  contentType?: JsonContentType
-): Promise<T> => {
+const request = async <T>(method: HttpMethod, path: string, options?: ApiRequestOptions): Promise<T> => {
+  const contentType = getRequestContentType(method, options);
   const nextOptions = prepareRequestOptions(options, contentType);
 
   const response = await fetch(buildUrl(path, nextOptions?.params), {
@@ -138,7 +159,7 @@ export const createHttpClient = ({
     const nextOptions = prepareOptions?.(options) ?? options;
 
     try {
-      return await request<T>(method, path, nextOptions, METHOD_CONTENT_TYPES[method]);
+      return await request<T>(method, path, nextOptions);
     } catch (error) {
       onError?.(error, nextOptions);
       throw error;

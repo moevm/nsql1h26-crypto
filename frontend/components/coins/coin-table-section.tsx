@@ -1,5 +1,5 @@
 import { CoinTable } from "@/components/coins/coin-table";
-import { ViewStateSection } from "@/components/view-state-section";
+import { ViewStateSection } from "@/components/view-state/view-state-section";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
 import type { CoinTableAction, CoinTablePagination } from "@/types/coin-table";
 import type { ViewStatus } from "@/types/status";
@@ -13,6 +13,7 @@ interface CoinTableSectionProps {
   onRetry: () => void;
   coins: WatchlistCoin[];
   totalLabel: string;
+  getCoinHref?: (coin: WatchlistCoin) => string;
   onToggleFavorite?: (coin: WatchlistCoin) => void | Promise<void>;
   getFavoriteActionLabel?: (coin: WatchlistCoin) => string;
   isFavoriteActionPending?: (coin: WatchlistCoin) => boolean;
@@ -36,6 +37,7 @@ export const CoinTableSection = ({
   onRetry,
   coins,
   totalLabel,
+  getCoinHref,
   onToggleFavorite,
   getFavoriteActionLabel,
   isFavoriteActionPending,
@@ -97,6 +99,7 @@ export const CoinTableSection = ({
         <div>
           <CoinTable
             coins={coins}
+            getCoinHref={getCoinHref}
             onToggleFavorite={onToggleFavorite}
             getFavoriteActionLabel={getFavoriteActionLabel}
             isFavoriteActionPending={isFavoriteActionPending}

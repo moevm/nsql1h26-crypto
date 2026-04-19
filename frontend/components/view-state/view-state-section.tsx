@@ -1,8 +1,8 @@
-import { EmptyState } from "@/components/empty-state";
 import { PropsWithChildren } from "react";
 
-import { ErrorState } from "@/components/error-state";
-import { LoadingState } from "@/components/loading-state";
+import { EmptyState } from "@/components/view-state/empty-state";
+import { ErrorState } from "@/components/view-state/error-state";
+import { LoadingState } from "@/components/view-state/loading-state";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
 
 interface ViewStateSectionProps extends PropsWithChildren {

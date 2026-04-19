@@ -1,4 +1,4 @@
-import { LoadingState } from "@/components/loading-state";
+import { LoadingState } from "@/components/view-state/loading-state";
 import { useAuthRouting } from "@/hooks/use-auth-routing";
 
 export default function IndexPage() {

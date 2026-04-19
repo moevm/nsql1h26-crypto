@@ -41,6 +41,17 @@ export interface RefreshWatchlistResponse {
   lastUpdatedAt?: string | null;
 }
 
+export interface AddToWatchlistCoinInfo {
+  symbol: string;
+  name: string;
+}
+
+export interface AddToWatchlistResponse {
+  success: boolean;
+  message?: string;
+  coin?: AddToWatchlistCoinInfo;
+}
+
 export interface CoinsMutationResponse {
   success: boolean;
   message?: string;
@@ -49,6 +60,7 @@ export interface CoinsMutationResponse {
 export interface CoinsApi {
   getWatchlist(params?: WatchlistRequestParams): Promise<WatchlistResponse>;
   refreshWatchlist(): Promise<RefreshWatchlistResponse>;
+  addToWatchlist(symbol: string): Promise<AddToWatchlistResponse>;
   addFavorite(symbol: string): Promise<CoinsMutationResponse>;
   removeFavorite(symbol: string): Promise<CoinsMutationResponse>;
   removeFromWatchlist(symbol: string): Promise<CoinsMutationResponse>;

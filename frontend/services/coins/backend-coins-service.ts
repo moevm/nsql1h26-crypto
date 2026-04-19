@@ -1,5 +1,6 @@
 import { authorizedHttpClient } from "@/services/authorized-http-client";
 import {
+  normalizeAddToWatchlistResponse,
   normalizeCoinsMutationResponse,
   normalizeRefreshWatchlistResponse,
   normalizeWatchlistResponse
@@ -25,6 +26,13 @@ export const backendCoinsService: CoinsApi = {
     const response = await authorizedHttpClient.post<unknown>("/api/coins/refresh");
 
     return normalizeRefreshWatchlistResponse(response);
+  },
+  async addToWatchlist(symbol: string) {
+    const response = await authorizedHttpClient.post<unknown>("/api/coins/watchlist", {
+      body: { symbol }
+    });
+
+    return normalizeAddToWatchlistResponse(response);
   },
   async addFavorite(symbol: string) {
     const response = await authorizedHttpClient.post<unknown>("/api/coins/favorites", {

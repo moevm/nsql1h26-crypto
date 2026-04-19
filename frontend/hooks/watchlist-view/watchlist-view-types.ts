@@ -35,7 +35,6 @@ export interface UseWatchlistViewResult {
   requestSort: (key: CoinTableSortKey) => void;
   isRefreshPending: boolean;
   refreshWatchlist: () => Promise<void>;
-  handleAddCoin: () => void;
   onToggleFavorite: (coin: WatchlistCoin) => Promise<void>;
   getFavoriteActionLabel: (coin: WatchlistCoin) => string;
   isFavoriteActionPending: (coin: WatchlistCoin) => boolean;

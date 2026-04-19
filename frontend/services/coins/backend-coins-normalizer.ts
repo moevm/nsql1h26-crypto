@@ -1,5 +1,7 @@
 import { ApiError } from "@/services/http-client";
 import type {
+  AddToWatchlistCoinInfo,
+  AddToWatchlistResponse,
   CoinsMutationResponse,
   RefreshWatchlistResponse,
   WatchlistCoin,
@@ -93,6 +95,23 @@ const normalizeCoin = (payload: unknown): WatchlistCoin => {
   };
 };
 
+const normalizeAddToWatchlistCoin = (payload: unknown): AddToWatchlistCoinInfo => {
+  if (!isRecord(payload)) {
+    throw createShapeError("coin");
+  }
+
+  const symbol = parseString(payload.symbol);
+
+  if (!symbol) {
+    throw createShapeError("coin.symbol");
+  }
+
+  return {
+    symbol,
+    name: parseString(payload.name) ?? symbol
+  };
+};
+
 const normalizeMutationResponse = (payload: unknown): CoinsMutationResponse => {
   if (!isRecord(payload)) {
     return { success: true };
@@ -101,6 +120,21 @@ const normalizeMutationResponse = (payload: unknown): CoinsMutationResponse => {
   return {
     success: parseBoolean(payload.success) ?? true,
     message: parseString(payload.message) ?? undefined
+  };
+};
+
+export const normalizeAddToWatchlistResponse = (payload: unknown): AddToWatchlistResponse => {
+  if (!isRecord(payload)) {
+    throw createShapeError("payload");
+  }
+
+  return {
+    success: parseBoolean(payload.success) ?? true,
+    message: parseString(payload.message) ?? undefined,
+    coin:
+      payload.coin === undefined || payload.coin === null
+        ? undefined
+        : normalizeAddToWatchlistCoin(payload.coin)
   };
 };
 

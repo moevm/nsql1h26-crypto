@@ -524,6 +524,56 @@
   color: var(--color-brand);
 }
 
+.cw-dialog-root {
+  @apply fixed inset-0 z-40;
+}
+
+.cw-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay-backdrop);
+}
+
+.cw-dialog-positioner {
+  @apply relative flex min-h-full items-center justify-center p-4 sm:p-6;
+}
+
+.cw-dialog-panel {
+  @apply relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-[28px] border px-5 py-5 sm:max-h-[calc(100vh-3rem)] sm:px-6 sm:py-6;
+  border-color: var(--border-soft-strong);
+  background: var(--overlay-strong);
+  box-shadow: var(--shadow-panel-lg);
+  backdrop-filter: blur(18px);
+}
+
+.cw-dialog-header {
+  @apply flex items-start gap-3;
+}
+
+.cw-dialog-title {
+  color: var(--color-text-strong);
+  @apply text-2xl font-semibold tracking-tight;
+}
+
+.cw-dialog-description {
+  color: var(--color-text-main);
+  @apply mt-3 max-w-xl text-sm leading-6 sm:text-base;
+  overflow-wrap: anywhere;
+}
+
+.cw-dialog-close {
+  @apply shrink-0 px-3 py-2 text-sm;
+}
+
+.cw-dialog-actions {
+  @apply flex flex-col-reverse gap-3 sm:flex-row sm:justify-end;
+}
+
+.cw-form-hint {
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
 .cw-error-state {
   @apply rounded-[28px] border px-5 py-6 sm:px-6;
   border-color: var(--border-danger-soft);

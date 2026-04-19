@@ -18,7 +18,7 @@ import type {
   UseWatchlistViewResult
 } from "@/hooks/watchlist-view/watchlist-view-types";
 import { useToast } from "@/hooks/use-toast";
-import { coinsService } from "@/services/coins";
+import { coinsService } from "@/services/coins/coins-service";
 import type { CoinTableAction } from "@/types/coin-table";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
@@ -183,13 +183,6 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     }
   };
 
-  const handleAddCoin = () => {
-    pushToast({
-      type: "info",
-      message: "Добавление новой монеты будет реализовано в следующем срезе"
-    });
-  };
-
   const handleToggleFavorite = async (coin: WatchlistCoin) => {
     if (
       favoritePendingSymbols.includes(coin.symbol) ||
@@ -347,7 +340,6 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     requestSort,
     isRefreshPending,
     refreshWatchlist,
-    handleAddCoin,
     onToggleFavorite: async (coin: WatchlistCoin) => {
       await handleToggleFavorite(coin);
     },

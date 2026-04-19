@@ -1,5 +1,6 @@
 import { ApiError } from "@/services/http-client";
 import type {
+  AddToWatchlistResponse,
   CoinsApi,
   CoinsMutationResponse,
   WatchlistCoin,
@@ -55,6 +56,19 @@ const createMutationResponse = (message?: string): CoinsMutationResponse => ({
   message
 });
 
+const createAddToWatchlistResponse = (
+  symbol: string,
+  name: string,
+  message?: string
+): AddToWatchlistResponse => ({
+  success: true,
+  message,
+  coin: {
+    symbol,
+    name
+  }
+});
+
 const saveMockUser = (nextUser: MockStoredUser): MockStoredUser => {
   mockAuthStore.replaceUser(nextUser);
 
@@ -73,7 +87,7 @@ const updateCurrentMockUser = (
   }
 
   if (!mockCoinsBySymbol.has(normalizedSymbol)) {
-    return throwCoinsError(404, "Coin not found");
+    return throwCoinsError(400, "Coin not found");
   }
 
   return saveMockUser(updater(currentUser, normalizedSymbol));
@@ -103,6 +117,31 @@ export const mockCoinsService: CoinsApi = {
       refreshedCount: buildWatchlistCoins(user).length,
       message: "Watchlist data refreshed"
     };
+  },
+  async addToWatchlist(symbol: string) {
+    updateCurrentMockUser((user, normalizedSymbol) => {
+      if (user.watchlist.includes(normalizedSymbol)) {
+        return throwCoinsError(400, "Coin already in watchlist");
+      }
+
+      return {
+        ...user,
+        watchlist: [...user.watchlist, normalizedSymbol]
+      };
+    }, symbol);
+
+    const normalizedSymbol = normalizeSymbol(symbol);
+    const coin = mockCoinsBySymbol.get(normalizedSymbol);
+
+    if (!coin) {
+      return throwCoinsError(400, "Coin not found");
+    }
+
+    return createAddToWatchlistResponse(
+      normalizedSymbol,
+      coin.name,
+      `${normalizedSymbol} added to watchlist`
+    );
   },
   async addFavorite(symbol: string) {
     updateCurrentMockUser((user, normalizedSymbol) => {

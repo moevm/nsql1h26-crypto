@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { useToastContext } from "@/components/toast-provider";
 import { useAuth } from "@/hooks/use-auth";
 import {
   createEmptyRange,
@@ -17,8 +18,7 @@ import type {
   FilterRangesState,
   UseWatchlistViewResult
 } from "@/hooks/watchlist-view/watchlist-view-types";
-import { useToast } from "@/hooks/use-toast";
-import { coinsService } from "@/services/coins";
+import { coinsService } from "@/services/coins/coins-service";
 import type { CoinTableAction } from "@/types/coin-table";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
@@ -49,13 +49,12 @@ const assertSuccessfulResponse = (
 
 export const useWatchlistView = (): UseWatchlistViewResult => {
   const { session, syncSessionUser } = useAuth();
-  const { pushToast } = useToast();
+  const { pushToast } = useToastContext();
   const [sourceCoins, setSourceCoins] = useState<WatchlistCoin[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<ViewStatus>(VIEW_STATUS.LOADING);
   const [errorMessage, setErrorMessage] = useState("Не удалось загрузить список монет");
-  const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState("");
   const [ranges, setRanges] = useState<FilterRangesState>(createEmptyRanges);
   const [sort, setSort] = useState<CoinTableSortState | null>(null);
@@ -63,13 +62,58 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
   const [favoritePendingSymbols, setFavoritePendingSymbols] = useState<string[]>([]);
   const [removePendingSymbols, setRemovePendingSymbols] = useState<string[]>([]);
 
+  const applyWatchlistResponse = useCallback(
+    (coins: WatchlistCoin[], nextTotalCount: number, nextHasMore: boolean) => {
+      setSourceCoins(coins);
+      setTotalCount(nextTotalCount);
+      setHasMore(nextHasMore);
+      setStatus(getLoadedStatus(coins.length, nextTotalCount));
+      setErrorMessage("Не удалось загрузить список монет");
+    },
+    []
+  );
+
+  const applyWatchlistError = useCallback((error: unknown) => {
+    setSourceCoins([]);
+    setTotalCount(0);
+    setHasMore(false);
+    setErrorMessage(getCoinsErrorMessage(error));
+    setStatus(VIEW_STATUS.ERROR);
+  }, []);
+
+  const reloadWatchlist = useCallback(
+    async (options?: { showLoading?: boolean; preserveDataOnError?: boolean }) => {
+      const showLoading = options?.showLoading ?? true;
+      const preserveDataOnError = options?.preserveDataOnError ?? false;
+
+      if (showLoading) {
+        setStatus(VIEW_STATUS.LOADING);
+      }
+
+      setErrorMessage("Не удалось загрузить список монет");
+
+      try {
+        const response = await coinsService.getWatchlist({
+          pageNo: 0,
+          pageSize: WATCHLIST_PAGE_SIZE
+        });
+
+        applyWatchlistResponse(response.coins, response.totalCount, response.hasMore);
+      } catch (error) {
+        if (!preserveDataOnError) {
+          applyWatchlistError(error);
+        }
+
+        throw error;
+      }
+    },
+    [applyWatchlistError, applyWatchlistResponse]
+  );
+
   useEffect(() => {
     let isCancelled = false;
 
-    const loadWatchlist = async () => {
-      setStatus(VIEW_STATUS.LOADING);
-      setErrorMessage("Не удалось загрузить список монет");
-
+    const loadInitialWatchlist = async () => {
       try {
         const response = await coinsService.getWatchlist({
           pageNo: 0,
@@ -80,30 +124,22 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
           return;
         }
 
-        setSourceCoins(response.coins);
-        setTotalCount(response.totalCount);
-        setHasMore(response.hasMore);
-        setStatus(getLoadedStatus(response.coins.length, response.totalCount));
-        setErrorMessage("Не удалось загрузить список монет");
+        applyWatchlistResponse(response.coins, response.totalCount, response.hasMore);
       } catch (error) {
         if (isCancelled) {
           return;
         }
 
-        setSourceCoins([]);
-        setTotalCount(0);
-        setHasMore(false);
-        setErrorMessage(getCoinsErrorMessage(error));
-        setStatus(VIEW_STATUS.ERROR);
+        applyWatchlistError(error);
       }
     };
 
-    void loadWatchlist();
+    void loadInitialWatchlist();
 
     return () => {
       isCancelled = true;
     };
-  }, [reloadKey]);
+  }, [applyWatchlistError, applyWatchlistResponse]);
 
   const rangeValidationMessage = getWatchlistRangeValidationMessage(ranges);
   const visibleCoins = getVisibleCoins(sourceCoins, {
@@ -116,18 +152,6 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     ranges,
     sort
   });
-
-  const syncWatchlistSession = (watchlist: string[], favorites: string[]) => {
-    if (!session) {
-      return;
-    }
-
-    syncSessionUser({
-      ...session,
-      watchlist,
-      favorites
-    });
-  };
 
   const resetFilters = () => {
     setQuery("");
@@ -156,22 +180,14 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       const refreshResponse = await coinsService.refreshWatchlist();
       assertSuccessfulResponse(refreshResponse, "Не удалось обновить данные списка");
 
-      const watchlistResponse = await coinsService.getWatchlist({
-        pageNo: 0,
-        pageSize: WATCHLIST_PAGE_SIZE
+      await reloadWatchlist({
+        showLoading: false,
+        preserveDataOnError: true
       });
-
-      setSourceCoins(watchlistResponse.coins);
-      setTotalCount(watchlistResponse.totalCount);
-      setHasMore(watchlistResponse.hasMore);
-      setStatus(getLoadedStatus(watchlistResponse.coins.length, watchlistResponse.totalCount));
-      setErrorMessage("Не удалось загрузить список монет");
 
       pushToast({
         type: "success",
-        message:
-          refreshResponse.message ??
-          `Данные обновлены: ${watchlistResponse.coins.length} монет(ы) в списке`
+        message: refreshResponse.message ?? "Данные обновлены"
       });
     } catch (error) {
       pushToast({
@@ -181,13 +197,6 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     } finally {
       setIsRefreshPending(false);
     }
-  };
-
-  const handleAddCoin = () => {
-    pushToast({
-      type: "info",
-      message: "Добавление новой монеты будет реализовано в следующем срезе"
-    });
   };
 
   const handleToggleFavorite = async (coin: WatchlistCoin) => {
@@ -232,7 +241,11 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
           ? session.favorites.filter((favoriteSymbol) => favoriteSymbol !== coin.symbol)
           : [...session.favorites, coin.symbol];
 
-        syncWatchlistSession(session.watchlist, nextFavorites);
+        syncSessionUser({
+          ...session,
+          watchlist: session.watchlist,
+          favorites: nextFavorites
+        });
       }
 
       pushToast({
@@ -276,10 +289,13 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       setTotalCount((currentCount) => Math.max(0, currentCount - 1));
 
       if (session) {
-        syncWatchlistSession(
-          session.watchlist.filter((watchlistSymbol) => watchlistSymbol !== coin.symbol),
-          session.favorites.filter((favoriteSymbol) => favoriteSymbol !== coin.symbol)
-        );
+        syncSessionUser({
+          ...session,
+          watchlist: session.watchlist.filter((watchlistSymbol) => watchlistSymbol !== coin.symbol),
+          favorites: session.favorites.filter(
+            (favoriteSymbol) => favoriteSymbol !== coin.symbol
+          )
+        });
       }
 
       pushToast({
@@ -347,7 +363,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     requestSort,
     isRefreshPending,
     refreshWatchlist,
-    handleAddCoin,
+    reloadWatchlist,
     onToggleFavorite: async (coin: WatchlistCoin) => {
       await handleToggleFavorite(coin);
     },
@@ -356,6 +372,8 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     isFavoriteActionPending: (coin: WatchlistCoin) =>
       favoritePendingSymbols.includes(coin.symbol) || removePendingSymbols.includes(coin.symbol),
     actions,
-    retry: () => setReloadKey((currentKey) => currentKey + 1)
+    retry: () => {
+      void reloadWatchlist();
+    }
   };
 };

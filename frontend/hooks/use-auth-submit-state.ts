@@ -10,14 +10,6 @@ interface UseAuthSubmitStateResult {
   runSubmit: (action: () => Promise<void>, fallbackMessage: string) => Promise<boolean>;
 }
 
-const getSubmitErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  return fallbackMessage;
-};
-
 export const useAuthSubmitState = (): UseAuthSubmitStateResult => {
   const [errors, setErrors] = useState<AuthFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +22,9 @@ export const useAuthSubmitState = (): UseAuthSubmitStateResult => {
       await action();
       return true;
     } catch (error) {
-      setErrors({ form: getSubmitErrorMessage(error, fallbackMessage) });
+      setErrors({
+        form: error instanceof ApiError ? error.message : fallbackMessage
+      });
       return false;
     } finally {
       setIsSubmitting(false);

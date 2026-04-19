@@ -1,6 +1,6 @@
 # Frontend
 
-## Docker и подключение backend
+## Режимы API
 
 - `NEXT_PUBLIC_API_MODE=mock|backend` - обязательная переменная
 - `mock` - frontend работает без реального backend

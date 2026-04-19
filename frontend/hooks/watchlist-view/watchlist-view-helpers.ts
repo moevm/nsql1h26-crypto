@@ -308,7 +308,8 @@ export const getWatchlistEmptyState = ({
   if (sourceCount === 0 && totalCount === 0) {
     return {
       title: "Watchlist пока пуст",
-      message: "Добавьте монеты"
+      message: "Добавьте монеты",
+      actionLabel: "Добавить монету"
     };
   }
 

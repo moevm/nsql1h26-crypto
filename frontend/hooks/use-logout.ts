@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
+import { useToastContext } from "@/components/toast-provider";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/auth";
 
 export const useLogout = () => {
   const router = useRouter();
   const { session, clearSession } = useAuth();
-  const { pushToast } = useToast();
+  const { pushToast } = useToastContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const logout = async () => {

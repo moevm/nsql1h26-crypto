@@ -1,8 +1,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
+import { useToastContext } from "@/components/toast-provider";
 import { useAuthSubmitState } from "@/hooks/use-auth-submit-state";
-import { useToast } from "@/hooks/use-toast";
 import type { AuthFormErrors } from "@/services/auth/auth-validation";
 import { validateRegisterPayload } from "@/services/auth/auth-validation";
 import { authService } from "@/services/auth";
@@ -21,7 +21,7 @@ interface UseRegisterFormResult {
 
 export const useRegisterForm = (): UseRegisterFormResult => {
   const router = useRouter();
-  const { pushToast } = useToast();
+  const { pushToast } = useToastContext();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");

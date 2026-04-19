@@ -72,7 +72,7 @@ export const AddCoinModal = ({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-     if (isSubmitting) {
+    if (isSubmitting) {
       return;
     }
 
@@ -143,7 +143,7 @@ export const AddCoinModal = ({
             </p>
           ) : (
             <p className="cw-form-hint mt-2 text-sm" id={helperTextId}>
-              Пробелы по краям уберем автоматически, тикер приведем к UPPERCASE.
+              Пробелы по краям уберем автоматически, тикер приведем к UPPERCASE
             </p>
           )}
         </div>

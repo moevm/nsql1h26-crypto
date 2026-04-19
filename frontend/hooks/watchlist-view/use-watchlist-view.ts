@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { useToastContext } from "@/components/toast-provider";
 import { useAuth } from "@/hooks/use-auth";
 import {
   createEmptyRange,
@@ -17,7 +18,6 @@ import type {
   FilterRangesState,
   UseWatchlistViewResult
 } from "@/hooks/watchlist-view/watchlist-view-types";
-import { useToast } from "@/hooks/use-toast";
 import { coinsService } from "@/services/coins/coins-service";
 import type { CoinTableAction } from "@/types/coin-table";
 import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
@@ -49,7 +49,7 @@ const assertSuccessfulResponse = (
 
 export const useWatchlistView = (): UseWatchlistViewResult => {
   const { session, syncSessionUser } = useAuth();
-  const { pushToast } = useToast();
+  const { pushToast } = useToastContext();
   const [sourceCoins, setSourceCoins] = useState<WatchlistCoin[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -82,8 +82,9 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
   }, []);
 
   const reloadWatchlist = useCallback(
-    async (options?: { showLoading?: boolean }) => {
+    async (options?: { showLoading?: boolean; preserveDataOnError?: boolean }) => {
       const showLoading = options?.showLoading ?? true;
+      const preserveDataOnError = options?.preserveDataOnError ?? false;
 
       if (showLoading) {
         setStatus(VIEW_STATUS.LOADING);
@@ -99,7 +100,10 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
 
         applyWatchlistResponse(response.coins, response.totalCount, response.hasMore);
       } catch (error) {
-        applyWatchlistError(error);
+        if (!preserveDataOnError) {
+          applyWatchlistError(error);
+        }
+
         throw error;
       }
     },
@@ -149,18 +153,6 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     sort
   });
 
-  const syncWatchlistSession = (watchlist: string[], favorites: string[]) => {
-    if (!session) {
-      return;
-    }
-
-    syncSessionUser({
-      ...session,
-      watchlist,
-      favorites
-    });
-  };
-
   const resetFilters = () => {
     setQuery("");
     setRanges(createEmptyRanges());
@@ -188,7 +180,10 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       const refreshResponse = await coinsService.refreshWatchlist();
       assertSuccessfulResponse(refreshResponse, "Не удалось обновить данные списка");
 
-      await reloadWatchlist({ showLoading: false });
+      await reloadWatchlist({
+        showLoading: false,
+        preserveDataOnError: true
+      });
 
       pushToast({
         type: "success",
@@ -246,7 +241,11 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
           ? session.favorites.filter((favoriteSymbol) => favoriteSymbol !== coin.symbol)
           : [...session.favorites, coin.symbol];
 
-        syncWatchlistSession(session.watchlist, nextFavorites);
+        syncSessionUser({
+          ...session,
+          watchlist: session.watchlist,
+          favorites: nextFavorites
+        });
       }
 
       pushToast({
@@ -290,10 +289,13 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       setTotalCount((currentCount) => Math.max(0, currentCount - 1));
 
       if (session) {
-        syncWatchlistSession(
-          session.watchlist.filter((watchlistSymbol) => watchlistSymbol !== coin.symbol),
-          session.favorites.filter((favoriteSymbol) => favoriteSymbol !== coin.symbol)
-        );
+        syncSessionUser({
+          ...session,
+          watchlist: session.watchlist.filter((watchlistSymbol) => watchlistSymbol !== coin.symbol),
+          favorites: session.favorites.filter(
+            (favoriteSymbol) => favoriteSymbol !== coin.symbol
+          )
+        });
       }
 
       pushToast({

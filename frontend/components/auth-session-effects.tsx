@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
+import { useToastContext } from "@/components/toast-provider";
 import { registerUnauthorizedHandler } from "@/services/authorized-http-client";
 
 export const AuthSessionEffects = () => {
   const { clearSession } = useAuth();
-  const { pushToast } = useToast();
+  const { pushToast } = useToastContext();
 
   useEffect(() => {
     return registerUnauthorizedHandler(() => {

@@ -1,12 +1,14 @@
 import { useState } from "react";
 
+import { useToastContext } from "@/components/toast-provider";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { coinsService } from "@/services/coins/coins-service";
-import type { AddToWatchlistResponse } from "@/types/coins";
 
 interface UseAddCoinFlowOptions {
-  reloadWatchlist: (options?: { showLoading?: boolean }) => Promise<void>;
+  reloadWatchlist: (options?: {
+    showLoading?: boolean;
+    preserveDataOnError?: boolean;
+  }) => Promise<void>;
 }
 
 interface UseAddCoinFlowResult {
@@ -14,15 +16,11 @@ interface UseAddCoinFlowResult {
   submitCoin: (symbol: string) => Promise<void>;
 }
 
-const getSuccessMessage = (response: AddToWatchlistResponse, symbol: string): string => {
-  return response.message ?? `${symbol} added to watchlist`;
-};
-
 export const useAddCoinFlow = ({
   reloadWatchlist
 }: UseAddCoinFlowOptions): UseAddCoinFlowResult => {
   const { session, syncSessionUser } = useAuth();
-  const { pushToast } = useToast();
+  const { pushToast } = useToastContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitCoin = async (symbol: string) => {
@@ -50,11 +48,14 @@ export const useAddCoinFlow = ({
       }
 
       try {
-        await reloadWatchlist({ showLoading: false });
+        await reloadWatchlist({
+          showLoading: false,
+          preserveDataOnError: true
+        });
       } catch {
         pushToast({
           type: "success",
-          message: getSuccessMessage(response, nextSymbol)
+          message: response.message ?? `${nextSymbol} added to watchlist`
         });
         pushToast({
           type: "error",
@@ -66,7 +67,7 @@ export const useAddCoinFlow = ({
 
       pushToast({
         type: "success",
-        message: getSuccessMessage(response, nextSymbol)
+        message: response.message ?? `${nextSymbol} added to watchlist`
       });
     } finally {
       setIsSubmitting(false);

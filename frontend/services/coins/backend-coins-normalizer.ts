@@ -10,15 +10,13 @@ import type {
 
 type UnknownRecord = Record<string, unknown>;
 
-const INVALID_RESPONSE_MESSAGE = "Invalid coins API response";
-
 const isRecord = (value: unknown): value is UnknownRecord =>
   typeof value === "object" && value !== null;
 
 const createShapeError = (fieldName: string): ApiError =>
   new ApiError({
     status: 500,
-    message: `${INVALID_RESPONSE_MESSAGE}: ${fieldName}`
+    message: `Invalid coins API response: ${fieldName}`
   });
 
 const parseNumber = (value: unknown): number | null => {
@@ -112,7 +110,7 @@ const normalizeAddToWatchlistCoin = (payload: unknown): AddToWatchlistCoinInfo =
   };
 };
 
-const normalizeMutationResponse = (payload: unknown): CoinsMutationResponse => {
+export const normalizeCoinsMutationResponse = (payload: unknown): CoinsMutationResponse => {
   if (!isRecord(payload)) {
     return { success: true };
   }
@@ -162,7 +160,7 @@ export const normalizeWatchlistResponse = (payload: unknown): WatchlistResponse 
 };
 
 export const normalizeRefreshWatchlistResponse = (payload: unknown): RefreshWatchlistResponse => {
-  const mutationResult = normalizeMutationResponse(payload);
+  const mutationResult = normalizeCoinsMutationResponse(payload);
 
   if (!isRecord(payload)) {
     return {
@@ -177,5 +175,3 @@ export const normalizeRefreshWatchlistResponse = (payload: unknown): RefreshWatc
     lastUpdatedAt: parseIsoDateString(payload.lastUpdatedAt)
   };
 };
-
-export const normalizeCoinsMutationResponse = normalizeMutationResponse;

@@ -1,4 +1,3 @@
-import type { CoinTableAction } from "@/types/coin-table";
 import type {
   CoinFilterRangeEdge,
   CoinFilterRangeKey,
@@ -7,21 +6,22 @@ import type {
   CoinTableSortState,
   WatchlistCoin
 } from "@/types/coins";
+import type { CoinTablePagination } from "@/types/coin-table";
 import type { ViewStatus } from "@/types/status";
 
-export interface WatchlistEmptyState {
+export interface FavoritesEmptyState {
   title: string;
   message: string;
   actionLabel?: string;
   onAction?: () => void;
 }
 
-export interface UseWatchlistViewResult {
+export interface UseFavoritesViewResult {
   status: ViewStatus;
   coins: WatchlistCoin[];
   totalLabel: string;
   errorMessage: string;
-  emptyState: WatchlistEmptyState;
+  emptyState: FavoritesEmptyState;
   query: string;
   setQuery: (value: string) => void;
   ranges: CoinFilterRangesState;
@@ -30,15 +30,9 @@ export interface UseWatchlistViewResult {
   resetFilters: () => void;
   sort: CoinTableSortState | null;
   requestSort: (key: CoinTableSortKey) => void;
-  isRefreshPending: boolean;
-  refreshWatchlist: () => Promise<void>;
-  reloadWatchlist: (options?: {
-    showLoading?: boolean;
-    preserveDataOnError?: boolean;
-  }) => Promise<void>;
   onToggleFavorite: (coin: WatchlistCoin) => Promise<void>;
   getFavoriteActionLabel: (coin: WatchlistCoin) => string;
   isFavoriteActionPending: (coin: WatchlistCoin) => boolean;
-  actions: CoinTableAction[];
+  pagination: CoinTablePagination;
   retry: () => void;
 }

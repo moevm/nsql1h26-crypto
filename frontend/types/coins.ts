@@ -8,6 +8,15 @@ export interface WatchlistCoin {
   isFavorite: boolean;
 }
 
+export interface CoinFilterRangeValue {
+  start: string;
+  end: string;
+}
+
+export type CoinFilterRangeKey = "price" | "cap" | "change" | "volume";
+export type CoinFilterRangeEdge = keyof CoinFilterRangeValue;
+export type CoinFilterRangesState = Record<CoinFilterRangeKey, CoinFilterRangeValue>;
+
 export type CoinTableSortKey =
   | "name"
   | "priceUsd"
@@ -27,11 +36,34 @@ export interface WatchlistRequestParams {
   pageNo?: number;
 }
 
+export interface FavoritesRequestParams {
+  pageSize?: number;
+  pageNo?: number;
+  sortBy?: CoinTableSortKey;
+  order?: CoinTableSortDirection;
+  priceMin?: number;
+  priceMax?: number;
+  capMin?: number;
+  capMax?: number;
+  changeMin?: number;
+  changeMax?: number;
+  volumeMin?: number;
+  volumeMax?: number;
+}
+
 export interface WatchlistResponse {
   coins: WatchlistCoin[];
   totalCount: number;
   hasMore: boolean;
   updatedAt: string | null;
+}
+
+export interface FavoritesResponse {
+  coins: WatchlistCoin[];
+  totalCount: number;
+  pageSize: number;
+  pageNo: number;
+  hasMore: boolean;
 }
 
 export interface RefreshWatchlistResponse {
@@ -59,6 +91,7 @@ export interface CoinsMutationResponse {
 
 export interface CoinsApi {
   getWatchlist(params?: WatchlistRequestParams): Promise<WatchlistResponse>;
+  getFavorites(params?: FavoritesRequestParams): Promise<FavoritesResponse>;
   refreshWatchlist(): Promise<RefreshWatchlistResponse>;
   addToWatchlist(symbol: string): Promise<AddToWatchlistResponse>;
   addFavorite(symbol: string): Promise<CoinsMutationResponse>;

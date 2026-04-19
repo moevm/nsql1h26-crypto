@@ -1,11 +1,13 @@
-import { authorizedHttpClient } from "@/services/authorized-http-client";
+import { authorizedHttpClient } from "@/services/http/authorized-http-client";
 import {
   normalizeAddToWatchlistResponse,
   normalizeCoinsMutationResponse,
+  normalizeFavoritesResponse,
   normalizeRefreshWatchlistResponse,
   normalizeWatchlistResponse
 } from "@/services/coins/backend-coins-normalizer";
-import type { CoinsApi, WatchlistRequestParams } from "@/types/coins";
+import type { CoinsApi, FavoritesRequestParams, WatchlistRequestParams } from "@/types/coins";
+import { getFavoritesBackendSortKey } from "@/utils/coin-table-sorting";
 
 export const backendCoinsService: CoinsApi = {
   async getWatchlist(params?: WatchlistRequestParams) {
@@ -21,6 +23,30 @@ export const backendCoinsService: CoinsApi = {
     });
 
     return normalizeWatchlistResponse(response);
+  },
+  async getFavorites(params?: FavoritesRequestParams) {
+    const queryParams = params
+      ? {
+          pageNo: params.pageNo,
+          pageSize: params.pageSize,
+          sortBy: getFavoritesBackendSortKey(params.sortBy),
+          order: params.order,
+          priceMin: params.priceMin,
+          priceMax: params.priceMax,
+          capMin: params.capMin,
+          capMax: params.capMax,
+          changeMin: params.changeMin,
+          changeMax: params.changeMax,
+          volumeMin: params.volumeMin,
+          volumeMax: params.volumeMax
+        }
+      : undefined;
+
+    const response = await authorizedHttpClient.get<unknown>("/api/coins/favorites", {
+      params: queryParams
+    });
+
+    return normalizeFavoritesResponse(response);
   },
   async refreshWatchlist() {
     const response = await authorizedHttpClient.post<unknown>("/api/coins/refresh");

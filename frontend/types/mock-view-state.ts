@@ -1,15 +1,7 @@
-import type { WatchlistCoin } from "@/types/coins";
 import type { StatisticsPreset } from "@/types/statistics";
 import type { ViewStatus } from "@/types/status";
 
 export type { ViewStatus } from "@/types/status";
-
-export interface FavoritesViewState {
-  status: ViewStatus;
-  coins: WatchlistCoin[];
-  totalLabel: string;
-  retry: () => void;
-}
 
 export interface StatisticsViewState {
   status: ViewStatus;

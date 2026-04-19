@@ -1,14 +1,20 @@
 import type { ChangeEvent, ReactNode } from "react";
 
 import { RangeField } from "@/components/coins/range-field";
+import type { CoinFilterRangeKey, CoinFilterRangeValue } from "@/types/coins";
 
-type CoinFilterRangeKey = "price" | "cap" | "change" | "volume";
 type RangeFieldEdge = "start" | "end";
 
-interface RangeFieldValue {
-  start?: string;
-  end?: string;
-}
+const COIN_FILTER_FIELDS: Array<{
+  key: CoinFilterRangeKey;
+  idSuffix: string;
+  label: string;
+}> = [
+  { key: "price", idSuffix: "price", label: "Цена, USD" },
+  { key: "cap", idSuffix: "cap", label: "Капитализация" },
+  { key: "change", idSuffix: "change", label: "Изменение за 24ч" },
+  { key: "volume", idSuffix: "volume", label: "Объем торгов" }
+];
 
 interface CoinFiltersPanelProps {
   sectionLabel: string;
@@ -20,22 +26,11 @@ interface CoinFiltersPanelProps {
   rangeIdPrefix: string;
   queryValue?: string;
   onQueryChange?: (value: string) => void;
-  ranges?: Partial<Record<CoinFilterRangeKey, RangeFieldValue>>;
+  ranges?: Partial<Record<CoinFilterRangeKey, CoinFilterRangeValue>>;
   onRangeChange?: (key: CoinFilterRangeKey, edge: RangeFieldEdge, value: string) => void;
   children?: ReactNode;
   footer?: ReactNode;
 }
-
-const RANGE_FIELDS: Array<{
-  key: CoinFilterRangeKey;
-  idSuffix: string;
-  label: string;
-}> = [
-  { key: "price", idSuffix: "price", label: "Цена, USD" },
-  { key: "cap", idSuffix: "cap", label: "Капитализация" },
-  { key: "change", idSuffix: "change", label: "Изменение за 24ч" },
-  { key: "volume", idSuffix: "volume", label: "Объем торгов" }
-];
 
 export const CoinFiltersPanel = ({
   sectionLabel,
@@ -81,7 +76,7 @@ export const CoinFiltersPanel = ({
         </div>
 
         <div className="cw-filter-grid mt-6">
-          {RANGE_FIELDS.map((field) => (
+          {COIN_FILTER_FIELDS.map((field) => (
             <RangeField
               key={field.key}
               id={`${rangeIdPrefix}-${field.idSuffix}`}

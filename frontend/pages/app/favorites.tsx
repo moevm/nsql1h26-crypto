@@ -1,10 +1,15 @@
 import { AppPageShell } from "@/components/app-page-shell";
 import { CoinFiltersPanel } from "@/components/coins/coin-filters-panel";
 import { CoinTableSection } from "@/components/coins/coin-table-section";
-import { useFavoritesViewMock } from "@/hooks/mock-views/use-favorites-view-mock";
+import { useFavoritesView } from "@/hooks/favorites-view/use-favorites-view";
+import type { WatchlistCoin } from "@/types/coins";
+import { FAVORITES_COIN_TABLE_SORTABLE_COLUMNS } from "@/utils/coin-table-sorting";
 
-const FavoritesPageContent = () => {
-  const viewState = useFavoritesViewMock();
+const getFavoriteCoinHref = (coin: WatchlistCoin) =>
+  `/app/coins/${encodeURIComponent(coin.symbol)}?from=favorites`;
+
+export default function FavoritesPage() {
+  const viewState = useFavoritesView();
 
   return (
     <AppPageShell
@@ -12,45 +17,61 @@ const FavoritesPageContent = () => {
       headTitle="Избранное | CryptoWatch"
       headDescription="Страница избранных монет"
       title="Избранные монеты"
-      description="Поиск, фильтр и список избранного"
+      description="Фильтры, сортировка и список"
     >
       <section className="mt-8 space-y-8">
         <CoinFiltersPanel
-          sectionLabel="Панель фильтров"
-          title="Поиск и фильтр"
+          sectionLabel="Поиск и фильтр"
+          title="Поиск и диапазоны"
           queryId="favorites-query"
-          queryName="favorites-query"
-          queryLabel="Поиск"
-          queryPlaceholder="Название, тикер или любой атрибут..."
+          queryName="query"
+          queryLabel="Поиск по названию или тикеру"
+          queryPlaceholder="Название или тикер..."
           rangeIdPrefix="favorites"
-        >
-          <div>
-            <label className="cw-field-label" htmlFor="favorites-sort">
-              Сортировка
-            </label>
-            <select className="cw-input" id="favorites-sort" defaultValue="change-desc">
-              <option value="change-desc">24ч: по убыванию</option>
-              <option value="price-desc">Цена: по убыванию</option>
-              <option value="cap-desc">Капитализация: по убыванию</option>
-            </select>
-          </div>
-        </CoinFiltersPanel>
+          queryValue={viewState.query}
+          onQueryChange={viewState.setQuery}
+          ranges={viewState.ranges}
+          onRangeChange={viewState.setRangeValue}
+          footer={
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-text-muted">
+                Фильтры применяются автоматически. Поиск работает по загруженному списку.
+              </p>
+              <button
+                className="cw-button-secondary"
+                type="button"
+                onClick={viewState.resetFilters}
+                disabled={!viewState.hasActiveFilters}
+              >
+                Сбросить фильтры
+              </button>
+            </div>
+          }
+        />
 
         <CoinTableSection
           sectionLabel="Таблица монет"
           title="Список"
           status={viewState.status}
           errorTitle="Не удалось загрузить избранное"
-          errorMessage="Попробуйте повторить запрос"
+          errorMessage={viewState.errorMessage}
           onRetry={viewState.retry}
           coins={viewState.coins}
           totalLabel={viewState.totalLabel}
+          getCoinHref={getFavoriteCoinHref}
+          onToggleFavorite={viewState.onToggleFavorite}
+          getFavoriteActionLabel={viewState.getFavoriteActionLabel}
+          isFavoriteActionPending={viewState.isFavoriteActionPending}
+          sort={viewState.sort}
+          onSortChange={viewState.requestSort}
+          sortableColumns={FAVORITES_COIN_TABLE_SORTABLE_COLUMNS}
+          pagination={viewState.pagination}
+          emptyTitle={viewState.emptyState.title}
+          emptyMessage={viewState.emptyState.message}
+          emptyActionLabel={viewState.emptyState.actionLabel}
+          onEmptyAction={viewState.emptyState.onAction}
         />
       </section>
     </AppPageShell>
   );
-};
-
-export default function FavoritesPage() {
-  return <FavoritesPageContent />;
 }

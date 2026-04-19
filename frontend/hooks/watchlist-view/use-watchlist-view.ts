@@ -2,39 +2,24 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useToastContext } from "@/components/toast-provider";
 import { useAuth } from "@/hooks/use-auth";
+import { useWatchlistControls } from "@/hooks/watchlist-view/use-watchlist-controls";
 import {
-  createEmptyRange,
   getCoinsErrorMessage,
   getDerivedWatchlistStatus,
-  getNextSortState,
   getVisibleCoins,
   getWatchlistEmptyState,
-  getWatchlistRangeValidationMessage,
-  hasActiveWatchlistFilters
 } from "@/hooks/watchlist-view/watchlist-view-helpers";
-import type {
-  FilterRangeEdge,
-  FilterRangeKey,
-  FilterRangesState,
-  UseWatchlistViewResult
-} from "@/hooks/watchlist-view/watchlist-view-types";
 import { coinsService } from "@/services/coins/coins-service";
 import type { CoinTableAction } from "@/types/coin-table";
-import type { CoinTableSortKey, CoinTableSortState, WatchlistCoin } from "@/types/coins";
+import type { WatchlistCoin } from "@/types/coins";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
+import type { UseWatchlistViewResult } from "@/hooks/watchlist-view/watchlist-view-types";
 
 const WATCHLIST_PAGE_SIZE = 1000;
 
 const getLoadedStatus = (coinsCount: number, totalCount: number): ViewStatus => {
   return coinsCount === 0 || totalCount === 0 ? VIEW_STATUS.EMPTY : VIEW_STATUS.READY;
 };
-
-const createEmptyRanges = (): FilterRangesState => ({
-  price: createEmptyRange(),
-  cap: createEmptyRange(),
-  change: createEmptyRange(),
-  volume: createEmptyRange()
-});
 
 const assertSuccessfulResponse = (
   response: { success: boolean; message?: string },
@@ -50,14 +35,22 @@ const assertSuccessfulResponse = (
 export const useWatchlistView = (): UseWatchlistViewResult => {
   const { session, syncSessionUser } = useAuth();
   const { pushToast } = useToastContext();
+  const {
+    query,
+    setQuery,
+    ranges,
+    setRangeValue,
+    sort,
+    requestSort,
+    rangeValidationMessage,
+    hasActiveFilters,
+    resetFilters
+  } = useWatchlistControls();
   const [sourceCoins, setSourceCoins] = useState<WatchlistCoin[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<ViewStatus>(VIEW_STATUS.LOADING);
   const [errorMessage, setErrorMessage] = useState("Не удалось загрузить список монет");
-  const [query, setQuery] = useState("");
-  const [ranges, setRanges] = useState<FilterRangesState>(createEmptyRanges);
-  const [sort, setSort] = useState<CoinTableSortState | null>(null);
   const [isRefreshPending, setIsRefreshPending] = useState(false);
   const [favoritePendingSymbols, setFavoritePendingSymbols] = useState<string[]>([]);
   const [removePendingSymbols, setRemovePendingSymbols] = useState<string[]>([]);
@@ -141,33 +134,11 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     };
   }, [applyWatchlistError, applyWatchlistResponse]);
 
-  const rangeValidationMessage = getWatchlistRangeValidationMessage(ranges);
   const visibleCoins = getVisibleCoins(sourceCoins, {
     query,
     ranges,
     sort
   });
-  const hasActiveFilters = hasActiveWatchlistFilters({
-    query,
-    ranges,
-    sort
-  });
-
-  const resetFilters = () => {
-    setQuery("");
-    setRanges(createEmptyRanges());
-    setSort(null);
-  };
-
-  const setRangeValue = (key: FilterRangeKey, edge: FilterRangeEdge, value: string) => {
-    setRanges((currentRanges) => ({
-      ...currentRanges,
-      [key]: {
-        ...currentRanges[key],
-        [edge]: value
-      }
-    }));
-  };
 
   const refreshWatchlist = async () => {
     if (isRefreshPending) {
@@ -314,8 +285,6 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     }
   };
 
-  const requestSort = (key: CoinTableSortKey) =>
-    setSort((currentSort) => getNextSortState(currentSort, key));
   const derivedStatus = getDerivedWatchlistStatus({
     status,
     sourceCount: sourceCoins.length,

@@ -1,6 +1,6 @@
 import { AppPageShell } from "@/components/app-page-shell";
 import { RangeField } from "@/components/coins/range-field";
-import { ViewStateSection } from "@/components/view-state-section";
+import { ViewStateSection } from "@/components/view-state/view-state-section";
 import { useStatisticsViewMock } from "@/hooks/mock-views/use-statistics-view-mock";
 
 const StatisticsPageContent = () => {

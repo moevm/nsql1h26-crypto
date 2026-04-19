@@ -1,5 +1,7 @@
-import { ApiError } from "@/services/http-client";
+import { ApiError } from "@/services/http/http-client";
 import type {
+  CoinFilterRangeValue,
+  CoinFilterRangesState,
   CoinTableSortDirection,
   CoinTableSortKey,
   CoinTableSortState,
@@ -7,15 +9,11 @@ import type {
 } from "@/types/coins";
 import { VIEW_STATUS, type ViewStatus } from "@/types/status";
 
-import type {
-  FilterRangeValue,
-  FilterRangesState,
-  WatchlistEmptyState
-} from "@/hooks/watchlist-view/watchlist-view-types";
+import type { WatchlistEmptyState } from "@/hooks/watchlist-view/watchlist-view-types";
 
 interface WatchlistFilterState {
   query: string;
-  ranges: FilterRangesState;
+  ranges: CoinFilterRangesState;
   sort: CoinTableSortState | null;
 }
 
@@ -34,7 +32,7 @@ interface EmptyStateOptions {
   resetFilters: () => void;
 }
 
-export const createEmptyRange = (): FilterRangeValue => ({
+export const createEmptyRange = (): CoinFilterRangeValue => ({
   start: "",
   end: ""
 });
@@ -53,10 +51,13 @@ const parseRangeNumber = (value: string): number | null => {
   return Number.isFinite(parsedValue) ? parsedValue : null;
 };
 
-const hasRangeValue = (range: FilterRangeValue): boolean =>
+const hasRangeValue = (range: CoinFilterRangeValue): boolean =>
   range.start.trim().length > 0 || range.end.trim().length > 0;
 
-const getRangeValidationMessage = (label: string, range: FilterRangeValue): string | null => {
+const getRangeValidationMessage = (
+  label: string,
+  range: CoinFilterRangeValue
+): string | null => {
   const startValue = parseRangeNumber(range.start);
   const endValue = parseRangeNumber(range.end);
 
@@ -80,7 +81,7 @@ const matchesTextFilter = (coin: WatchlistCoin, query: string): boolean => {
   );
 };
 
-const matchesNumberRange = (value: number | null, range: FilterRangeValue): boolean => {
+const matchesNumberRange = (value: number | null, range: CoinFilterRangeValue): boolean => {
   const startValue = parseRangeNumber(range.start);
   const endValue = parseRangeNumber(range.end);
 
@@ -210,7 +211,7 @@ export const getWatchlistRangeValidationMessage = ({
   cap,
   change,
   volume
-}: FilterRangesState): string | null => {
+}: CoinFilterRangesState): string | null => {
   return (
     getRangeValidationMessage("Цена", price) ??
     getRangeValidationMessage("Капитализация", cap) ??

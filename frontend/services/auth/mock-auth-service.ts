@@ -1,5 +1,5 @@
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
-import { ApiError } from "@/services/http-client";
+import { ApiError } from "@/services/http/http-client";
 import type {
   AuthApi,
   LoginRequestPayload,

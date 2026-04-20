@@ -30,11 +30,11 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (!request.getPassword().equals(request.getPasswordConfirm())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пароли не совпадают");
         }
 
         if (userRepository.findByLogin(request.getLogin()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Login already taken");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Логин занят");
         }
 
         User user = User.builder()
@@ -50,7 +50,7 @@ public class AuthService {
 
         return AuthResponse.builder()
                 .success(true)
-                .message("User registered successfully")
+                .message("Пользователь успешно зарегестрирован")
                 .userId(savedUser.getId())
                 .build();
     }
@@ -64,7 +64,7 @@ public class AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             User user = userRepository.findByLogin(userDetails.getUsername())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователеь не найден"));
 
             String jwt = jwtTokenProvider.generateToken(userDetails, user.getId());
 
@@ -79,20 +79,20 @@ public class AuthService {
                     .build();
 
         } catch (AuthenticationException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid login or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Неверный логин или пароль");
         }
     }
 
     public AuthResponse logout(String authHeader) {
         return AuthResponse.builder()
                 .success(true)
-                .message("Logged out successfully")
+                .message("Успешный выход") //не уверен на счет формулировки
                 .build();
     }
 
     public VerifyResponse verify(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Неверный токен");
         }
 
         String token = authHeader.substring(7);
@@ -101,7 +101,7 @@ public class AuthService {
         String role = jwtTokenProvider.extractRole(token);
 
         userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
         return VerifyResponse.builder()
                 .success(true)

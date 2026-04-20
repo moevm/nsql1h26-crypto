@@ -131,12 +131,12 @@ public class CoinService {
     
     public CoinDetailsResponse getCoinDetails(String userId, String symbol) {
         CoinsMeta meta = coinsMetaRepository.findBySymbol(symbol.toUpperCase())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Coin not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Монета не найдена"));
         
         List<CoinSnapshot> latestList = snapshotsRepository.findLatestSnapshotsForSymbols(List.of(symbol));
         CoinSnapshot latest = latestList.isEmpty() ? null : latestList.get(0);
         if (latest == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No price data available for this coin");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Нет данных о цене для этой монеты");
         }
         
         Calendar cal = Calendar.getInstance();
@@ -179,7 +179,7 @@ public class CoinService {
                                               String sortBy, String order,
                                               int pageSize, int pageNo) {
         CoinsMeta meta = coinsMetaRepository.findBySymbol(symbol.toUpperCase())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Coin not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Монета не найдена"));
         
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         List<CoinSnapshot> snapshots = snapshotsRepository.findHistoryWithFilters(
@@ -211,6 +211,7 @@ public class CoinService {
                 .dateRange(range)
                 .build();
     }
+    
     public FavoritesResponse getFavorites(String userId, int pageSize, int pageNo,
                                         String sortBy, String order,
                                         Double priceMin, Double priceMax,
@@ -218,7 +219,7 @@ public class CoinService {
                                         Double changeMin, Double changeMax,
                                         Double volumeMin, Double volumeMax) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
         List<String> favoriteSymbols = user.getFavorites();
         List<String> finalFavorites = (favoriteSymbols == null) ? new ArrayList<>() : favoriteSymbols;
 
@@ -252,7 +253,7 @@ public class CoinService {
                             .percentChange24h(snap.getPercentChange24h())
                             .marketCap(snap.getMarketCap())
                             .volume24h(snap.getVolume24h())
-                            .isFavorite(true) // always true because it's from favorites
+                            .isFavorite(true)
                             .lastUpdated(snap.getTimestamp())
                             .build();
                 })
@@ -281,21 +282,21 @@ public class CoinService {
 
     public AddCoinResponse addToFavorites(String userId, String symbol) {
         if (symbol == null || symbol.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Symbol is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Символ обязателен");
         }
         symbol = symbol.toUpperCase();
 
         CoinsMeta coinMeta = coinsMetaRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета не найдена"));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
         List<String> favorites = user.getFavorites();
         if (favorites == null) favorites = new ArrayList<>();
 
         if (favorites.contains(symbol)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin already in favorites");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета уже в избранном");
         }
 
         favorites.add(symbol);
@@ -309,23 +310,23 @@ public class CoinService {
 
         return AddCoinResponse.builder()
                 .success(true)
-                .message(symbol + " added to favorites")
+                .message(symbol + " добавлена в избранное")
                 .coin(coinInfo)
                 .build();
     }
 
     public DeleteCoinResponse removeFromFavorites(String userId, String symbol) {
         if (symbol == null || symbol.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid symbol");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Неверный символ");
         }
         symbol = symbol.toUpperCase();
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
         List<String> favorites = user.getFavorites();
         if (favorites == null || !favorites.contains(symbol)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin not in favorites");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета отсутствует в избранном");
         }
 
         favorites.remove(symbol);
@@ -334,7 +335,7 @@ public class CoinService {
 
         return DeleteCoinResponse.builder()
                 .success(true)
-                .message(symbol + " removed from favorites")
+                .message(symbol + " удалена из избранного")
                 .build();
     }
 }

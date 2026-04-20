@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getDefaultMessage())
                 .findFirst()
-                .orElse("Validation failed");
+                .orElse("Ошибка валидации");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(AuthResponse.builder()
                         .success(false)
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(AuthResponse.builder()
                         .success(false)
-                        .message("Invalid login or password")
+                        .message("Неверный логин или пароль")
                         .build());
     }
 
@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(AuthResponse.builder()
                         .success(false)
-                        .message("An unexpected error occurred")
+                        .message("Произошла непредвиденная ошибка")
                         .build());
     }
 }

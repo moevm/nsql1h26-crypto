@@ -24,12 +24,8 @@ public class CmcScheduler {
     @Scheduled(fixedRateString = "${crypto.scheduler.update-interval:15}", timeUnit = TimeUnit.MINUTES)
     public void updateSnapshots() {
         log.info("Starting scheduled snapshot update...");
-        try {
-            var result = cmcService.refreshSnapshots(null); // all coins
-            log.info("Scheduled update completed: {} snapshots saved for symbols: {}", 
-                    result.getRefreshedCount(), result.getSymbols());
-        } catch (Exception e) {
-            log.error("Scheduled update failed: {}", e.getMessage());
-        }
+        var result = cmcService.refreshSnapshots(null); // all coins
+        log.info("Scheduled update completed: {} snapshots saved for symbols: {}", 
+                result.getRefreshedCount(), result.getSymbols());
     }
 }

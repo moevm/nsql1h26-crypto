@@ -48,48 +48,43 @@ public class CoinMarketCapService {
                 .collect(Collectors.joining(","));
 
         String url = String.format("%s?symbol=%s&convert=USD", CMC_URL, symbolParam);
-        try {
-            ResponseEntity<CmcResponse> responseEntity = restTemplate.getForEntity(url, CmcResponse.class);
-            CmcResponse response = responseEntity.getBody();
+        ResponseEntity<CmcResponse> responseEntity = restTemplate.getForEntity(url, CmcResponse.class);
+        CmcResponse response = responseEntity.getBody();
 
-            if (response == null || response.getData() == null) {
-                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Empty response from CMC");
-            }
+        if (response == null || response.getData() == null) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Empty response from CMC");
+        }
 
-            Date now = new Date();
-            List<CoinSnapshot> snapshots = new ArrayList<>();
-            List<String> refreshedSymbols = new ArrayList<>();
+        Date now = new Date();
+        List<CoinSnapshot> snapshots = new ArrayList<>();
+        List<String> refreshedSymbols = new ArrayList<>();
 
-            for (CoinsMeta meta : metas) {
-                CmcQuoteData quoteData = response.getData().get(meta.getSymbol());
-                if (quoteData != null && quoteData.getQuote() != null) {
-                    CmcUsd usd = quoteData.getQuote().get("USD");
-                    if (usd != null) {
-                        CoinSnapshot snapshot = CoinSnapshot.builder()
-                                .symbol(meta.getSymbol())
-                                .timestamp(now)
-                                .price(usd.getPrice())
-                                .marketCap(usd.getMarketCap())
-                                .volume24h(usd.getVolume24h())
-                                .percentChange24h(usd.getPercentChange24h())
-                                .build();
-                        snapshots.add(snapshot);
-                        refreshedSymbols.add(meta.getSymbol());
-                    }
+        for (CoinsMeta meta : metas) {
+            CmcQuoteData quoteData = response.getData().get(meta.getSymbol());
+            if (quoteData != null && quoteData.getQuote() != null) {
+                CmcUsd usd = quoteData.getQuote().get("USD");
+                if (usd != null) {
+                    CoinSnapshot snapshot = CoinSnapshot.builder()
+                            .symbol(meta.getSymbol())
+                            .timestamp(now)
+                            .price(usd.getPrice())
+                            .marketCap(usd.getMarketCap())
+                            .volume24h(usd.getVolume24h())
+                            .percentChange24h(usd.getPercentChange24h())
+                            .build();
+                    snapshots.add(snapshot);
+                    refreshedSymbols.add(meta.getSymbol());
                 }
             }
-
-            if (!snapshots.isEmpty()) {
-                snapshotsRepository.saveAll(snapshots);
-                log.info("Saved {} snapshots", snapshots.size());
-            }
-
-            return new RefreshResult(snapshots.size(), refreshedSymbols, now);
-
-        } catch (Exception e) {
-            log.error("CMC API error: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "CoinMarketCap unavailable");
         }
+
+        if (!snapshots.isEmpty()) {
+            snapshotsRepository.saveAll(snapshots);
+            log.info("Saved {} snapshots", snapshots.size());
+        }
+
+        return new RefreshResult(snapshots.size(), refreshedSymbols, now);
+
     }
 
     private List<CoinsMeta> getMetas(List<String> symbols) {

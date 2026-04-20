@@ -9,12 +9,12 @@ import lombok.Data;
 public class RegisterRequest {
 
     @NotBlank
-    @Size(min = 3, max = 20, message = "Login must be between 3 and 20 characters")
+    @Size(min = 3, max = 20, message = "Логин должен содержать от 3 до 20 символов")
     private String login;
 
     @NotBlank
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[!@#$%^&*])(?=\\S+$).{8,}$",
-             message = "Password must be at least 8 characters, contain a digit and a special character")
+             message = "Пароль должен быть минимум 8 символов, содержать цифру и специальный символ")
     private String password;
 
     @NotBlank

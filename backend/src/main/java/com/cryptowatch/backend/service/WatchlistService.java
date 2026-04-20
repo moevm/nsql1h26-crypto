@@ -30,7 +30,7 @@ public class WatchlistService {
     @Transactional(readOnly = true)
     public WatchlistResponse getWatchlist(String userId, int pageSize, int pageNo) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
         List<String> watchlist = user.getWatchlist();
         if (watchlist == null) watchlist = new ArrayList<>();
@@ -83,22 +83,22 @@ public class WatchlistService {
     @Transactional
     public AddCoinResponse addToWatchlist(String userId, String symbol) {
         if (symbol == null || symbol.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Symbol is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Символ обязателен");
         }
 
         symbol = symbol.toUpperCase();
 
         CoinsMeta coinMeta = coinsMetaRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета не найдена"));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
         List<String> watchlist = user.getWatchlist();
         if (watchlist == null) watchlist = new ArrayList<>();
 
         if (watchlist.contains(symbol)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin already in watchlist");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета уже в списке наблюдения");
         }
 
         watchlist.add(symbol);
@@ -112,7 +112,7 @@ public class WatchlistService {
 
         return AddCoinResponse.builder()
                 .success(true)
-                .message(symbol + " added to watchlist")
+                .message(symbol + " добавлена в список наблюдения")
                 .coin(coinInfo)
                 .build();
     }
@@ -120,17 +120,17 @@ public class WatchlistService {
     @Transactional
     public DeleteCoinResponse removeFromWatchlist(String userId, String symbol) {
         if (symbol == null || symbol.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid symbol");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Неверный символ");
         }
 
         symbol = symbol.toUpperCase();
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
         List<String> watchlist = user.getWatchlist();
         if (watchlist == null || !watchlist.contains(symbol)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin not in watchlist");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета отсутствует в списке наблюдения");
         }
 
         watchlist.remove(symbol);
@@ -139,7 +139,7 @@ public class WatchlistService {
 
         return DeleteCoinResponse.builder()
                 .success(true)
-                .message(symbol + " removed from watchlist")
+                .message(symbol + " удалена из списка наблюдения")
                 .build();
     }
 }

@@ -81,8 +81,8 @@ public class AdminService {
 
         Map<String, Long> recordCount = new HashMap<>();
 
+        // Import users
         try {
-            // Import users
             if (dataNode.has("users") && dataNode.get("users").isArray()) {
                 List<User> users = new ArrayList<>();
                 for (JsonNode node : dataNode.get("users")) {
@@ -94,8 +94,12 @@ public class AdminService {
             } else {
                 recordCount.put("users", 0L);
             }
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user data: " + e.getMessage());
+        }
 
-            // Import coins_meta
+        // Import coins_meta
+        try {
             if (dataNode.has("coins_meta") && dataNode.get("coins_meta").isArray()) {
                 List<CoinsMeta> metas = new ArrayList<>();
                 for (JsonNode node : dataNode.get("coins_meta")) {
@@ -107,8 +111,12 @@ public class AdminService {
             } else {
                 recordCount.put("coins_meta", 0L);
             }
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid coins_meta data: " + e.getMessage());
+        }
 
-            // Import coin_snapshots
+        // Import coin_snapshots
+        try {
             if (dataNode.has("coin_snapshots") && dataNode.get("coin_snapshots").isArray()) {
                 List<CoinSnapshot> snapshots = new ArrayList<>();
                 for (JsonNode node : dataNode.get("coin_snapshots")) {
@@ -120,8 +128,12 @@ public class AdminService {
             } else {
                 recordCount.put("coin_snapshots", 0L);
             }
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid coin_snapshots data: " + e.getMessage());
+        }
 
-            // Import statistics_settings
+        // Import statistics_settings
+        try {
             if (dataNode.has("statistics_settings") && dataNode.get("statistics_settings").isArray()) {
                 List<StatisticsSettings> settings = new ArrayList<>();
                 for (JsonNode node : dataNode.get("statistics_settings")) {
@@ -134,7 +146,7 @@ public class AdminService {
                 recordCount.put("statistics_settings", 0L);
             }
         } catch (JsonProcessingException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid data structure in JSON: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid statistics_settings data: " + e.getMessage());
         }
 
         return ImportDataResponse.builder()

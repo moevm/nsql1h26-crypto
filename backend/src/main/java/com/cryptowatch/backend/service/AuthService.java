@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,31 +55,27 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getLogin(), request.getPassword())
-            );
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getLogin(), request.getPassword())
+        );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            User user = userRepository.findByLogin(userDetails.getUsername())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователеь не найден"));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User user = userRepository.findByLogin(userDetails.getUsername())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователеь не найден"));
 
-            String jwt = jwtTokenProvider.generateToken(userDetails, user.getId());
+        String jwt = jwtTokenProvider.generateToken(userDetails, user.getId());
 
-            return AuthResponse.builder()
-                    .success(true)
-                    .token(jwt)
-                    .userId(user.getId())
-                    .login(user.getLogin())
-                    .role(user.getRole())
-                    .watchlist(user.getWatchlist())
-                    .favorites(user.getFavorites())
-                    .build();
+        return AuthResponse.builder()
+                .success(true)
+                .token(jwt)
+                .userId(user.getId())
+                .login(user.getLogin())
+                .role(user.getRole())
+                .watchlist(user.getWatchlist())
+                .favorites(user.getFavorites())
+                .build();
 
-        } catch (AuthenticationException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Неверный логин или пароль");
-        }
     }
 
     public AuthResponse logout(String authHeader) {

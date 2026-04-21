@@ -25,22 +25,17 @@ export type CoinTableSortKey =
   | "volume24hUsd";
 
 export type CoinTableSortDirection = "asc" | "desc";
+export type ServerCoinTableSortKey = Extract<
+  CoinTableSortKey,
+  "priceUsd" | "change24hPercent" | "marketCapUsd"
+>;
 
 export interface CoinTableSortState {
   key: CoinTableSortKey;
   direction: CoinTableSortDirection;
 }
 
-export interface WatchlistRequestParams {
-  pageSize?: number;
-  pageNo?: number;
-}
-
-export interface FavoritesRequestParams {
-  pageSize?: number;
-  pageNo?: number;
-  sortBy?: CoinTableSortKey;
-  order?: CoinTableSortDirection;
+export interface CoinNumericFilterParams {
   priceMin?: number;
   priceMax?: number;
   capMin?: number;
@@ -51,19 +46,45 @@ export interface FavoritesRequestParams {
   volumeMax?: number;
 }
 
-export interface WatchlistResponse {
-  coins: WatchlistCoin[];
-  totalCount: number;
-  hasMore: boolean;
-  updatedAt: string | null;
+export interface CoinCollectionRequestParams extends CoinNumericFilterParams {
+  pageSize?: number;
+  pageNo?: number;
+  sortBy?: CoinTableSortKey;
+  order?: CoinTableSortDirection;
 }
 
-export interface FavoritesResponse {
+export interface FavoritesRequestParams extends CoinCollectionRequestParams {}
+
+export interface SearchCoinsRequestParams extends CoinCollectionRequestParams {
+  query?: string;
+}
+
+export interface PaginatedCoinsResponse {
   coins: WatchlistCoin[];
   totalCount: number;
   pageSize: number;
   pageNo: number;
   hasMore: boolean;
+}
+
+export interface FavoritesResponse extends PaginatedCoinsResponse {}
+
+export interface SearchCoinsAppliedFilters {
+  query?: string;
+  sortBy: ServerCoinTableSortKey;
+  order: CoinTableSortDirection;
+  priceMin?: number;
+  priceMax?: number;
+  capMin?: number;
+  capMax?: number;
+  changeMin?: number;
+  changeMax?: number;
+  volumeMin?: number;
+  volumeMax?: number;
+}
+
+export interface SearchCoinsResponse extends PaginatedCoinsResponse {
+  appliedFilters: SearchCoinsAppliedFilters;
 }
 
 export interface RefreshWatchlistResponse {
@@ -90,8 +111,8 @@ export interface CoinsMutationResponse {
 }
 
 export interface CoinsApi {
-  getWatchlist(params?: WatchlistRequestParams): Promise<WatchlistResponse>;
   getFavorites(params?: FavoritesRequestParams): Promise<FavoritesResponse>;
+  searchCoins(params?: SearchCoinsRequestParams): Promise<SearchCoinsResponse>;
   refreshWatchlist(): Promise<RefreshWatchlistResponse>;
   addToWatchlist(symbol: string): Promise<AddToWatchlistResponse>;
   addFavorite(symbol: string): Promise<CoinsMutationResponse>;

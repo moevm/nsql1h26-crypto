@@ -5,11 +5,18 @@ import type {
   CoinsMutationResponse,
   FavoritesRequestParams,
   FavoritesResponse,
-  WatchlistCoin,
-  WatchlistRequestParams
+  SearchCoinsRequestParams,
+  SearchCoinsResponse,
+  WatchlistCoin
 } from "@/types/coins";
+import {
+  buildSearchCoinsAppliedFilters,
+  matchesCoinNumericFilters,
+  matchesCoinSearchQuery,
+  paginateCoins,
+  sortCoinsByRequestParams
+} from "@/services/coins/coins-service-helpers";
 import { authStorage } from "@/utils/auth-storage";
-import { getFavoritesBackendSortKey } from "@/utils/coin-table-sorting";
 import { mockAuthStore, type MockStoredUser } from "@/utils/mocks/mock-auth-store";
 import { mockCoinCatalog } from "@/utils/mocks/mock-coin-catalog";
 
@@ -71,107 +78,6 @@ const buildFavoriteCoins = (user: MockStoredUser): WatchlistCoin[] => {
   });
 };
 
-const matchesRange = (
-  value: number | null,
-  minValue?: number,
-  maxValue?: number
-): boolean => {
-  if (minValue === undefined && maxValue === undefined) {
-    return true;
-  }
-
-  if (value === null) {
-    return false;
-  }
-
-  if (minValue !== undefined && value < minValue) {
-    return false;
-  }
-
-  if (maxValue !== undefined && value > maxValue) {
-    return false;
-  }
-
-  return true;
-};
-
-const matchesFavoritesFilters = (coin: WatchlistCoin, params?: FavoritesRequestParams): boolean => {
-  if (!params) {
-    return true;
-  }
-
-  return (
-    matchesRange(coin.priceUsd, params.priceMin, params.priceMax) &&
-    matchesRange(coin.marketCapUsd, params.capMin, params.capMax) &&
-    matchesRange(coin.change24hPercent, params.changeMin, params.changeMax) &&
-    matchesRange(coin.volume24hUsd, params.volumeMin, params.volumeMax)
-  );
-};
-
-const compareNullableNumbers = (leftValue: number | null, rightValue: number | null): number => {
-  if (leftValue === null && rightValue === null) {
-    return 0;
-  }
-
-  if (leftValue === null) {
-    return 1;
-  }
-
-  if (rightValue === null) {
-    return -1;
-  }
-
-  return leftValue - rightValue;
-};
-
-const sortFavoriteCoins = (
-  coins: WatchlistCoin[],
-  params?: FavoritesRequestParams
-): WatchlistCoin[] => {
-  const backendSortKey = getFavoritesBackendSortKey(params?.sortBy) ?? "marketCap";
-  const direction = params?.order ?? "desc";
-
-  const sortedCoins = [...coins].sort((leftCoin, rightCoin) => {
-    const comparisonResult =
-      backendSortKey === "price"
-        ? compareNullableNumbers(leftCoin.priceUsd, rightCoin.priceUsd)
-        : backendSortKey === "percentChange24h"
-          ? compareNullableNumbers(leftCoin.change24hPercent, rightCoin.change24hPercent)
-          : compareNullableNumbers(leftCoin.marketCapUsd, rightCoin.marketCapUsd);
-
-    if (comparisonResult !== 0) {
-      return direction === "asc" ? comparisonResult : comparisonResult * -1;
-    }
-
-    return leftCoin.symbol.localeCompare(rightCoin.symbol, "en", {
-      sensitivity: "base"
-    });
-  });
-
-  return sortedCoins;
-};
-
-const paginateCoins = <TCoin>(
-  allCoins: TCoin[],
-  params: {
-    pageSize?: number;
-    pageNo?: number;
-    defaultPageSize: number;
-  }
-) => {
-  const pageSize = params.pageSize ?? params.defaultPageSize;
-  const pageNo = params.pageNo ?? 0;
-  const start = pageNo * pageSize;
-  const coins = allCoins.slice(start, start + pageSize);
-
-  return {
-    coins,
-    pageSize,
-    pageNo,
-    hasMore: start + coins.length < allCoins.length
-  };
-};
-
 const createMutationResponse = (message?: string): CoinsMutationResponse => ({
   success: true,
   message
@@ -214,29 +120,20 @@ const updateCurrentMockUser = (
   return saveMockUser(updater(currentUser, normalizedSymbol));
 };
 
-export const mockCoinsService: CoinsApi = {
-  async getWatchlist(params?: WatchlistRequestParams) {
-    const user = getCurrentMockUser();
-    const allCoins = buildWatchlistCoins(user);
-    const pagedResult = paginateCoins(allCoins, {
-      pageSize: params?.pageSize,
-      pageNo: params?.pageNo,
-      defaultPageSize: allCoins.length || 1
-    });
+const buildSearchCoins = (user: MockStoredUser): WatchlistCoin[] => {
+  return mockCoinCatalog.map((coin) => ({
+    ...coin,
+    isFavorite: user.favorites.includes(coin.symbol)
+  }));
+};
 
-    return {
-      coins: pagedResult.coins,
-      totalCount: allCoins.length,
-      hasMore: pagedResult.hasMore,
-      updatedAt: null
-    };
-  },
+export const mockCoinsService: CoinsApi = {
   async getFavorites(params?: FavoritesRequestParams): Promise<FavoritesResponse> {
     const user = getCurrentMockUser();
     const filteredCoins = buildFavoriteCoins(user).filter((coin) =>
-      matchesFavoritesFilters(coin, params)
+      matchesCoinNumericFilters(coin, params)
     );
-    const sortedCoins = sortFavoriteCoins(filteredCoins, params);
+    const sortedCoins = sortCoinsByRequestParams(filteredCoins, params);
     const pagedResult = paginateCoins(sortedCoins, {
       pageSize: params?.pageSize,
       pageNo: params?.pageNo,
@@ -249,6 +146,29 @@ export const mockCoinsService: CoinsApi = {
       pageSize: pagedResult.pageSize,
       pageNo: pagedResult.pageNo,
       hasMore: pagedResult.hasMore
+    };
+  },
+  async searchCoins(params?: SearchCoinsRequestParams): Promise<SearchCoinsResponse> {
+    const user = getCurrentMockUser();
+    const filteredCoins = buildSearchCoins(user).filter(
+      (coin) =>
+        matchesCoinSearchQuery(coin, params?.query) &&
+        matchesCoinNumericFilters(coin, params)
+    );
+    const sortedCoins = sortCoinsByRequestParams(filteredCoins, params);
+    const pagedResult = paginateCoins(sortedCoins, {
+      pageSize: params?.pageSize,
+      pageNo: params?.pageNo,
+      defaultPageSize: 10
+    });
+
+    return {
+      coins: pagedResult.coins,
+      totalCount: sortedCoins.length,
+      pageSize: pagedResult.pageSize,
+      pageNo: pagedResult.pageNo,
+      hasMore: pagedResult.hasMore,
+      appliedFilters: buildSearchCoinsAppliedFilters(params)
     };
   },
   async refreshWatchlist() {

@@ -19,10 +19,11 @@ const COIN_FILTER_FIELDS: Array<{
 interface CoinFiltersPanelProps {
   sectionLabel: string;
   title: string;
-  queryId: string;
-  queryName: string;
-  queryLabel: string;
-  queryPlaceholder: string;
+  showQueryField?: boolean;
+  queryId?: string;
+  queryName?: string;
+  queryLabel?: string;
+  queryPlaceholder?: string;
   rangeIdPrefix: string;
   queryValue?: string;
   onQueryChange?: (value: string) => void;
@@ -35,6 +36,7 @@ interface CoinFiltersPanelProps {
 export const CoinFiltersPanel = ({
   sectionLabel,
   title,
+  showQueryField = true,
   queryId,
   queryName,
   queryLabel,
@@ -53,6 +55,12 @@ export const CoinFiltersPanel = ({
         onChange: (event: ChangeEvent<HTMLInputElement>) => onQueryChange(event.target.value)
       }
     : {};
+  const shouldShowQueryField =
+    showQueryField &&
+    queryId !== undefined &&
+    queryName !== undefined &&
+    queryLabel !== undefined &&
+    queryPlaceholder !== undefined;
 
   return (
     <div>
@@ -60,20 +68,22 @@ export const CoinFiltersPanel = ({
       <div className="cw-panel-muted">
         <h2 className="cw-card-title">{title}</h2>
 
-        <div className="mt-6">
-          <label className="cw-field-label" htmlFor={queryId}>
-            {queryLabel}
-          </label>
-          <input
-            autoComplete="off"
-            className="cw-input"
-            id={queryId}
-            name={queryName}
-            placeholder={queryPlaceholder}
-            type="search"
-            {...queryControlProps}
-          />
-        </div>
+        {shouldShowQueryField ? (
+          <div className="mt-6">
+            <label className="cw-field-label" htmlFor={queryId}>
+              {queryLabel}
+            </label>
+            <input
+              autoComplete="off"
+              className="cw-input"
+              id={queryId}
+              name={queryName}
+              placeholder={queryPlaceholder}
+              type="search"
+              {...queryControlProps}
+            />
+          </div>
+        ) : null}
 
         <div className="cw-filter-grid mt-6">
           {COIN_FILTER_FIELDS.map((field) => (

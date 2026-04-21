@@ -4,49 +4,32 @@ import {
   normalizeCoinsMutationResponse,
   normalizeFavoritesResponse,
   normalizeRefreshWatchlistResponse,
-  normalizeWatchlistResponse
+  normalizeSearchCoinsResponse
 } from "@/services/coins/backend-coins-normalizer";
-import type { CoinsApi, FavoritesRequestParams, WatchlistRequestParams } from "@/types/coins";
-import { getFavoritesBackendSortKey } from "@/utils/coin-table-sorting";
+import {
+  buildFavoritesQueryParams,
+  buildSearchCoinsQueryParams
+} from "@/services/coins/coins-service-helpers";
+import type {
+  CoinsApi,
+  FavoritesRequestParams,
+  SearchCoinsRequestParams
+} from "@/types/coins";
 
 export const backendCoinsService: CoinsApi = {
-  async getWatchlist(params?: WatchlistRequestParams) {
-    const queryParams = params
-      ? {
-          pageNo: params.pageNo,
-          pageSize: params.pageSize
-        }
-      : undefined;
-
-    const response = await authorizedHttpClient.get<unknown>("/api/coins/watchlist", {
-      params: queryParams
-    });
-
-    return normalizeWatchlistResponse(response);
-  },
   async getFavorites(params?: FavoritesRequestParams) {
-    const queryParams = params
-      ? {
-          pageNo: params.pageNo,
-          pageSize: params.pageSize,
-          sortBy: getFavoritesBackendSortKey(params.sortBy),
-          order: params.order,
-          priceMin: params.priceMin,
-          priceMax: params.priceMax,
-          capMin: params.capMin,
-          capMax: params.capMax,
-          changeMin: params.changeMin,
-          changeMax: params.changeMax,
-          volumeMin: params.volumeMin,
-          volumeMax: params.volumeMax
-        }
-      : undefined;
-
     const response = await authorizedHttpClient.get<unknown>("/api/coins/favorites", {
-      params: queryParams
+      params: buildFavoritesQueryParams(params)
     });
 
     return normalizeFavoritesResponse(response);
+  },
+  async searchCoins(params?: SearchCoinsRequestParams) {
+    const response = await authorizedHttpClient.get<unknown>("/api/coins/search", {
+      params: buildSearchCoinsQueryParams(params)
+    });
+
+    return normalizeSearchCoinsResponse(response);
   },
   async refreshWatchlist() {
     const response = await authorizedHttpClient.post<unknown>("/api/coins/refresh");

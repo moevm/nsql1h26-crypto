@@ -1,5 +1,9 @@
 import type {
+  CoinHistoryEntry,
+  CoinHistoryRequestParams,
+  CoinHistorySortKey,
   CoinCollectionRequestParams,
+  CoinHistoryNumericFilterParams,
   CoinNumericFilterParams,
   CoinTableSortDirection,
   FavoritesRequestParams,
@@ -10,6 +14,7 @@ import type {
 import { getBackendCoinSortKey, getServerCoinTableSortKey } from "@/utils/coin-table-sorting";
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
+type BackendCoinHistorySortKey = "timestamp" | "price" | "volume24h";
 
 interface PaginationOptions {
   pageSize?: number;
@@ -72,6 +77,60 @@ export const buildSearchCoinsQueryParams = (
   };
 };
 
+const BACKEND_COIN_HISTORY_SORT_KEY_BY_TABLE_KEY: Record<
+  CoinHistorySortKey,
+  BackendCoinHistorySortKey
+> = {
+  timestamp: "timestamp",
+  priceUsd: "price",
+  volume24hUsd: "volume24h"
+};
+
+const normalizeIsoDateParam = (value?: string): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalizedValue = value.trim();
+
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  return Number.isNaN(Date.parse(normalizedValue)) ? undefined : normalizedValue;
+};
+
+const getBackendCoinHistorySortKey = (
+  sortKey?: CoinHistorySortKey
+): BackendCoinHistorySortKey | undefined => {
+  if (!sortKey) {
+    return undefined;
+  }
+
+  return BACKEND_COIN_HISTORY_SORT_KEY_BY_TABLE_KEY[sortKey];
+};
+
+export const buildCoinHistoryQueryParams = (
+  params?: CoinHistoryRequestParams
+): QueryParams | undefined => {
+  if (!params) {
+    return undefined;
+  }
+
+  return {
+    dateFrom: normalizeIsoDateParam(params.dateFrom),
+    dateTo: normalizeIsoDateParam(params.dateTo),
+    priceMin: params.priceMin,
+    priceMax: params.priceMax,
+    volumeMin: params.volumeMin,
+    volumeMax: params.volumeMax,
+    sortBy: getBackendCoinHistorySortKey(params.sortBy),
+    order: params.order,
+    pageNo: params.pageNo,
+    pageSize: params.pageSize
+  };
+};
+
 const matchesRange = (
   value: number | null,
   minValue?: number,
@@ -109,6 +168,47 @@ export const matchesCoinNumericFilters = (
     matchesRange(coin.marketCapUsd, params.capMin, params.capMax) &&
     matchesRange(coin.change24hPercent, params.changeMin, params.changeMax) &&
     matchesRange(coin.volume24hUsd, params.volumeMin, params.volumeMax)
+  );
+};
+
+const matchesTimestampRange = (
+  value: string,
+  dateFrom?: string,
+  dateTo?: string
+): boolean => {
+  if (!dateFrom && !dateTo) {
+    return true;
+  }
+
+  const numericValue = Date.parse(value);
+
+  if (Number.isNaN(numericValue)) {
+    return false;
+  }
+
+  if (dateFrom && numericValue < Date.parse(dateFrom)) {
+    return false;
+  }
+
+  if (dateTo && numericValue > Date.parse(dateTo)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const matchesCoinHistoryFilters = (
+  entry: CoinHistoryEntry,
+  params?: Pick<CoinHistoryRequestParams, "dateFrom" | "dateTo"> & CoinHistoryNumericFilterParams
+): boolean => {
+  if (!params) {
+    return true;
+  }
+
+  return (
+    matchesTimestampRange(entry.timestamp, params.dateFrom, params.dateTo) &&
+    matchesRange(entry.priceUsd, params.priceMin, params.priceMax) &&
+    matchesRange(entry.volume24hUsd, params.volumeMin, params.volumeMax)
   );
 };
 
@@ -183,6 +283,29 @@ export const paginateCoins = <TCoin>(
     pageNo,
     hasMore: start + coins.length < allCoins.length
   };
+};
+
+export const sortCoinHistoryByRequestParams = (
+  historyEntries: CoinHistoryEntry[],
+  params?: Pick<CoinHistoryRequestParams, "sortBy" | "order">
+): CoinHistoryEntry[] => {
+  const sortBy = params?.sortBy ?? "timestamp";
+  const direction: CoinTableSortDirection = params?.order ?? "desc";
+
+  return [...historyEntries].sort((leftEntry, rightEntry) => {
+    const comparisonResult =
+      sortBy === "priceUsd"
+        ? leftEntry.priceUsd - rightEntry.priceUsd
+        : sortBy === "volume24hUsd"
+          ? leftEntry.volume24hUsd - rightEntry.volume24hUsd
+          : Date.parse(leftEntry.timestamp) - Date.parse(rightEntry.timestamp);
+
+    if (comparisonResult !== 0) {
+      return direction === "asc" ? comparisonResult : comparisonResult * -1;
+    }
+
+    return leftEntry.timestamp.localeCompare(rightEntry.timestamp);
+  });
 };
 
 export const buildSearchCoinsAppliedFilters = (

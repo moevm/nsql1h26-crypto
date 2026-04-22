@@ -2,6 +2,10 @@ import { ApiError } from "@/services/http/http-client";
 import type {
   AddToWatchlistCoinInfo,
   AddToWatchlistResponse,
+  CoinDetails,
+  CoinHistoryDateRange,
+  CoinHistoryEntry,
+  CoinHistoryResponse,
   CoinsMutationResponse,
   FavoritesResponse,
   RefreshWatchlistResponse,
@@ -94,6 +98,16 @@ const parseRequiredBoolean = (value: unknown, fieldName: string): boolean => {
 
 const parseRequiredString = (value: unknown, fieldName: string): string => {
   const parsedValue = parseString(value);
+
+  if (!parsedValue) {
+    throw createShapeError(fieldName);
+  }
+
+  return parsedValue;
+};
+
+const parseRequiredIsoDateString = (value: unknown, fieldName: string): string => {
+  const parsedValue = parseIsoDateString(value);
 
   if (!parsedValue) {
     throw createShapeError(fieldName);
@@ -281,5 +295,80 @@ export const normalizeRefreshWatchlistResponse = (payload: unknown): RefreshWatc
     ...mutationResult,
     refreshedCount: parseNumber(payload.refreshedCount) ?? 0,
     lastUpdatedAt: parseIsoDateString(payload.lastUpdatedAt)
+  };
+};
+
+export const normalizeCoinDetailsResponse = (payload: unknown): CoinDetails => {
+  if (!isRecord(payload)) {
+    throw createShapeError("payload");
+  }
+
+  const symbol = parseRequiredString(payload.symbol, "symbol");
+
+  return {
+    symbol,
+    name: parseString(payload.name) ?? symbol,
+    priceUsd: parseRequiredNumber(payload.price, "price"),
+    change24hPercent: parseRequiredNumber(payload.percentChange24h, "percentChange24h"),
+    marketCapUsd: parseRequiredNumber(payload.marketCap, "marketCap"),
+    volume24hUsd: parseRequiredNumber(payload.volume24h, "volume24h"),
+    minPrice7d: parseNumber(payload.minPrice7d),
+    maxPrice7d: parseNumber(payload.maxPrice7d),
+    avgPrice7d: parseNumber(payload.avgPrice7d),
+    isFavorite: parseRequiredBoolean(payload.isFavorite, "isFavorite"),
+    lastUpdatedAt: parseRequiredIsoDateString(payload.lastUpdated, "lastUpdated")
+  };
+};
+
+const normalizeCoinHistoryEntry = (payload: unknown): CoinHistoryEntry => {
+  if (!isRecord(payload)) {
+    throw createShapeError("historyEntry");
+  }
+
+  return {
+    timestamp: parseRequiredIsoDateString(payload.timestamp, "historyEntry.timestamp"),
+    priceUsd: parseRequiredNumber(payload.price, "historyEntry.price"),
+    marketCapUsd: parseRequiredNumber(payload.marketCap, "historyEntry.marketCap"),
+    volume24hUsd: parseRequiredNumber(payload.volume24h, "historyEntry.volume24h"),
+    change24hPercent: parseRequiredNumber(
+      payload.percentChange24h,
+      "historyEntry.percentChange24h"
+    )
+  };
+};
+
+const normalizeCoinHistoryDateRange = (payload: unknown): CoinHistoryDateRange => {
+  if (!isRecord(payload)) {
+    throw createShapeError("dateRange");
+  }
+
+  return {
+    from:
+      payload.from === undefined || payload.from === null
+        ? null
+        : parseRequiredIsoDateString(payload.from, "dateRange.from"),
+    to:
+      payload.to === undefined || payload.to === null
+        ? null
+        : parseRequiredIsoDateString(payload.to, "dateRange.to")
+  };
+};
+
+export const normalizeCoinHistoryResponse = (payload: unknown): CoinHistoryResponse => {
+  if (!isRecord(payload)) {
+    throw createShapeError("payload");
+  }
+
+  const rawHistory = payload.history;
+
+  if (!Array.isArray(rawHistory)) {
+    throw createShapeError("history");
+  }
+
+  return {
+    symbol: parseRequiredString(payload.symbol, "symbol"),
+    history: rawHistory.map(normalizeCoinHistoryEntry),
+    totalCount: parseRequiredNumber(payload.totalCount, "totalCount"),
+    dateRange: normalizeCoinHistoryDateRange(payload.dateRange)
   };
 };

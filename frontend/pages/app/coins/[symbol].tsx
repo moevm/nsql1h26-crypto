@@ -1,61 +1,28 @@
-import { useRouter } from "next/router";
-
 import { AppPageShell } from "@/components/app-page-shell";
-
-type CoinRouteSource = "watchlist" | "favorites";
-
-const getRouteSymbol = (value: string | string[] | undefined): string => {
-  if (typeof value === "string" && value.trim()) {
-    return value.trim().toUpperCase();
-  }
-
-  if (Array.isArray(value) && value[0]?.trim()) {
-    return value[0].trim().toUpperCase();
-  }
-
-  return "";
-};
-
-const getRouteSource = (value: string | string[] | undefined): CoinRouteSource | null => {
-  if (value === "watchlist" || value === "favorites") {
-    return value;
-  }
-
-  if (Array.isArray(value) && (value[0] === "watchlist" || value[0] === "favorites")) {
-    return value[0];
-  }
-
-  return null;
-};
+import { CoinHistorySection } from "@/components/coin-details/coin-history-section";
+import { CoinSummaryCard } from "@/components/coin-details/coin-summary-card";
+import { EmptyState } from "@/components/view-state/empty-state";
+import { ErrorState } from "@/components/view-state/error-state";
+import { LoadingState } from "@/components/view-state/loading-state";
+import { useCoinHistoryView } from "@/hooks/coin-details-view/use-coin-history-view";
+import { useCoinDetailsView } from "@/hooks/coin-details-view/use-coin-details-view";
 
 export default function CoinDetailsPage() {
-  const router = useRouter();
-  const symbol = getRouteSymbol(router.query.symbol);
-  const source = getRouteSource(router.query.from);
-  const symbolLabel = symbol || "...";
-  const fallbackHref = source === "favorites" ? "/app/favorites" : "/app";
-
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      router.back();
-
-      return;
-    }
-
-    void router.push(fallbackHref);
-  };
+  const viewState = useCoinDetailsView();
+  const historyViewState = useCoinHistoryView();
+  const symbolLabel = viewState.symbol || "...";
 
   return (
     <AppPageShell
       activeSection="coins"
-      headTitle={symbol ? `${symbol} | CryptoWatch` : "Монета | CryptoWatch"}
-      headDescription="Страница монеты"
-      title={symbol ? `Монета ${symbol}` : "Монета"}
-      description="Временная страница"
+      headTitle={viewState.headTitle}
+      headDescription={viewState.headDescription}
+      title={viewState.pageTitle}
+      description={viewState.pageDescription}
     >
       <section className="mt-8 space-y-6">
         <div className="flex items-center justify-between gap-3">
-          <button className="cw-button-secondary" type="button" onClick={handleBack}>
+          <button className="cw-button-secondary" type="button" onClick={viewState.goBack}>
             Назад
           </button>
 
@@ -64,15 +31,45 @@ export default function CoinDetailsPage() {
           </span>
         </div>
 
-        <div className="cw-surface p-6 sm:p-8">
-          <p className="cw-kicker">Временный экран</p>
-          <h2 className="cw-card-title mt-3 text-2xl" translate="no">
-            {symbolLabel}
-          </h2>
-          <p className="cw-auth-copy mt-4 max-w-2xl text-sm leading-7 sm:text-base">
-            Полная страница монеты появится позже
-          </p>
-        </div>
+        {viewState.status === "loading" ? (
+          <LoadingState
+            title="Загружаем монету..."
+            message="Получаем данные и подготавливаем экран"
+          />
+        ) : null}
+
+        {viewState.status === "notFound" ? (
+          <EmptyState
+            title="Монета не найдена"
+            message="Проверьте тикер или вернитесь к списку монет"
+            actionLabel="Назад"
+            onAction={viewState.goBack}
+          />
+        ) : null}
+
+        {viewState.status === "error" ? (
+          <ErrorState
+            title="Не удалось открыть страницу монеты"
+            message={viewState.errorMessage}
+            onAction={() => {
+              void viewState.retry();
+            }}
+          />
+        ) : null}
+
+        {viewState.status === "ready" && viewState.coinDetails ? (
+          <>
+            <CoinSummaryCard
+              coinDetails={viewState.coinDetails}
+              isFavoritePending={viewState.isFavoritePending}
+              onToggleFavorite={() => {
+                void viewState.toggleFavorite();
+              }}
+            />
+
+            <CoinHistorySection viewState={historyViewState} />
+          </>
+        ) : null}
       </section>
     </AppPageShell>
   );

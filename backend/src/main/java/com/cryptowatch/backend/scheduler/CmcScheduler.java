@@ -23,9 +23,14 @@ public class CmcScheduler {
 
     @Scheduled(fixedRateString = "${crypto.scheduler.update-interval:15}", timeUnit = TimeUnit.MINUTES)
     public void updateSnapshots() {
+        if (!cmcService.isSyncEnabled()) {
+            log.debug("Scheduled sync skipped: CMC_API_KEY is not configured (DB-only mode)");
+            return;
+        }
+
         log.info("Starting scheduled snapshot update...");
         var result = cmcService.refreshSnapshots(null); // all coins
-        log.info("Scheduled update completed: {} snapshots saved for symbols: {}", 
+        log.info("Scheduled update completed: {} snapshots saved for symbols: {}",
                 result.getRefreshedCount(), result.getSymbols());
     }
 }

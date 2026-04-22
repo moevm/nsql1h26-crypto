@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,16 +34,19 @@ public class CoinMarketCapService {
 
     private static final String CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest";
 
+    public boolean isSyncEnabled() {
+        return apiKey != null && !apiKey.isBlank();
+    }
+
     public RefreshResult refreshSnapshots(List<String> symbols) {
-        if (apiKey == null || apiKey.isBlank()) {
-            log.error("CMC_API_KEY not set in environment");
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "CoinMarketCap API key not configured");
+        if (!isSyncEnabled()) {
+            log.info("CMC_API_KEY is not set. Running in DB-only mode, sync skipped.");
+            return new RefreshResult(0, new ArrayList<>(), new Date(), false);
         }
 
         List<CoinsMeta> metas = getMetas(symbols);
         if (metas.isEmpty()) {
-            return new RefreshResult(0, new ArrayList<>(), new Date());
+            return new RefreshResult(0, new ArrayList<>(), new Date(), true);
         }
 
         String symbolParam = metas.stream()
@@ -48,7 +54,15 @@ public class CoinMarketCapService {
                 .collect(Collectors.joining(","));
 
         String url = String.format("%s?symbol=%s&convert=USD", CMC_URL, symbolParam);
-        ResponseEntity<CmcResponse> responseEntity = restTemplate.getForEntity(url, CmcResponse.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-CMC_PRO_API_KEY", apiKey);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+        ResponseEntity<CmcResponse> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                requestEntity,
+                CmcResponse.class
+        );
         CmcResponse response = responseEntity.getBody();
 
         if (response == null || response.getData() == null) {
@@ -83,7 +97,7 @@ public class CoinMarketCapService {
             log.info("Saved {} snapshots", snapshots.size());
         }
 
-        return new RefreshResult(snapshots.size(), refreshedSymbols, now);
+        return new RefreshResult(snapshots.size(), refreshedSymbols, now, true);
 
     }
 
@@ -125,5 +139,6 @@ public class CoinMarketCapService {
         private int refreshedCount;
         private List<String> symbols;
         private Date lastUpdatedAt;
+        private boolean syncEnabled;
     }
 }

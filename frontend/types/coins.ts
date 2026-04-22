@@ -87,6 +87,58 @@ export interface SearchCoinsResponse extends PaginatedCoinsResponse {
   appliedFilters: SearchCoinsAppliedFilters;
 }
 
+export interface CoinDetails {
+  symbol: string;
+  name: string;
+  priceUsd: number;
+  change24hPercent: number;
+  marketCapUsd: number;
+  volume24hUsd: number;
+  minPrice7d: number | null;
+  maxPrice7d: number | null;
+  avgPrice7d: number | null;
+  isFavorite: boolean;
+  lastUpdatedAt: string;
+}
+
+export interface CoinHistoryNumericFilterParams {
+  priceMin?: number;
+  priceMax?: number;
+  volumeMin?: number;
+  volumeMax?: number;
+}
+
+export type CoinHistorySortKey = "timestamp" | "priceUsd" | "volume24hUsd";
+
+export interface CoinHistoryRequestParams extends CoinHistoryNumericFilterParams {
+  dateFrom?: string;
+  dateTo?: string;
+  pageSize?: number;
+  pageNo?: number;
+  sortBy?: CoinHistorySortKey;
+  order?: CoinTableSortDirection;
+}
+
+export interface CoinHistoryEntry {
+  timestamp: string;
+  priceUsd: number;
+  marketCapUsd: number;
+  volume24hUsd: number;
+  change24hPercent: number;
+}
+
+export interface CoinHistoryDateRange {
+  from: string | null;
+  to: string | null;
+}
+
+export interface CoinHistoryResponse {
+  symbol: string;
+  history: CoinHistoryEntry[];
+  totalCount: number;
+  dateRange: CoinHistoryDateRange;
+}
+
 export interface RefreshWatchlistResponse {
   success: boolean;
   refreshedCount: number;
@@ -112,6 +164,8 @@ export interface CoinsMutationResponse {
 
 export interface CoinsApi {
   getFavorites(params?: FavoritesRequestParams): Promise<FavoritesResponse>;
+  getCoinDetails(symbol: string): Promise<CoinDetails>;
+  getCoinHistory(symbol: string, params?: CoinHistoryRequestParams): Promise<CoinHistoryResponse>;
   searchCoins(params?: SearchCoinsRequestParams): Promise<SearchCoinsResponse>;
   refreshWatchlist(): Promise<RefreshWatchlistResponse>;
   addToWatchlist(symbol: string): Promise<AddToWatchlistResponse>;

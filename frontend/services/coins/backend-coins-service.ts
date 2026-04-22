@@ -1,16 +1,20 @@
 import { authorizedHttpClient } from "@/services/http/authorized-http-client";
 import {
   normalizeAddToWatchlistResponse,
+  normalizeCoinDetailsResponse,
+  normalizeCoinHistoryResponse,
   normalizeCoinsMutationResponse,
   normalizeFavoritesResponse,
   normalizeRefreshWatchlistResponse,
   normalizeSearchCoinsResponse
 } from "@/services/coins/backend-coins-normalizer";
 import {
+  buildCoinHistoryQueryParams,
   buildFavoritesQueryParams,
   buildSearchCoinsQueryParams
 } from "@/services/coins/coins-service-helpers";
 import type {
+  CoinHistoryRequestParams,
   CoinsApi,
   FavoritesRequestParams,
   SearchCoinsRequestParams
@@ -23,6 +27,23 @@ export const backendCoinsService: CoinsApi = {
     });
 
     return normalizeFavoritesResponse(response);
+  },
+  async getCoinDetails(symbol: string) {
+    const response = await authorizedHttpClient.get<unknown>(
+      `/api/coins/${encodeURIComponent(symbol)}`
+    );
+
+    return normalizeCoinDetailsResponse(response);
+  },
+  async getCoinHistory(symbol: string, params?: CoinHistoryRequestParams) {
+    const response = await authorizedHttpClient.get<unknown>(
+      `/api/coins/${encodeURIComponent(symbol)}/history`,
+      {
+        params: buildCoinHistoryQueryParams(params)
+      }
+    );
+
+    return normalizeCoinHistoryResponse(response);
   },
   async searchCoins(params?: SearchCoinsRequestParams) {
     const response = await authorizedHttpClient.get<unknown>("/api/coins/search", {

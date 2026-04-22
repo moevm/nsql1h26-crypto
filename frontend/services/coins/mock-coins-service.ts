@@ -1,6 +1,9 @@
 import { ApiError } from "@/services/http/http-client";
 import type {
   AddToWatchlistResponse,
+  CoinHistoryDateRange,
+  CoinHistoryRequestParams,
+  CoinHistoryResponse,
   CoinsApi,
   CoinsMutationResponse,
   FavoritesRequestParams,
@@ -11,22 +14,47 @@ import type {
 } from "@/types/coins";
 import {
   buildSearchCoinsAppliedFilters,
+  matchesCoinHistoryFilters,
   matchesCoinNumericFilters,
   matchesCoinSearchQuery,
   paginateCoins,
+  sortCoinHistoryByRequestParams,
   sortCoinsByRequestParams
 } from "@/services/coins/coins-service-helpers";
 import { authStorage } from "@/utils/auth-storage";
 import { mockAuthStore, type MockStoredUser } from "@/utils/mocks/mock-auth-store";
 import { mockCoinCatalog } from "@/utils/mocks/mock-coin-catalog";
+import { getMockCoinHistory } from "@/utils/mocks/mock-coin-history";
 
 const mockCoinsBySymbol = new Map(mockCoinCatalog.map((coin) => [coin.symbol, coin]));
+const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+const DEFAULT_HISTORY_PAGE_SIZE = 10;
 
 const throwCoinsError = (status: number, message: string): never => {
   throw new ApiError({ status, message });
 };
 
 const normalizeSymbol = (symbol: string): string => symbol.trim().toUpperCase();
+
+const normalizeHistoryDateParam = (value?: string): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalizedValue = value.trim();
+
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  const timestamp = Date.parse(normalizedValue);
+
+  if (Number.isNaN(timestamp)) {
+    return throwCoinsError(400, "Invalid date");
+  }
+
+  return new Date(timestamp).toISOString();
+};
 
 const getCurrentMockUser = (): MockStoredUser => {
   const token = authStorage.getToken();
@@ -43,6 +71,81 @@ const getCurrentMockUser = (): MockStoredUser => {
 
   return user;
 };
+
+const getMockCatalogCoin = (symbol: string) => {
+  const normalizedSymbol = normalizeSymbol(symbol);
+
+  if (!normalizedSymbol) {
+    return throwCoinsError(400, "Symbol is required");
+  }
+
+  const coin = mockCoinsBySymbol.get(normalizedSymbol);
+
+  if (!coin) {
+    return throwCoinsError(404, "Coin not found");
+  }
+
+  return {
+    normalizedSymbol,
+    coin
+  };
+};
+
+const getMockCoinHistoryEntries = (symbol: string) => {
+  const historyEntries = getMockCoinHistory(symbol);
+
+  if (!historyEntries) {
+    return throwCoinsError(404, "Coin not found");
+  }
+
+  return historyEntries;
+};
+
+const getHistoryPriceStats = (prices: number[]) => {
+  if (prices.length === 0) {
+    return {
+      minPrice7d: null,
+      maxPrice7d: null,
+      avgPrice7d: null
+    };
+  }
+
+  const averagePrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+
+  return {
+    minPrice7d: Math.min(...prices),
+    maxPrice7d: Math.max(...prices),
+    avgPrice7d: averagePrice
+  };
+};
+
+const getRecentHistoryWindow = (historyEntries: CoinHistoryResponse["history"]) => {
+  const latestEntry = historyEntries[historyEntries.length - 1];
+
+  if (!latestEntry) {
+    return [];
+  }
+
+  const latestTimestamp = Date.parse(latestEntry.timestamp);
+
+  return historyEntries.filter(
+    (entry) => Date.parse(entry.timestamp) >= latestTimestamp - WEEK_IN_MS
+  );
+};
+
+const createHistoryDateRange = (
+  historyEntries: CoinHistoryResponse["history"],
+  params?: Pick<CoinHistoryRequestParams, "dateFrom" | "dateTo">
+): CoinHistoryDateRange => ({
+  from: params?.dateFrom ?? historyEntries[historyEntries.length - 1]?.timestamp ?? null,
+  to: params?.dateTo ?? historyEntries[0]?.timestamp ?? null
+});
+
+const normalizeHistoryParams = (params?: CoinHistoryRequestParams): CoinHistoryRequestParams => ({
+  ...params,
+  dateFrom: normalizeHistoryDateParam(params?.dateFrom),
+  dateTo: normalizeHistoryDateParam(params?.dateTo)
+});
 
 const buildWatchlistCoins = (user: MockStoredUser): WatchlistCoin[] => {
   return user.watchlist.flatMap((symbol) => {
@@ -171,6 +274,59 @@ export const mockCoinsService: CoinsApi = {
       appliedFilters: buildSearchCoinsAppliedFilters(params)
     };
   },
+  async getCoinDetails(symbol: string) {
+    const user = getCurrentMockUser();
+    const { normalizedSymbol, coin } = getMockCatalogCoin(symbol);
+    const historyEntries = getMockCoinHistoryEntries(normalizedSymbol);
+    const latestEntry = historyEntries[historyEntries.length - 1];
+
+    if (!latestEntry) {
+      return throwCoinsError(404, "Coin data not found");
+    }
+
+    const recentHistory = getRecentHistoryWindow(historyEntries);
+    const priceStats = getHistoryPriceStats(recentHistory.map((entry) => entry.priceUsd));
+
+    return {
+      symbol: normalizedSymbol,
+      name: coin.name,
+      priceUsd: latestEntry.priceUsd,
+      change24hPercent: latestEntry.change24hPercent,
+      marketCapUsd: latestEntry.marketCapUsd,
+      volume24hUsd: latestEntry.volume24hUsd,
+      minPrice7d: priceStats.minPrice7d,
+      maxPrice7d: priceStats.maxPrice7d,
+      avgPrice7d: priceStats.avgPrice7d,
+      isFavorite: user.favorites.includes(normalizedSymbol),
+      lastUpdatedAt: latestEntry.timestamp
+    };
+  },
+  async getCoinHistory(
+    symbol: string,
+    params?: CoinHistoryRequestParams
+  ): Promise<CoinHistoryResponse> {
+    getCurrentMockUser();
+
+    const { normalizedSymbol } = getMockCatalogCoin(symbol);
+    const normalizedParams = normalizeHistoryParams(params);
+    const historyEntries = getMockCoinHistoryEntries(normalizedSymbol);
+    const filteredHistory = historyEntries.filter((entry) =>
+      matchesCoinHistoryFilters(entry, normalizedParams)
+    );
+    const sortedHistory = sortCoinHistoryByRequestParams(filteredHistory, normalizedParams);
+    const pagedHistory = paginateCoins(sortedHistory, {
+      pageSize: normalizedParams.pageSize,
+      pageNo: normalizedParams.pageNo,
+      defaultPageSize: DEFAULT_HISTORY_PAGE_SIZE
+    });
+
+    return {
+      symbol: normalizedSymbol,
+      history: pagedHistory.coins,
+      totalCount: sortedHistory.length,
+      dateRange: createHistoryDateRange(pagedHistory.coins, normalizedParams)
+    };
+  },
   async refreshWatchlist() {
     const user = getCurrentMockUser();
 
@@ -207,12 +363,8 @@ export const mockCoinsService: CoinsApi = {
   },
   async addFavorite(symbol: string) {
     updateCurrentMockUser((user, normalizedSymbol) => {
-      if (!user.watchlist.includes(normalizedSymbol)) {
-        return throwCoinsError(400, "Coin is not in watchlist");
-      }
-
       if (user.favorites.includes(normalizedSymbol)) {
-        return user;
+        return throwCoinsError(400, "Coin already in favorites");
       }
 
       return {
@@ -224,13 +376,16 @@ export const mockCoinsService: CoinsApi = {
     return createMutationResponse("Coin added to favorites");
   },
   async removeFavorite(symbol: string) {
-    updateCurrentMockUser(
-      (user, normalizedSymbol) => ({
+    updateCurrentMockUser((user, normalizedSymbol) => {
+      if (!user.favorites.includes(normalizedSymbol)) {
+        return throwCoinsError(400, "Coin is not in favorites");
+      }
+
+      return {
         ...user,
         favorites: user.favorites.filter((favoriteSymbol) => favoriteSymbol !== normalizedSymbol)
-      }),
-      symbol
-    );
+      };
+    }, symbol);
 
     return createMutationResponse("Coin removed from favorites");
   },

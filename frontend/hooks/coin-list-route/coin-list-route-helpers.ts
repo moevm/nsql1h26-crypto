@@ -4,6 +4,10 @@ import { normalizeCoinSearchQuery } from "@/services/coins/coins-service-helpers
 import type { CoinTableSortDirection } from "@/types/coins";
 import { createQueryString } from "@/utils/query-string";
 import {
+  parsePositiveIntegerQueryValue,
+  readSingleQueryValue
+} from "@/utils/route-query";
+import {
   areCoinFilterRangesEqual,
   createEmptyCoinFilterRanges,
   getCoinFilterRangesValidationMessage,
@@ -18,24 +22,6 @@ import type {
   CoinListRouteFiltersDraft,
   CoinListRouteRequestParams
 } from "@/hooks/coin-list-route/coin-list-route-config";
-
-const readSingleQueryValue = (value: string | string[] | undefined): string | undefined => {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-
-  return value;
-};
-
-const parsePositiveInteger = (value: string | undefined, fallbackValue: number): number => {
-  if (!value) {
-    return fallbackValue;
-  }
-
-  const parsedValue = Number(value);
-
-  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallbackValue;
-};
 
 const parseOrder = (
   value: string | undefined,
@@ -117,7 +103,7 @@ export const parseCoinListRouteState = (
         : config.defaultSort.key,
       direction: parseOrder(orderValue, config.defaultSort.direction)
     },
-    page: parsePositiveInteger(readSingleQueryValue(routeQuery.page), 1)
+    page: parsePositiveIntegerQueryValue(routeQuery.page, 1)
   };
 };
 

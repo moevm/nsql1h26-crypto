@@ -16,6 +16,7 @@ const getBackendApiOrigin = (): string => {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   async rewrites() {
     if (apiMode !== "backend") {
       return [];

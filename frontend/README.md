@@ -29,4 +29,4 @@
 - `/app/coins/[symbol]` - страница монеты с summary, history filters, chart и table
 - `/app/favorites` - избранные монеты
 - `/app/statistics` - статистика и пресеты
-- `/app/admin/import-export` - импорт / экспорт
+- `/app/admin/import-export` - импорт / экспорт (только для `role=admin`)

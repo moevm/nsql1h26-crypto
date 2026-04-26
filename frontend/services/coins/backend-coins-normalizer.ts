@@ -96,6 +96,12 @@ const parseRequiredBoolean = (value: unknown, fieldName: string): boolean => {
   return parsedValue;
 };
 
+const parseFavorite = (payload: UnknownRecord, fieldName: string): boolean => {
+  const value = payload.isFavorite ?? payload.favorite;
+
+  return parseRequiredBoolean(value, fieldName);
+};
+
 const parseRequiredString = (value: unknown, fieldName: string): string => {
   const parsedValue = parseString(value);
 
@@ -136,7 +142,7 @@ const normalizeCoin = (payload: unknown): WatchlistCoin => {
     change24hPercent: parseNumber(payload.percentChange24h),
     marketCapUsd: parseNumber(payload.marketCap),
     volume24hUsd: parseNumber(payload.volume24h),
-    isFavorite: parseBoolean(payload.isFavorite) ?? false
+    isFavorite: parseBoolean(payload.isFavorite ?? payload.favorite) ?? false
   };
 };
 
@@ -315,7 +321,7 @@ export const normalizeCoinDetailsResponse = (payload: unknown): CoinDetails => {
     minPrice7d: parseNumber(payload.minPrice7d),
     maxPrice7d: parseNumber(payload.maxPrice7d),
     avgPrice7d: parseNumber(payload.avgPrice7d),
-    isFavorite: parseRequiredBoolean(payload.isFavorite, "isFavorite"),
+    isFavorite: parseFavorite(payload, "isFavorite"),
     lastUpdatedAt: parseRequiredIsoDateString(payload.lastUpdated, "lastUpdated")
   };
 };

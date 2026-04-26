@@ -1,5 +1,6 @@
 package com.cryptowatch.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class CoinDto {
     private double percentChange24h;
     private double marketCap;
     private double volume24h;
+    @JsonProperty("isFavorite")
     private boolean isFavorite;
     private Date lastUpdated;
 }

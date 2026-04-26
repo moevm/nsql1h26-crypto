@@ -12,9 +12,3 @@ export interface StatisticsViewState {
   retry: () => void;
 }
 
-export interface ImportExportViewState {
-  status: ViewStatus;
-  exportDescription: string;
-  importDescription: string;
-  retry: () => void;
-}

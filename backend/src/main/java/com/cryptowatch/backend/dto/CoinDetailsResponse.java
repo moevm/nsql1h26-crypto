@@ -1,5 +1,6 @@
 package com.cryptowatch.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class CoinDetailsResponse {
     private Double minPrice7d;
     private Double maxPrice7d;
     private Double avgPrice7d;
+    @JsonProperty("isFavorite")
     private boolean isFavorite;
     private Date lastUpdated;
 }

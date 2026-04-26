@@ -30,22 +30,16 @@ public class AdminService {
     private final ObjectMapper objectMapper;
 
     public ExportDataResponse exportAllData() {
-        List<User> users = userRepository.findAll();
         List<CoinsMeta> coinsMeta = coinsMetaRepository.findAll();
         List<CoinSnapshot> snapshots = snapshotsRepository.findAll();
-        List<StatisticsSettings> settings = settingsRepository.findAll();
 
         Map<String, List<?>> data = new HashMap<>();
-        data.put("users", users);
         data.put("coins_meta", coinsMeta);
         data.put("coin_snapshots", snapshots);
-        data.put("statistics_settings", settings);
 
         Map<String, Long> recordCount = new HashMap<>();
-        recordCount.put("users", (long) users.size());
         recordCount.put("coins_meta", (long) coinsMeta.size());
         recordCount.put("coin_snapshots", (long) snapshots.size());
-        recordCount.put("statistics_settings", (long) settings.size());
 
         return ExportDataResponse.builder()
                 .success(true)

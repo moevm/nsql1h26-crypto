@@ -162,34 +162,34 @@ public class StatisticsService {
         if (maxPrice != null) criteria.and("price").lte(maxPrice);
         if (minVolume != null) criteria.and("volume24h").gte(minVolume);
         
-        String dateGroupFormat;
+        String dateFormat;
         switch (aggregation.toLowerCase()) {
             case "hours":
-                dateGroupFormat = "%Y-%m-%dT%H:00:00";
+                dateFormat = "%Y-%m-%dT%H:00:00";
                 break;
             case "weeks":
-                dateGroupFormat = "%Y-%U";
+                dateFormat = "%Y-%U";
                 break;
             case "days":
             default:
-                dateGroupFormat = "%Y-%m-%d";
+                dateFormat = "%Y-%m-%d";
                 break;
         }
         
         Aggregation aggregationPipeline = Aggregation.newAggregation(
                 Aggregation.match(criteria),
-                Aggregation.project()
-                        .andExpression("toDate(timestamp)").as("dateObj")
-                        .and("price").as("price")
-                        .and("volume24h").as("volume24h"),
-                Aggregation.group(projectDateGrouping(dateGroupFormat))
+                Aggregation.addFields()
+                        .addFieldWithValue("dateStr",
+                                DateOperators.DateToString.dateOf("timestamp").toString(dateFormat))
+                        .build(),
+                Aggregation.group("dateStr")
                         .avg("price").as("avgPrice")
                         .avg("volume24h").as("avgVolume")
                         .min("price").as("minPrice")
                         .max("price").as("maxPrice")
                         .count().as("recordCount")
-                        .first("dateObj").as("periodStart")
-                        .last("dateObj").as("periodEnd"),
+                        .first("timestamp").as("periodStart")
+                        .last("timestamp").as("periodEnd"),
                 Aggregation.sort(Sort.by(Sort.Direction.ASC, "_id"))
         );
         
@@ -209,13 +209,6 @@ public class StatisticsService {
                     .build());
         }
         return list;
-    }
-    
-    // Helper to create group by expression
-    private String projectDateGrouping(String format) {
-        return "{\n" +
-                "    $dateToString: { format: \"" + format + "\", date: \"$timestamp\" }\n" +
-                "}";
     }
     
     private static class AggregationResult {

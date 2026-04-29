@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,12 +22,11 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminService {
 
-    private final UserRepository userRepository;
     private final CoinsMetaRepository coinsMetaRepository;
     private final CoinSnapshotsRepository snapshotsRepository;
-    private final StatisticsSettingsRepository settingsRepository;
     private final MongoTemplate mongoTemplate;
     private final ObjectMapper objectMapper;
 
@@ -68,80 +69,61 @@ public class AdminService {
         }
         JsonNode dataNode = root.get("data");
 
-        mongoTemplate.dropCollection(User.class);
+        if (!dataNode.has("coins_meta") || !dataNode.get("coins_meta").isArray()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing or invalid 'coins_meta' array");
+        }
+        if (!dataNode.has("coin_snapshots") || !dataNode.get("coin_snapshots").isArray()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing or invalid 'coin_snapshots' array");
+        }
+        
+        List<CoinsMeta> newMetas = new ArrayList<>();
+        List<CoinSnapshot> newSnapshots = new ArrayList<>();
+        // Валидация coins_meta
+        JsonNode metasNode = dataNode.get("coins_meta");
+        for (JsonNode node : metasNode) {
+            try {
+                CoinsMeta meta = objectMapper.treeToValue(node, CoinsMeta.class);
+                if (meta.getSymbol() == null || meta.getSymbol().isBlank()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin meta has blank symbol");
+                }
+                if (meta.getName() == null || meta.getName().isBlank()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin meta has blank name for symbol " + meta.getSymbol());
+                }
+                newMetas.add(meta);
+            } catch (JsonProcessingException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid coin_meta entry: " + e.getMessage());
+            }
+        }
+
+        // Валидация coin_snapshots
+        JsonNode snapshotsNode = dataNode.get("coin_snapshots");
+        for (JsonNode node : snapshotsNode) {
+            try {
+                CoinSnapshot snapshot = objectMapper.treeToValue(node, CoinSnapshot.class);
+                if (snapshot.getSymbol() == null || snapshot.getSymbol().isBlank()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin snapshot has blank symbol");
+                }
+                if (snapshot.getTimestamp() == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Coin snapshot has null timestamp for symbol " + snapshot.getSymbol());
+                }
+                newSnapshots.add(snapshot);
+            } catch (JsonProcessingException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid coin_snapshot entry: " + e.getMessage());
+            }
+        }
+
+        log.info("Import validation passed, clearing existing market collections and inserting {} metas and {} snapshots",
+                newMetas.size(), newSnapshots.size());
+
         mongoTemplate.dropCollection(CoinsMeta.class);
         mongoTemplate.dropCollection(CoinSnapshot.class);
-        mongoTemplate.dropCollection(StatisticsSettings.class);
+
+        coinsMetaRepository.saveAll(newMetas);
+        snapshotsRepository.saveAll(newSnapshots);
 
         Map<String, Long> recordCount = new HashMap<>();
-
-        // Import users
-        try {
-            if (dataNode.has("users") && dataNode.get("users").isArray()) {
-                List<User> users = new ArrayList<>();
-                for (JsonNode node : dataNode.get("users")) {
-                    User user = objectMapper.treeToValue(node, User.class);
-                    users.add(user);
-                }
-                userRepository.saveAll(users);
-                recordCount.put("users", (long) users.size());
-            } else {
-                recordCount.put("users", 0L);
-            }
-        } catch (JsonProcessingException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user data: " + e.getMessage());
-        }
-
-        // Import coins_meta
-        try {
-            if (dataNode.has("coins_meta") && dataNode.get("coins_meta").isArray()) {
-                List<CoinsMeta> metas = new ArrayList<>();
-                for (JsonNode node : dataNode.get("coins_meta")) {
-                    CoinsMeta meta = objectMapper.treeToValue(node, CoinsMeta.class);
-                    metas.add(meta);
-                }
-                coinsMetaRepository.saveAll(metas);
-                recordCount.put("coins_meta", (long) metas.size());
-            } else {
-                recordCount.put("coins_meta", 0L);
-            }
-        } catch (JsonProcessingException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid coins_meta data: " + e.getMessage());
-        }
-
-        // Import coin_snapshots
-        try {
-            if (dataNode.has("coin_snapshots") && dataNode.get("coin_snapshots").isArray()) {
-                List<CoinSnapshot> snapshots = new ArrayList<>();
-                for (JsonNode node : dataNode.get("coin_snapshots")) {
-                    CoinSnapshot snapshot = objectMapper.treeToValue(node, CoinSnapshot.class);
-                    snapshots.add(snapshot);
-                }
-                snapshotsRepository.saveAll(snapshots);
-                recordCount.put("coin_snapshots", (long) snapshots.size());
-            } else {
-                recordCount.put("coin_snapshots", 0L);
-            }
-        } catch (JsonProcessingException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid coin_snapshots data: " + e.getMessage());
-        }
-
-        // Import statistics_settings
-        try {
-            if (dataNode.has("statistics_settings") && dataNode.get("statistics_settings").isArray()) {
-                List<StatisticsSettings> settings = new ArrayList<>();
-                for (JsonNode node : dataNode.get("statistics_settings")) {
-                    StatisticsSettings setting = objectMapper.treeToValue(node, StatisticsSettings.class);
-                    settings.add(setting);
-                }
-                settingsRepository.saveAll(settings);
-                recordCount.put("statistics_settings", (long) settings.size());
-            } else {
-                recordCount.put("statistics_settings", 0L);
-            }
-        } catch (JsonProcessingException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid statistics_settings data: " + e.getMessage());
-        }
+        recordCount.put("coins_meta", (long) newMetas.size());
+        recordCount.put("coin_snapshots", (long) newSnapshots.size());
 
         return ImportDataResponse.builder()
                 .success(true)

@@ -26,6 +26,7 @@ public class WatchlistService {
     private final UserRepository userRepository;
     private final CoinsMetaRepository coinsMetaRepository;
     private final CoinSnapshotsRepository coinSnapshotsRepository;
+    private final CoinMarketCapService coinMarketCapService;
 
     @Transactional(readOnly = true)
     public WatchlistResponse getWatchlist(String userId, int pageSize, int pageNo) {
@@ -81,15 +82,15 @@ public class WatchlistService {
     }
 
     @Transactional
-    public AddCoinResponse addToWatchlist(String userId, String symbol) {
-        if (symbol == null || symbol.isBlank()) {
+    public AddCoinResponse addToWatchlist(String userId, String initialSymbol) {
+        if (initialSymbol == null || initialSymbol.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Символ обязателен");
         }
 
-        symbol = symbol.toUpperCase();
+        final String symbol = initialSymbol.toUpperCase();
 
         CoinsMeta coinMeta = coinsMetaRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета не найдена"));
+                .orElseGet(() -> coinMarketCapService.fetchAndCreateMetaIfAbsent(symbol));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));

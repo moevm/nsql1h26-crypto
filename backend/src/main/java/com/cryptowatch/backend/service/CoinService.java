@@ -8,6 +8,8 @@ import com.cryptowatch.backend.repository.CoinSnapshotsRepository;
 import com.cryptowatch.backend.repository.CoinsMetaRepository;
 import com.cryptowatch.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,11 +21,13 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CoinService {
 
     private final CoinsMetaRepository coinsMetaRepository;
     private final CoinSnapshotsRepository snapshotsRepository;
     private final UserRepository userRepository;
+    private final CoinMarketCapService coinMarketCapService;
 
     public SearchCoinsResponse searchCoins(String userId, String query,
                                            Double priceMin, Double priceMax,
@@ -37,6 +41,14 @@ public class CoinService {
             allMetas = coinsMetaRepository.findAll();
         } else {
             allMetas = coinsMetaRepository.searchBySymbolOrName(query);
+            if (allMetas.isEmpty() && query.matches("^[A-Za-z0-9]+$")) {
+                try {
+                    CoinsMeta newMeta = coinMarketCapService.fetchAndCreateMetaIfAbsent(query);
+                    allMetas = List.of(newMeta);
+                } catch (ResponseStatusException e) {
+                    log.debug("No coin found for query: {}", query);
+                }
+            }
         }
 
         List<String> symbols = allMetas.stream().map(CoinsMeta::getSymbol).collect(Collectors.toList());
@@ -200,7 +212,7 @@ public class CoinService {
                 .collect(Collectors.toList());
 
         CoinHistoryResponse.DateRange range = CoinHistoryResponse.DateRange.builder()
-                .from(dateFrom != null ? dateFrom : (snapshots.isEmpty() ? null : snapshots.get(snapshots.size()-1).getTimestamp()))
+                .from(dateFrom != null ? dateFrom : (snapshots.isEmpty() ? null : snapshots.get(snapshots.size() - 1).getTimestamp()))
                 .to(dateTo != null ? dateTo : (snapshots.isEmpty() ? null : snapshots.get(0).getTimestamp()))
                 .build();
 
@@ -214,11 +226,11 @@ public class CoinService {
     }
 
     public FavoritesResponse getFavorites(String userId, int pageSize, int pageNo,
-                                        String sortBy, String order,
-                                        Double priceMin, Double priceMax,
-                                        Double capMin, Double capMax,
-                                        Double changeMin, Double changeMax,
-                                        Double volumeMin, Double volumeMax) {
+                                          String sortBy, String order,
+                                          Double priceMin, Double priceMax,
+                                          Double capMin, Double capMax,
+                                          Double changeMin, Double changeMax,
+                                          Double volumeMin, Double volumeMax) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
         List<String> favoriteSymbols = user.getFavorites();

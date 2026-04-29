@@ -14,6 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,12 +28,13 @@ public class CoinMarketCapService {
 
     private final CoinsMetaRepository coinsMetaRepository;
     private final CoinSnapshotsRepository snapshotsRepository;
-    private final RestTemplate restTemplate;  // вместо WebClient
+    private final RestTemplate restTemplate;
 
     @Value("${CMC_API_KEY:}")
     private String apiKey;
 
-    private static final String CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest";
+    private static final String CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency";
+
 
     public boolean isSyncEnabled() {
         return apiKey != null && !apiKey.isBlank();
@@ -53,17 +55,8 @@ public class CoinMarketCapService {
                 .map(CoinsMeta::getSymbol)
                 .collect(Collectors.joining(","));
 
-        String url = String.format("%s?symbol=%s&convert=USD", CMC_URL, symbolParam);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-CMC_PRO_API_KEY", apiKey);
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-        ResponseEntity<CmcResponse> responseEntity = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                requestEntity,
-                CmcResponse.class
-        );
-        CmcResponse response = responseEntity.getBody();
+        String url = String.format("%s/quotes/latest?symbol=%s&convert=USD", CMC_URL, symbolParam);
+        CmcResponse response = executeGet(url, CmcResponse.class);
 
         if (response == null || response.getData() == null) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Empty response from CMC");
@@ -98,7 +91,42 @@ public class CoinMarketCapService {
         }
 
         return new RefreshResult(snapshots.size(), refreshedSymbols, now, true);
+    }
+    public CoinsMeta fetchAndCreateMetaIfAbsent(String symbol) {
+        if (!isSyncEnabled()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "CMC_API_KEY is not set. Unable to fetch coin info.");
+        }
 
+        String upperSymbol = symbol.toUpperCase();
+
+        Optional<CoinsMeta> existing = coinsMetaRepository.findBySymbol(upperSymbol);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        String url = String.format("%s/info?symbol=%s", CMC_URL, upperSymbol);
+        CmcInfoResponse infoResponse = executeGet(url, CmcInfoResponse.class);
+
+        if (infoResponse == null || infoResponse.getData() == null || infoResponse.getData().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Symbol not found: " + upperSymbol);
+        }
+
+        CmcInfo info = infoResponse.getData().get(upperSymbol);
+        if (info == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Symbol not found: " + upperSymbol);
+        }
+
+        CoinsMeta meta = CoinsMeta.builder()
+                .symbol(upperSymbol)
+                .name(info.getName())
+                .cmcId(info.getId())
+                .lastUpdated(new Date())
+                .build();
+
+        return coinsMetaRepository.save(meta);
     }
 
     private List<CoinsMeta> getMetas(List<String> symbols) {
@@ -110,6 +138,24 @@ public class CoinMarketCapService {
                 .map(sym -> coinsMetaRepository.findBySymbol(sym).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+    private <T> T executeGet(String url, Class<T> responseType) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-CMC_PRO_API_KEY", apiKey);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+            T body = response.getBody();
+            if (body == null) {
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                        "Empty response from CMC for URL: " + url);
+            }
+            return body;
+        } catch (RestClientException e) {
+            log.error("CMC API request failed: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "CMC API error: " + e.getMessage());
+        }
     }
 
     @lombok.Data
@@ -131,6 +177,18 @@ public class CoinMarketCapService {
         private double marketCap;
         @JsonProperty("percent_change_24h")
         private double percentChange24h;
+    }
+
+    @lombok.Data
+    public static class CmcInfoResponse {
+        private Map<String, CmcInfo> data;
+    }
+
+    @lombok.Data
+    public static class CmcInfo {
+        private int id;
+        private String name;
+        private String symbol;
     }
 
     @lombok.Data

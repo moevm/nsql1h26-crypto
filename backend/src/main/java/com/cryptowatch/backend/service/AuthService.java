@@ -1,9 +1,11 @@
 package com.cryptowatch.backend.service;
 
 import com.cryptowatch.backend.dto.*;
+import com.cryptowatch.backend.model.BlacklistedToken;
 import com.cryptowatch.backend.model.User;
 import com.cryptowatch.backend.repository.UserRepository;
 import com.cryptowatch.backend.security.JwtTokenProvider;
+import com.cryptowatch.backend.repository.BlacklistedTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,6 +28,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
 
     public AuthResponse register(RegisterRequest request) {
         if (!request.getPassword().equals(request.getPasswordConfirm())) {
@@ -79,9 +82,24 @@ public class AuthService {
     }
 
     public AuthResponse logout(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token format");
+        }
+        String token = authHeader.substring(7);
+        Date expiry = jwtTokenProvider.extractExpiration(token);
+        String tokenHash = jwtTokenProvider.hashToken(token);
+        
+        BlacklistedToken blacklisted = BlacklistedToken.builder()
+                .tokenHash(tokenHash)
+                .expiryDate(expiry)
+                .build();
+        blacklistedTokenRepository.save(blacklisted);
+        
+        SecurityContextHolder.clearContext();
+        
         return AuthResponse.builder()
                 .success(true)
-                .message("Успешный выход") //не уверен на счет формулировки
+                .message("Успешный выход.")
                 .build();
     }
 

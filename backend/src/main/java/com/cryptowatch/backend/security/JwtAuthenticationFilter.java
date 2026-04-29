@@ -13,6 +13,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.cryptowatch.backend.repository.BlacklistedTokenRepository;
+
 import java.io.IOException;
 
 @Component
@@ -21,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -33,6 +36,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
+        String tokenHash = jwtTokenProvider.hashToken(jwt);
+        if (blacklistedTokenRepository.existsById(tokenHash)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token has been revoked");
+            return;
+        }
         final String login = jwtTokenProvider.extractLogin(jwt);
 
         if (login != null && SecurityContextHolder.getContext().getAuthentication() == null) {

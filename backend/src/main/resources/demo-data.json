@@ -1,0 +1,99 @@
+{
+  "data": {
+    "users": [
+      {
+        "id": "u-user",
+        "login": "user",
+        "passwordHash": "User123!",
+        "role": "ROLE_USER",
+        "watchlist": ["BTC", "ETH", "SOL"],
+        "favorites": ["BTC"],
+        "createdAt": "2026-04-20T09:00:00Z"
+      },
+      {
+        "id": "u-admin",
+        "login": "admin",
+        "passwordHash": "Admin123!",
+        "role": "ROLE_ADMIN",
+        "watchlist": ["BTC", "ETH", "SOL", "ADA", "DOGE"],
+        "favorites": ["ETH", "SOL"],
+        "createdAt": "2026-04-20T09:00:00Z"
+      }
+    ],
+    "coins_meta": [
+      {
+        "id": "coin-btc",
+        "symbol": "BTC",
+        "name": "Bitcoin",
+        "cmcId": 1,
+        "lastUpdated": "2026-04-20T12:00:00Z"
+      },
+      {
+        "id": "coin-eth",
+        "symbol": "ETH",
+        "name": "Ethereum",
+        "cmcId": 1027,
+        "lastUpdated": "2026-04-20T12:00:00Z"
+      },
+      {
+        "id": "coin-sol",
+        "symbol": "SOL",
+        "name": "Solana",
+        "cmcId": 5426,
+        "lastUpdated": "2026-04-20T12:00:00Z"
+      },
+      {
+        "id": "coin-ada",
+        "symbol": "ADA",
+        "name": "Cardano",
+        "cmcId": 2010,
+        "lastUpdated": "2026-04-20T12:00:00Z"
+      },
+      {
+        "id": "coin-doge",
+        "symbol": "DOGE",
+        "name": "Dogecoin",
+        "cmcId": 74,
+        "lastUpdated": "2026-04-20T12:00:00Z"
+      }
+    ],
+    "coin_snapshots": [
+      { "symbol": "BTC", "timestamp": "2026-04-20T00:00:00Z", "price": 85920.5, "marketCap": 1665000000000.0, "volume24h": 42100000000.0, "percentChange24h": 0.84 },
+      { "symbol": "BTC", "timestamp": "2026-04-20T06:00:00Z", "price": 86240.0, "marketCap": 1672000000000.0, "volume24h": 42900000000.0, "percentChange24h": 1.22 },
+      { "symbol": "BTC", "timestamp": "2026-04-20T12:00:00Z", "price": 86530.2, "marketCap": 1678000000000.0, "volume24h": 43600000000.0, "percentChange24h": 1.56 },
+
+      { "symbol": "ETH", "timestamp": "2026-04-20T00:00:00Z", "price": 2478.1, "marketCap": 299000000000.0, "volume24h": 19800000000.0, "percentChange24h": 0.75 },
+      { "symbol": "ETH", "timestamp": "2026-04-20T06:00:00Z", "price": 2496.4, "marketCap": 302000000000.0, "volume24h": 20400000000.0, "percentChange24h": 1.31 },
+      { "symbol": "ETH", "timestamp": "2026-04-20T12:00:00Z", "price": 2512.9, "marketCap": 305000000000.0, "volume24h": 21000000000.0, "percentChange24h": 1.92 },
+
+      { "symbol": "SOL", "timestamp": "2026-04-20T00:00:00Z", "price": 176.2, "marketCap": 91000000000.0, "volume24h": 7100000000.0, "percentChange24h": 0.42 },
+      { "symbol": "SOL", "timestamp": "2026-04-20T06:00:00Z", "price": 178.8, "marketCap": 92400000000.0, "volume24h": 7350000000.0, "percentChange24h": 1.38 },
+      { "symbol": "SOL", "timestamp": "2026-04-20T12:00:00Z", "price": 181.5, "marketCap": 93800000000.0, "volume24h": 7510000000.0, "percentChange24h": 2.04 },
+
+      { "symbol": "ADA", "timestamp": "2026-04-20T00:00:00Z", "price": 0.66, "marketCap": 23600000000.0, "volume24h": 1040000000.0, "percentChange24h": -0.41 },
+      { "symbol": "ADA", "timestamp": "2026-04-20T06:00:00Z", "price": 0.67, "marketCap": 24000000000.0, "volume24h": 1080000000.0, "percentChange24h": 0.33 },
+      { "symbol": "ADA", "timestamp": "2026-04-20T12:00:00Z", "price": 0.69, "marketCap": 24600000000.0, "volume24h": 1120000000.0, "percentChange24h": 1.27 },
+
+      { "symbol": "DOGE", "timestamp": "2026-04-20T00:00:00Z", "price": 0.15, "marketCap": 22300000000.0, "volume24h": 1360000000.0, "percentChange24h": -0.72 },
+      { "symbol": "DOGE", "timestamp": "2026-04-20T06:00:00Z", "price": 0.16, "marketCap": 22900000000.0, "volume24h": 1410000000.0, "percentChange24h": 0.58 },
+      { "symbol": "DOGE", "timestamp": "2026-04-20T12:00:00Z", "price": 0.17, "marketCap": 23600000000.0, "volume24h": 1480000000.0, "percentChange24h": 1.49 }
+    ],
+    "statistics_presets": [
+      {
+        "id": "preset-user-1",
+        "userId": "u-user",
+        "name": "BTC vs ETH / week",
+        "symbols": ["BTC", "ETH"],
+        "timeRangeFrom": "2026-04-13T00:00:00Z",
+        "timeRangeTo": "2026-04-20T12:00:00Z",
+        "minPrice": 1000.0,
+        "maxPrice": 200000.0,
+        "minVolume": 1000000.0,
+        "aggregation": "days",
+        "createdAt": "2026-04-20T09:00:00Z",
+        "updatedAt": "2026-04-20T09:00:00Z"
+      }
+    ]
+  }
+}
+

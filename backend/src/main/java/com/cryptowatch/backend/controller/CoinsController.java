@@ -79,7 +79,7 @@ public class CoinsController {
             @RequestParam(defaultValue = "desc") String order,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "0") int pageNo) {
-        
+
         String token = authHeader.substring(7);
         String userId = jwtTokenProvider.extractUserId(token);
         SearchCoinsResponse response = coinService.searchCoins(
@@ -113,10 +113,10 @@ public class CoinsController {
             @RequestParam(defaultValue = "desc") String order,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "0") int pageNo) {
-        
+
         String token = authHeader.substring(7);
         jwtTokenProvider.extractUserId(token); // just validate
-        
+
         CoinHistoryResponse response = coinService.getCoinHistory(
                 symbol, dateFrom, dateTo, priceMin, priceMax, volumeMin, volumeMax,
                 sortBy, order, pageSize, pageNo);
@@ -187,7 +187,13 @@ public class CoinsController {
         CoinMarketCapService.RefreshResult result = coinMarketCapService.refreshSnapshots(symbols); // lowercase 'r'
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Snapshots refreshed");
+        response.put("syncEnabled", result.isSyncEnabled());
+        response.put(
+                "message",
+                result.isSyncEnabled()
+                        ? "Snapshots refreshed"
+                        : "CMC_API_KEY is not set. Running in DB-only mode, sync skipped"
+        );
         response.put("refreshedCount", result.getRefreshedCount());
         response.put("symbols", result.getSymbols());
         response.put("lastUpdatedAt", result.getLastUpdatedAt());

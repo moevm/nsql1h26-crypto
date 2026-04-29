@@ -20,7 +20,7 @@ public interface CoinSnapshotsRepository extends MongoRepository<CoinSnapshot, S
 
 interface CoinSnapshotsRepositoryCustom {
     List<CoinSnapshot> findLatestSnapshotsForSymbols(List<String> symbols);
-    
+
     List<CoinSnapshot> findSnapshotsForSymbolBetweenDates(String symbol, Date from, Date to);
     List<CoinSnapshot> findHistoryWithFilters(String symbol, Date dateFrom, Date dateTo,
                                                Double priceMin, Double priceMax,
@@ -56,11 +56,10 @@ class CoinSnapshotsRepositoryImpl implements CoinSnapshotsRepositoryCustom {
     }
     @Override
     public List<CoinSnapshot> findSnapshotsForSymbolBetweenDates(String symbol, Date from, Date to) {
-        Criteria criteria = Criteria.where("symbol").is(symbol);
-        if (from != null) criteria = criteria.and("timestamp").gte(from);
-        if (to != null) criteria = criteria.and("timestamp").lte(to);
-        Query query = new Query(criteria).with(Sort.by(Sort.Direction.ASC, "timestamp"));
-        return mongoTemplate.find(query, CoinSnapshot.class);
+        Query query = new Query(Criteria.where("symbol").is(symbol));
+        addRangeCriteria(query, "timestamp", from, to);
+        Query sortedQuery = query.with(Sort.by(Sort.Direction.ASC, "timestamp"));
+        return mongoTemplate.find(sortedQuery, CoinSnapshot.class);
     }
 
     @Override
@@ -70,21 +69,17 @@ class CoinSnapshotsRepositoryImpl implements CoinSnapshotsRepositoryCustom {
                                                     String sortBy, String order,
                                                     int pageSize, int pageNo,
                                                     Pageable pageable) {
-        Criteria criteria = Criteria.where("symbol").is(symbol);
-        if (dateFrom != null) criteria = criteria.and("timestamp").gte(dateFrom);
-        if (dateTo != null) criteria = criteria.and("timestamp").lte(dateTo);
-        if (priceMin != null) criteria = criteria.and("price").gte(priceMin);
-        if (priceMax != null) criteria = criteria.and("price").lte(priceMax);
-        if (volumeMin != null) criteria = criteria.and("volume24h").gte(volumeMin);
-        if (volumeMax != null) criteria = criteria.and("volume24h").lte(volumeMax);
-        
-        Query query = new Query(criteria).with(pageable);
+        Query query = new Query(Criteria.where("symbol").is(symbol));
+        addRangeCriteria(query, "timestamp", dateFrom, dateTo);
+        addRangeCriteria(query, "price", priceMin, priceMax);
+        addRangeCriteria(query, "volume24h", volumeMin, volumeMax);
+        query.with(pageable);
         String sortField = "timestamp";
         if ("price".equals(sortBy)) sortField = "price";
         else if ("volume24h".equals(sortBy)) sortField = "volume24h";
         Sort.Direction direction = "desc".equalsIgnoreCase(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
         query.with(Sort.by(direction, sortField));
-        
+
         return mongoTemplate.find(query, CoinSnapshot.class);
     }
 
@@ -92,14 +87,38 @@ class CoinSnapshotsRepositoryImpl implements CoinSnapshotsRepositoryCustom {
     public long countHistoryWithFilters(String symbol, Date dateFrom, Date dateTo,
                                         Double priceMin, Double priceMax,
                                         Double volumeMin, Double volumeMax) {
-        Criteria criteria = Criteria.where("symbol").is(symbol);
-        if (dateFrom != null) criteria = criteria.and("timestamp").gte(dateFrom);
-        if (dateTo != null) criteria = criteria.and("timestamp").lte(dateTo);
-        if (priceMin != null) criteria = criteria.and("price").gte(priceMin);
-        if (priceMax != null) criteria = criteria.and("price").lte(priceMax);
-        if (volumeMin != null) criteria = criteria.and("volume24h").gte(volumeMin);
-        if (volumeMax != null) criteria = criteria.and("volume24h").lte(volumeMax);
-        Query query = new Query(criteria);
+        Query query = new Query(Criteria.where("symbol").is(symbol));
+        addRangeCriteria(query, "timestamp", dateFrom, dateTo);
+        addRangeCriteria(query, "price", priceMin, priceMax);
+        addRangeCriteria(query, "volume24h", volumeMin, volumeMax);
         return mongoTemplate.count(query, CoinSnapshot.class);
+    }
+
+    private void addRangeCriteria(Query query, String field, Date from, Date to) {
+        if (from == null && to == null) {
+            return;
+        }
+        Criteria range = Criteria.where(field);
+        if (from != null) {
+            range.gte(from);
+        }
+        if (to != null) {
+            range.lte(to);
+        }
+        query.addCriteria(range);
+    }
+
+    private void addRangeCriteria(Query query, String field, Double min, Double max) {
+        if (min == null && max == null) {
+            return;
+        }
+        Criteria range = Criteria.where(field);
+        if (min != null) {
+            range.gte(min);
+        }
+        if (max != null) {
+            range.lte(max);
+        }
+        query.addCriteria(range);
     }
 }

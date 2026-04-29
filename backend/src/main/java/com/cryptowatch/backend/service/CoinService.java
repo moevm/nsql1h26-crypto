@@ -38,15 +38,15 @@ public class CoinService {
         } else {
             allMetas = coinsMetaRepository.searchBySymbolOrName(query);
         }
-        
+
         List<String> symbols = allMetas.stream().map(CoinsMeta::getSymbol).collect(Collectors.toList());
         List<CoinSnapshot> latestSnapshots = snapshotsRepository.findLatestSnapshotsForSymbols(symbols);
         Map<String, CoinSnapshot> snapshotMap = latestSnapshots.stream()
                 .collect(Collectors.toMap(CoinSnapshot::getSymbol, s -> s));
-        
+
         User user = userRepository.findById(userId).orElse(null);
         List<String> favorites = (user != null && user.getFavorites() != null) ? user.getFavorites() : new ArrayList<>();
-        
+
         List<CoinDto> filteredCoins = allMetas.stream()
                 .map(meta -> {
                     CoinSnapshot snap = snapshotMap.get(meta.getSymbol());
@@ -65,16 +65,16 @@ public class CoinService {
                 .filter(Objects::nonNull)
                 .filter(coin -> applyFilters(coin, priceMin, priceMax, capMin, capMax, changeMin, changeMax, volumeMin, volumeMax))
                 .collect(Collectors.toList());
-        
+
         Comparator<CoinDto> comparator = getComparator(sortBy, order);
         filteredCoins.sort(comparator);
-        
+
         long totalCount = filteredCoins.size();
         int start = pageNo * pageSize;
         int end = Math.min(start + pageSize, filteredCoins.size());
         List<CoinDto> pagedCoins = (start < filteredCoins.size()) ? filteredCoins.subList(start, end) : new ArrayList<>();
         boolean hasMore = end < totalCount;
-        
+
         Map<String, Object> appliedFilters = new HashMap<>();
         if (query != null && !query.isBlank()) appliedFilters.put("query", query);
         if (priceMin != null) appliedFilters.put("priceMin", priceMin);
@@ -87,7 +87,7 @@ public class CoinService {
         if (volumeMax != null) appliedFilters.put("volumeMax", volumeMax);
         appliedFilters.put("sortBy", sortBy != null ? sortBy : "marketCap");
         appliedFilters.put("order", order != null ? order : "desc");
-        
+
         return SearchCoinsResponse.builder()
                 .success(true)
                 .coins(pagedCoins)
@@ -98,7 +98,7 @@ public class CoinService {
                 .appliedFilters(appliedFilters)
                 .build();
     }
-    
+
     private boolean applyFilters(CoinDto coin, Double priceMin, Double priceMax,
                                  Double capMin, Double capMax,
                                  Double changeMin, Double changeMax,
@@ -113,7 +113,7 @@ public class CoinService {
         if (volumeMax != null && coin.getVolume24h() > volumeMax) return false;
         return true;
     }
-    
+
     private Comparator<CoinDto> getComparator(String sortBy, String order) {
         Comparator<CoinDto> comparator;
         if ("price".equalsIgnoreCase(sortBy)) {
@@ -128,35 +128,36 @@ public class CoinService {
         }
         return comparator;
     }
-    
+
     public CoinDetailsResponse getCoinDetails(String userId, String symbol) {
-        CoinsMeta meta = coinsMetaRepository.findBySymbol(symbol.toUpperCase())
+        String normalizedSymbol = symbol.toUpperCase();
+        CoinsMeta meta = coinsMetaRepository.findBySymbol(normalizedSymbol)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Монета не найдена"));
-        
-        List<CoinSnapshot> latestList = snapshotsRepository.findLatestSnapshotsForSymbols(List.of(symbol));
+
+        List<CoinSnapshot> latestList = snapshotsRepository.findLatestSnapshotsForSymbols(List.of(normalizedSymbol));
         CoinSnapshot latest = latestList.isEmpty() ? null : latestList.get(0);
         if (latest == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Нет данных о цене для этой монеты");
         }
-        
+
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -7);
         Date sevenDaysAgo = cal.getTime();
-        List<CoinSnapshot> weekSnapshots = snapshotsRepository.findSnapshotsForSymbolBetweenDates(symbol, sevenDaysAgo, new Date());
-        
+        List<CoinSnapshot> weekSnapshots = snapshotsRepository.findSnapshotsForSymbolBetweenDates(normalizedSymbol, sevenDaysAgo, new Date());
+
         Double minPrice = null, maxPrice = null, avgPrice = null;
         if (!weekSnapshots.isEmpty()) {
             minPrice = weekSnapshots.stream().mapToDouble(CoinSnapshot::getPrice).min().orElse(0);
             maxPrice = weekSnapshots.stream().mapToDouble(CoinSnapshot::getPrice).max().orElse(0);
             avgPrice = weekSnapshots.stream().mapToDouble(CoinSnapshot::getPrice).average().orElse(0);
         }
-        
+
         boolean isFavorite = false;
         if (userId != null) {
             User user = userRepository.findById(userId).orElse(null);
-            isFavorite = user != null && user.getFavorites() != null && user.getFavorites().contains(symbol.toUpperCase());
+            isFavorite = user != null && user.getFavorites() != null && user.getFavorites().contains(normalizedSymbol);
         }
-        
+
         return CoinDetailsResponse.builder()
                 .success(true)
                 .symbol(meta.getSymbol())
@@ -172,7 +173,7 @@ public class CoinService {
                 .lastUpdated(latest.getTimestamp())
                 .build();
     }
-    
+
     public CoinHistoryResponse getCoinHistory(String symbol, Date dateFrom, Date dateTo,
                                               Double priceMin, Double priceMax,
                                               Double volumeMin, Double volumeMax,
@@ -180,14 +181,14 @@ public class CoinService {
                                               int pageSize, int pageNo) {
         CoinsMeta meta = coinsMetaRepository.findBySymbol(symbol.toUpperCase())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Монета не найдена"));
-        
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         List<CoinSnapshot> snapshots = snapshotsRepository.findHistoryWithFilters(
                 symbol.toUpperCase(), dateFrom, dateTo, priceMin, priceMax, volumeMin, volumeMax,
                 sortBy, order, pageSize, pageNo, pageable);
         long totalCount = snapshotsRepository.countHistoryWithFilters(
                 symbol.toUpperCase(), dateFrom, dateTo, priceMin, priceMax, volumeMin, volumeMax);
-        
+
         List<CoinHistoryResponse.HistoryEntry> history = snapshots.stream()
                 .map(s -> CoinHistoryResponse.HistoryEntry.builder()
                         .timestamp(s.getTimestamp())
@@ -197,12 +198,12 @@ public class CoinService {
                         .percentChange24h(s.getPercentChange24h())
                         .build())
                 .collect(Collectors.toList());
-        
+
         CoinHistoryResponse.DateRange range = CoinHistoryResponse.DateRange.builder()
                 .from(dateFrom != null ? dateFrom : (snapshots.isEmpty() ? null : snapshots.get(snapshots.size()-1).getTimestamp()))
                 .to(dateTo != null ? dateTo : (snapshots.isEmpty() ? null : snapshots.get(0).getTimestamp()))
                 .build();
-        
+
         return CoinHistoryResponse.builder()
                 .success(true)
                 .symbol(meta.getSymbol())
@@ -211,7 +212,7 @@ public class CoinService {
                 .dateRange(range)
                 .build();
     }
-    
+
     public FavoritesResponse getFavorites(String userId, int pageSize, int pageNo,
                                         String sortBy, String order,
                                         Double priceMin, Double priceMax,

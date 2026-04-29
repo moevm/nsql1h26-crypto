@@ -1,8 +1,15 @@
-"use client";
+import {
+  createContext,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
-
-import type { ToastInput, ToastItem } from "@/types/ui";
+import type { ToastInput, ToastItem } from "@/types/toast";
 
 interface ToastContextValue {
   pushToast: (toast: ToastInput) => void;
@@ -10,6 +17,7 @@ interface ToastContextValue {
 }
 
 const TOAST_TIMEOUT_MS = 4000;
+const MAX_TOASTS = 4;
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
@@ -29,22 +37,79 @@ const toastTypeLabel: Record<ToastItem["type"], string> = {
 
 export const ToastProvider = ({ children }: PropsWithChildren) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const timeoutIdsRef = useRef(new Map<string, number>());
+  const toastsRef = useRef<ToastItem[]>([]);
+
+  useEffect(() => {
+    toastsRef.current = toasts;
+  }, [toasts]);
+
+  const clearToastTimeout = useCallback((id: string) => {
+    const timeoutId = timeoutIdsRef.current.get(id);
+
+    if (!timeoutId) {
+      return;
+    }
+
+    window.clearTimeout(timeoutId);
+    timeoutIdsRef.current.delete(id);
+  }, []);
+
+  useEffect(() => {
+    const timeoutIds = timeoutIdsRef.current;
+
+    return () => {
+      timeoutIds.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      timeoutIds.clear();
+    };
+  }, []);
 
   const dismissToast = useCallback((id: string) => {
+    clearToastTimeout(id);
     setToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== id));
-  }, []);
+  }, [clearToastTimeout]);
 
   const pushToast = useCallback(
     (toast: ToastInput) => {
+      const hasDuplicateToast = toastsRef.current.some(
+        (currentToast) =>
+          currentToast.type === toast.type &&
+          currentToast.message === toast.message &&
+          currentToast.title === toast.title
+      );
+
+      if (hasDuplicateToast) {
+        return;
+      }
+
       const id = buildToastId();
+      const nextToast = { id, ...toast };
 
-      setToasts((currentToasts) => [...currentToasts, { id, ...toast }]);
+      setToasts((currentToasts) => {
+        const nextToasts = [...currentToasts, nextToast];
 
-      window.setTimeout(() => {
+        if (nextToasts.length <= MAX_TOASTS) {
+          return nextToasts;
+        }
+
+        const removedToasts = nextToasts.slice(0, nextToasts.length - MAX_TOASTS);
+
+        removedToasts.forEach((removedToast) => {
+          clearToastTimeout(removedToast.id);
+        });
+
+        return nextToasts.slice(-MAX_TOASTS);
+      });
+
+      const timeoutId = window.setTimeout(() => {
         dismissToast(id);
       }, TOAST_TIMEOUT_MS);
+
+      timeoutIdsRef.current.set(id, timeoutId);
     },
-    [dismissToast]
+    [clearToastTimeout, dismissToast]
   );
 
   const value = useMemo(

@@ -1,9 +1,8 @@
-"use client";
-
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 
-import type { AppSection } from "@/types/ui";
+import { useAuth } from "@/hooks/use-auth";
+import type { AppSection } from "@/types/app-navigation";
 import { appNavItems } from "@/utils/app-navigation";
 
 interface AppNavigationProps {
@@ -11,8 +10,16 @@ interface AppNavigationProps {
 }
 
 export const AppNavigation = ({ activeSection }: AppNavigationProps) => {
+  const { session } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuId = useId();
+  const visibleItems = appNavItems.filter((item) => {
+    if (item.requiredRole && item.requiredRole !== session?.role) {
+      return false;
+    }
+
+    return true;
+  });
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -43,7 +50,7 @@ export const AppNavigation = ({ activeSection }: AppNavigationProps) => {
   return (
     <div className="cw-app-nav">
       <nav className="hidden flex-wrap gap-2 lg:flex" aria-label="Основная навигация">
-        {appNavItems.map((item) => (
+        {visibleItems.map((item) => (
           <Link
             key={item.key}
             href={item.href}
@@ -83,7 +90,7 @@ export const AppNavigation = ({ activeSection }: AppNavigationProps) => {
             className="cw-app-nav-mobile lg:hidden"
             aria-label="Мобильная навигация"
           >
-            {appNavItems.map((item) => (
+            {visibleItems.map((item) => (
               <Link
                 key={item.key}
                 href={item.href}

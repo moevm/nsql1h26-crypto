@@ -1,139 +1,78 @@
-import { AppLayout } from "@/components/app-layout";
-import { CoinTable } from "@/components/coin-table";
-import { PageHead } from "@/components/page-head";
-import { RangeField } from "@/components/range-field";
-import { ViewStateSection } from "@/components/view-state-section";
-import { useToast } from "@/hooks/use-toast";
-import { useWatchlistViewMock } from "@/hooks/use-watchlist-view-mock";
-import { watchlistToastMessages } from "@/utils/toast-mocks";
+import { useRef, useState } from "react";
 
-export default function AppHomePage() {
-  const { pushToast } = useToast();
-  const viewState = useWatchlistViewMock();
+import { AppPageShell } from "@/components/app-page-shell";
+import { AddCoinModal } from "@/components/coins/add-coin-modal";
+import { SearchableCoinListTemplate } from "@/components/coins/searchable-coin-list-template";
+import { useAddCoinFlow } from "@/hooks/watchlist-view/use-add-coin-flow";
+import { useWatchlistView } from "@/hooks/watchlist-view/use-watchlist-view";
+
+const AppHomePageContent = () => {
+  const viewState = useWatchlistView();
+  const addCoinFlow = useAddCoinFlow({
+    reloadWatchlist: viewState.reloadWatchlist
+  });
+  const [isAddCoinModalOpen, setIsAddCoinModalOpen] = useState(false);
+  const addCoinButtonRef = useRef<HTMLButtonElement>(null);
+
+  const openAddCoinModal = () => {
+    setIsAddCoinModalOpen(true);
+  };
+
+  const closeAddCoinModal = () => {
+    setIsAddCoinModalOpen(false);
+  };
 
   return (
     <>
-      <PageHead 
-        title="Монеты | CryptoWatch" 
-        description="Главная страница watchlist" 
-      />
-
-      <AppLayout
+      <AppPageShell
         activeSection="coins"
+        headTitle="Монеты | CryptoWatch"
+        headDescription="Главная страница watchlist"
         title="Список отслеживаемых монет"
         description="Поиск, фильтр, таблица"
       >
-        <section className="cw-toolbar">
-          <div className="cw-toolbar-actions">
-            <button
-              className="cw-button-primary"
-              type="button"
-              onClick={() => pushToast(watchlistToastMessages.addCoinPending)}
-            >
-              Добавить монету
-            </button>
-            <button
-              className="cw-button-secondary"
-              type="button"
-              onClick={() => pushToast(watchlistToastMessages.comparePending)}
-            >
-              Сравнить
-            </button>
-          </div>
-        </section>
-
-        <section className="mt-8 space-y-6">
-          <div>
-            <div className="cw-section-label">Поиск и фильтр</div>
-            <div className="cw-panel-muted">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div className="flex-1">
-                  <label className="cw-field-label" htmlFor="watchlist-query">
-                    Глобальный поиск
-                  </label>
-                  <input
-                    className="cw-input"
-                    id="watchlist-query"
-                    name="query"
-                    placeholder="Название или тикер"
-                    type="search"
-                  />
-                </div>
-                <div className="lg:pt-7">
-                  <button
-                    className="cw-button-secondary"
-                    type="button"
-                    onClick={() => pushToast(watchlistToastMessages.filtersShown)}
-                  >
-                    Фильтры
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="cw-section-label">Расширенный фильтр</div>
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="cw-card-title">Диапазоны</h2>
-              <div className="flex gap-3">
+        <SearchableCoinListTemplate
+          toolbar={
+            <section className="cw-toolbar">
+              <div className="cw-toolbar-actions">
                 <button
+                  ref={addCoinButtonRef}
                   className="cw-button-primary"
                   type="button"
-                  onClick={() => pushToast(watchlistToastMessages.filtersApplied)}
+                  onClick={openAddCoinModal}
                 >
-                  Применить
+                  Добавить монету
                 </button>
                 <button
                   className="cw-button-secondary"
                   type="button"
-                  onClick={() => pushToast(watchlistToastMessages.filtersReset)}
+                  onClick={() => void viewState.refreshWatchlist()}
+                  disabled={viewState.isRefreshPending}
                 >
-                  Сбросить
+                  {viewState.isRefreshPending ? "Обновляем..." : "Обновить"}
                 </button>
               </div>
-            </div>
+            </section>
+          }
+          filters={viewState.filters}
+          table={{
+            ...viewState.table,
+            onEmptyAction: viewState.table.onEmptyAction ?? openAddCoinModal
+          }}
+        />
+      </AppPageShell>
 
-            <div className="cw-filter-grid">
-              <RangeField id="price-min" label="Цена, USD" />
-              <RangeField id="cap-min" label="Капитализация" />
-              <RangeField id="change-min" label="Изменение за 24ч" />
-              <RangeField id="volume-min" label="Объем торгов" />
-            </div>
-          </div>
-
-          <div>
-            <div className="cw-section-label">Таблица монет</div>
-            <div className="mb-4">
-              <h2 className="cw-card-title">Watchlist</h2>
-            </div>
-
-            <ViewStateSection
-              status={viewState.status}
-              errorTitle="Не удалось загрузить список"
-              errorMessage="Попробуйте обновить данные еще раз"
-              onRetry={() => {
-                viewState.retry();
-                pushToast(watchlistToastMessages.filtersShown);
-              }}
-            >
-              <>
-                <CoinTable rows={viewState.rows} />
-
-                <div className="cw-pagination">
-                  <span>{viewState.totalLabel}</span>
-                  <div className="flex gap-2">
-                    <span className="cw-page-pill cw-page-pill-active">1</span>
-                    <span className="cw-page-pill">2</span>
-                    <span className="cw-page-pill">3</span>
-                    <span className="cw-page-pill">...</span>
-                  </div>
-                </div>
-              </>
-            </ViewStateSection>
-          </div>
-        </section>
-      </AppLayout>
+      <AddCoinModal
+        open={isAddCoinModalOpen}
+        onClose={closeAddCoinModal}
+        isSubmitting={addCoinFlow.isSubmitting}
+        onSubmit={addCoinFlow.submitCoin}
+        restoreFocusRef={addCoinButtonRef}
+      />
     </>
   );
+};
+
+export default function AppHomePage() {
+  return <AppHomePageContent />;
 }

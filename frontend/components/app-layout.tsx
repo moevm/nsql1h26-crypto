@@ -1,7 +1,7 @@
 import { PropsWithChildren } from "react";
 
-import { AppNavigation } from "@/components/app-navigation";
-import type { AppSection } from "@/types/ui";
+import { AppHeaderActions } from "@/components/app-header-actions";
+import type { AppSection } from "@/types/app-navigation";
 
 interface AppLayoutProps extends PropsWithChildren {
   activeSection: AppSection;
@@ -20,10 +20,7 @@ export const AppLayout = ({
       <div className="cw-app-frame">
         <header className="cw-surface overflow-hidden">
           <div className="cw-app-header-bar">
-            <div className="cw-app-header-row">
-              <p className="cw-kicker mb-0">CryptoWatch</p>
-              <AppNavigation activeSection={activeSection} />
-            </div>
+            <AppHeaderActions activeSection={activeSection} />
           </div>
 
           <div className="cw-app-header-copy">

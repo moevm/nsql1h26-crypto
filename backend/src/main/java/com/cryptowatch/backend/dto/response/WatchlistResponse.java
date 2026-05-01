@@ -1,4 +1,4 @@
-package com.cryptowatch.backend.dto;
+package com.cryptowatch.backend.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
+
+import com.cryptowatch.backend.dto.common.CoinDto;
 
 @Data
 @Builder

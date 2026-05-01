@@ -1,4 +1,4 @@
-package com.cryptowatch.backend.dto;
+package com.cryptowatch.backend.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SavePresetResponse {
+public class DeletePresetResponse {
     private boolean success;
     private String message;
-    private String presetId;
-    private PresetDto preset;
 }

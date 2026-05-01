@@ -9,6 +9,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -48,6 +51,15 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
+    }
     public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractLogin(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));

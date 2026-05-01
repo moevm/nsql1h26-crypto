@@ -1,10 +1,11 @@
 package com.cryptowatch.backend.service;
 
+import com.cryptowatch.backend.dto.cmc.*;
+import com.cryptowatch.backend.config.CryptoConfig;
 import com.cryptowatch.backend.model.CoinSnapshot;
 import com.cryptowatch.backend.model.CoinsMeta;
 import com.cryptowatch.backend.repository.CoinSnapshotsRepository;
 import com.cryptowatch.backend.repository.CoinsMetaRepository;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,9 +15,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,20 +32,28 @@ public class CoinMarketCapService {
 
     private final CoinsMetaRepository coinsMetaRepository;
     private final CoinSnapshotsRepository snapshotsRepository;
-    private final RestTemplate restTemplate;  // вместо WebClient
+    private final RestTemplate restTemplate;
+    private final CryptoConfig cryptoConfig;
 
     @Value("${CMC_API_KEY:}")
     private String apiKey;
 
-    private static final String CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest";
+    private static final String CMC_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency";
+
 
     public boolean isSyncEnabled() {
         return apiKey != null && !apiKey.isBlank();
     }
-
+    // Старый метод – для совместимости
     public RefreshResult refreshSnapshots(List<String> symbols) {
+        CryptoConfig.History historyConfig = cryptoConfig.getHistory(); // нужно внедрить CryptoConfig
+        return refreshSnapshots(symbols, historyConfig.getDefaultDays(), historyConfig.getDefaultInterval());
+    }
+
+    // Новый метод с параметрами истории
+    public RefreshResult refreshSnapshots(List<String> symbols, int historyDays, String historyInterval) {
         if (!isSyncEnabled()) {
-            log.info("CMC_API_KEY is not set. Running in DB-only mode, sync skipped.");
+            log.info("CMC_API_KEY not set – sync skipped");
             return new RefreshResult(0, new ArrayList<>(), new Date(), false);
         }
 
@@ -49,36 +62,19 @@ public class CoinMarketCapService {
             return new RefreshResult(0, new ArrayList<>(), new Date(), true);
         }
 
-        String symbolParam = metas.stream()
-                .map(CoinsMeta::getSymbol)
-                .collect(Collectors.joining(","));
-
-        String url = String.format("%s?symbol=%s&convert=USD", CMC_URL, symbolParam);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-CMC_PRO_API_KEY", apiKey);
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-        ResponseEntity<CmcResponse> responseEntity = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                requestEntity,
-                CmcResponse.class
-        );
-        CmcResponse response = responseEntity.getBody();
-
-        if (response == null || response.getData() == null) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Empty response from CMC");
-        }
-
+        String symbolParam = metas.stream().map(CoinsMeta::getSymbol).collect(Collectors.joining(","));
+        String latestUrl = String.format("%s/quotes/latest?symbol=%s&convert=USD", CMC_URL, symbolParam);
+        CmcResponse latestResponse = executeGet(latestUrl, CmcResponse.class);
         Date now = new Date();
-        List<CoinSnapshot> snapshots = new ArrayList<>();
+        List<CoinSnapshot> allSnapshots = new ArrayList<>();
         List<String> refreshedSymbols = new ArrayList<>();
 
         for (CoinsMeta meta : metas) {
-            CmcQuoteData quoteData = response.getData().get(meta.getSymbol());
+            CmcQuoteData quoteData = latestResponse.getData().get(meta.getSymbol());
             if (quoteData != null && quoteData.getQuote() != null) {
                 CmcUsd usd = quoteData.getQuote().get("USD");
                 if (usd != null) {
-                    CoinSnapshot snapshot = CoinSnapshot.builder()
+                    CoinSnapshot current = CoinSnapshot.builder()
                             .symbol(meta.getSymbol())
                             .timestamp(now)
                             .price(usd.getPrice())
@@ -86,19 +82,58 @@ public class CoinMarketCapService {
                             .volume24h(usd.getVolume24h())
                             .percentChange24h(usd.getPercentChange24h())
                             .build();
-                    snapshots.add(snapshot);
+                    allSnapshots.add(current);
                     refreshedSymbols.add(meta.getSymbol());
                 }
             }
+
+            List<CoinSnapshot> historical = fetchHistoricalSnapshots(meta.getSymbol(), historyDays, historyInterval);
+            allSnapshots.addAll(historical);
         }
 
-        if (!snapshots.isEmpty()) {
-            snapshotsRepository.saveAll(snapshots);
-            log.info("Saved {} snapshots", snapshots.size());
+        if (!allSnapshots.isEmpty()) {
+            snapshotsRepository.saveAll(allSnapshots);
+            log.info("Saved {} total snapshots ({} current + historical)", allSnapshots.size(),
+                    allSnapshots.size() - (allSnapshots.size() - refreshedSymbols.size())); // упрощённо
         }
 
-        return new RefreshResult(snapshots.size(), refreshedSymbols, now, true);
+        return new RefreshResult(refreshedSymbols.size(), refreshedSymbols, now, true);
+    }
+    public CoinsMeta fetchAndCreateMetaIfAbsent(String symbol) {
+        if (!isSyncEnabled()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "CMC_API_KEY is not set. Unable to fetch coin info.");
+        }
 
+        String upperSymbol = symbol.toUpperCase();
+
+        Optional<CoinsMeta> existing = coinsMetaRepository.findBySymbol(upperSymbol);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        String url = String.format("%s/info?symbol=%s", CMC_URL, upperSymbol);
+        CmcInfoResponse infoResponse = executeGet(url, CmcInfoResponse.class);
+
+        if (infoResponse == null || infoResponse.getData() == null || infoResponse.getData().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Symbol not found: " + upperSymbol);
+        }
+
+        CmcInfo info = infoResponse.getData().get(upperSymbol);
+        if (info == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Symbol not found: " + upperSymbol);
+        }
+
+        CoinsMeta meta = CoinsMeta.builder()
+                .symbol(upperSymbol)
+                .name(info.getName())
+                .cmcId(info.getId())
+                .lastUpdated(new Date())
+                .build();
+
+        return coinsMetaRepository.save(meta);
     }
 
     private List<CoinsMeta> getMetas(List<String> symbols) {
@@ -111,34 +146,68 @@ public class CoinMarketCapService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
-
-    @lombok.Data
-    public static class CmcResponse {
-        private Map<String, CmcQuoteData> data;
+    private <T> T executeGet(String url, Class<T> responseType) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-CMC_PRO_API_KEY", apiKey);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+            T body = response.getBody();
+            if (body == null) {
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                        "Empty response from CMC for URL: " + url);
+            }
+            return body;
+        } catch (RestClientException e) {
+            log.error("CMC API request failed: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "CMC API error: " + e.getMessage());
+        }
     }
 
-    @lombok.Data
-    public static class CmcQuoteData {
-        private Map<String, CmcUsd> quote;
-    }
+    public List<CoinSnapshot> fetchHistoricalSnapshots(String symbol, int days, String interval) {
+        if (!isSyncEnabled()) {
+            log.debug("Sync disabled, skip historical fetch for {}", symbol);
+            return List.of();
+        }
 
-    @lombok.Data
-    public static class CmcUsd {
-        private double price;
-        @JsonProperty("volume_24h")
-        private double volume24h;
-        @JsonProperty("market_cap")
-        private double marketCap;
-        @JsonProperty("percent_change_24h")
-        private double percentChange24h;
-    }
+        String upperSymbol = symbol.toUpperCase();
+        Instant now = Instant.now();
+        Instant start = now.minus(days, ChronoUnit.DAYS);
+        DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
 
-    @lombok.Data
-    @lombok.AllArgsConstructor
-    public static class RefreshResult {
-        private int refreshedCount;
-        private List<String> symbols;
-        private Date lastUpdatedAt;
-        private boolean syncEnabled;
+        String url = String.format("%s/quotes/historical?symbol=%s&time_start=%s&time_end=%s&interval=%s&convert=USD",
+                CMC_URL, upperSymbol,
+                isoFormatter.format(start), isoFormatter.format(now),
+                interval);
+
+        try {
+            CmcHistoricalResponse response = executeGet(url, CmcHistoricalResponse.class);
+            if (response == null || response.getData() == null || response.getData().getQuotes() == null) {
+                log.warn("No historical data for {} with interval {}", upperSymbol, interval);
+                return List.of();
+            }
+
+            List<CoinSnapshot> newSnapshots = new ArrayList<>();
+            for (CmcHistoricalQuote quote : response.getData().getQuotes()) {
+                Date timestamp = Date.from(Instant.parse(quote.getTimestamp()));
+                if (!snapshotsRepository.existsBySymbolAndTimestamp(upperSymbol, timestamp)) {
+                    CoinSnapshot snapshot = CoinSnapshot.builder()
+                            .symbol(upperSymbol)
+                            .timestamp(timestamp)
+                            .price(quote.getPrice())
+                            .marketCap(quote.getMarketCap())
+                            .volume24h(quote.getVolume24h())
+                            .percentChange24h(quote.getPercentChange24h())
+                            .build();
+                    newSnapshots.add(snapshot);
+                }
+            }
+            log.info("Fetched {} new historical snapshots for {}", newSnapshots.size(), upperSymbol);
+            return newSnapshots;
+        } catch (Exception e) {
+            log.error("Failed to fetch historical data for {}: {}", upperSymbol, e.getMessage());
+            return List.of();
+        }
     }
 }

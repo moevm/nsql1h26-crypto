@@ -1,4 +1,4 @@
-package com.cryptowatch.backend.dto;
+package com.cryptowatch.backend.dto.error;
 
 import lombok.Builder;
 import lombok.Data;

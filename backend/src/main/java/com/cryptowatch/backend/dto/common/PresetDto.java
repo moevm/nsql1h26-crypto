@@ -1,4 +1,4 @@
-package com.cryptowatch.backend.dto;
+package com.cryptowatch.backend.dto.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

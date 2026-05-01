@@ -1,4 +1,4 @@
-package com.cryptowatch.backend.dto;
+package com.cryptowatch.backend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

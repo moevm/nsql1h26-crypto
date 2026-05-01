@@ -1,4 +1,4 @@
-package com.cryptowatch.backend.dto;
+package com.cryptowatch.backend.dto.request;
 
 import lombok.Data;
 import java.util.Date;

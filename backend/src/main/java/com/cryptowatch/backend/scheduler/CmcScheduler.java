@@ -1,6 +1,5 @@
 package com.cryptowatch.backend.scheduler;
 
-import com.cryptowatch.backend.config.CryptoConfig;
 import com.cryptowatch.backend.service.CoinMarketCapService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 public class CmcScheduler {
 
     private final CoinMarketCapService cmcService;
-    private final CryptoConfig cryptoConfig;
 
     @Scheduled(fixedRateString = "${crypto.scheduler.update-interval:15}", timeUnit = TimeUnit.MINUTES)
     public void updateSnapshots() {

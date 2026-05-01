@@ -1,6 +1,6 @@
 package com.cryptowatch.backend.exception;
 
-import com.cryptowatch.backend.dto.ApiError;
+import com.cryptowatch.backend.dto.error.ApiError;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.springframework.http.HttpStatus;

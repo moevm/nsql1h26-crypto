@@ -1,7 +1,8 @@
 package com.cryptowatch.backend.controller;
 
 import com.cryptowatch.backend.config.CryptoConfig;
-import com.cryptowatch.backend.dto.*;
+import com.cryptowatch.backend.dto.response.*;
+import com.cryptowatch.backend.dto.cmc.RefreshResult;
 import com.cryptowatch.backend.security.JwtTokenProvider;
 import com.cryptowatch.backend.service.CoinService;
 import com.cryptowatch.backend.service.WatchlistService;
@@ -192,7 +193,7 @@ public class CoinsController {
         int actualDays = (days != null && days > 0) ? days : historyConfig.getDefaultDays();
         String actualInterval = (interval != null && !interval.isBlank()) ? interval : historyConfig.getDefaultInterval();
 
-        CoinMarketCapService.RefreshResult result = coinMarketCapService.refreshSnapshots(symbols, actualDays, actualInterval);
+        RefreshResult result = coinMarketCapService.refreshSnapshots(symbols, actualDays, actualInterval);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

@@ -1,7 +1,7 @@
 package com.cryptowatch.backend.service;
 
-import com.cryptowatch.backend.dto.ExportDataResponse;
-import com.cryptowatch.backend.dto.ImportDataResponse;
+import com.cryptowatch.backend.dto.response.ExportDataResponse;
+import com.cryptowatch.backend.dto.response.ImportDataResponse;
 import com.cryptowatch.backend.model.*;
 import com.cryptowatch.backend.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;

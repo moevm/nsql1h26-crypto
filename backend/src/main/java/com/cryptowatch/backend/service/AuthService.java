@@ -1,6 +1,9 @@
 package com.cryptowatch.backend.service;
 
-import com.cryptowatch.backend.dto.*;
+import com.cryptowatch.backend.dto.request.LoginRequest;
+import com.cryptowatch.backend.dto.request.RegisterRequest;
+import com.cryptowatch.backend.dto.response.AuthResponse;
+import com.cryptowatch.backend.dto.response.VerifyResponse;
 import com.cryptowatch.backend.model.BlacklistedToken;
 import com.cryptowatch.backend.model.User;
 import com.cryptowatch.backend.repository.UserRepository;

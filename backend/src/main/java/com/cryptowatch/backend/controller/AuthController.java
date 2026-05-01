@@ -1,6 +1,9 @@
 package com.cryptowatch.backend.controller;
 
-import com.cryptowatch.backend.dto.*;
+import com.cryptowatch.backend.dto.request.LoginRequest;
+import com.cryptowatch.backend.dto.request.RegisterRequest;
+import com.cryptowatch.backend.dto.response.AuthResponse;
+import com.cryptowatch.backend.dto.response.VerifyResponse;
 import com.cryptowatch.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

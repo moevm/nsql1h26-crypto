@@ -1,11 +1,11 @@
 package com.cryptowatch.backend.service;
 
+import com.cryptowatch.backend.dto.cmc.*;
 import com.cryptowatch.backend.config.CryptoConfig;
 import com.cryptowatch.backend.model.CoinSnapshot;
 import com.cryptowatch.backend.model.CoinsMeta;
 import com.cryptowatch.backend.repository.CoinSnapshotsRepository;
 import com.cryptowatch.backend.repository.CoinsMetaRepository;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -209,68 +209,5 @@ public class CoinMarketCapService {
             log.error("Failed to fetch historical data for {}: {}", upperSymbol, e.getMessage());
             return List.of();
         }
-    }
-    @lombok.Data
-    public static class CmcResponse {
-        private Map<String, CmcQuoteData> data;
-    }
-
-    @lombok.Data
-    public static class CmcQuoteData {
-        private Map<String, CmcUsd> quote;
-    }
-
-    @lombok.Data
-    public static class CmcUsd {
-        private double price;
-        @JsonProperty("volume_24h")
-        private double volume24h;
-        @JsonProperty("market_cap")
-        private double marketCap;
-        @JsonProperty("percent_change_24h")
-        private double percentChange24h;
-    }
-
-    @lombok.Data
-    public static class CmcInfoResponse {
-        private Map<String, CmcInfo> data;
-    }
-
-    @lombok.Data
-    public static class CmcInfo {
-        private int id;
-        private String name;
-        private String symbol;
-    }
-
-    @lombok.Data
-    @lombok.AllArgsConstructor
-    public static class RefreshResult {
-        private int refreshedCount;
-        private List<String> symbols;
-        private Date lastUpdatedAt;
-        private boolean syncEnabled;
-    }
-    @lombok.Data
-    public static class CmcHistoricalResponse {
-        private CmcHistoricalData data;
-    }
-
-    @lombok.Data
-    public static class CmcHistoricalData {
-        private String symbol;
-        private List<CmcHistoricalQuote> quotes;
-    }
-
-    @lombok.Data
-    public static class CmcHistoricalQuote {
-        private String timestamp;
-        private double price;
-        @JsonProperty("volume_24h")
-        private double volume24h;
-        @JsonProperty("market_cap")
-        private double marketCap;
-        @JsonProperty("percent_change_24h")
-        private double percentChange24h;
     }
 }

@@ -1,4 +1,4 @@
-package com.cryptowatch.backend.dto;
+package com.cryptowatch.backend.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,13 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
+import com.cryptowatch.backend.dto.common.PresetDto;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FavoritesResponse {
+public class PresetListResponse {
     private boolean success;
-    private List<CoinDto> coins;
+    private List<PresetDto> presets;
     private long totalCount;
     private int pageSize;
     private int pageNo;

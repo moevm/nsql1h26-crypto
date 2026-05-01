@@ -1,9 +1,9 @@
 package com.cryptowatch.backend.service;
 
-import com.cryptowatch.backend.dto.AddCoinResponse;
-import com.cryptowatch.backend.dto.CoinDto;
-import com.cryptowatch.backend.dto.DeleteCoinResponse;
-import com.cryptowatch.backend.dto.WatchlistResponse;
+import com.cryptowatch.backend.dto.common.CoinDto;
+import com.cryptowatch.backend.dto.response.AddCoinResponse;
+import com.cryptowatch.backend.dto.response.DeleteCoinResponse;
+import com.cryptowatch.backend.dto.response.WatchlistResponse;
 import com.cryptowatch.backend.model.CoinSnapshot;
 import com.cryptowatch.backend.model.CoinsMeta;
 import com.cryptowatch.backend.model.User;

@@ -1,5 +1,6 @@
 package com.cryptowatch.backend.controller;
 
+import com.cryptowatch.backend.config.CryptoConfig;
 import com.cryptowatch.backend.dto.*;
 import com.cryptowatch.backend.security.JwtTokenProvider;
 import com.cryptowatch.backend.service.CoinService;
@@ -26,6 +27,7 @@ public class CoinsController {
     private final JwtTokenProvider jwtTokenProvider;
     private final CoinService coinService;
     private final CoinMarketCapService coinMarketCapService;
+    private final CryptoConfig cryptoConfig;
 
     @GetMapping("/watchlist")
     public ResponseEntity<?> getWatchlist(
@@ -175,33 +177,38 @@ public class CoinsController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> RefreshSnapshots(
+    public ResponseEntity<?> refreshSnapshots(
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody(required = false) RefreshRequest request)
-            {
+            @RequestBody(required = false) RefreshRequest request) {
+
         String token = authHeader.substring(7);
         String userId = jwtTokenProvider.extractUserId(token);
 
-        List<String> symbols = (request != null && request.getSymbols() != null)
-            ? request.getSymbols(): null;
-        CoinMarketCapService.RefreshResult result = coinMarketCapService.refreshSnapshots(symbols); // lowercase 'r'
+        List<String> symbols = (request != null && request.getSymbols() != null) ? request.getSymbols() : null;
+        Integer days = (request != null && request.getDays() != null) ? request.getDays() : null;
+        String interval = (request != null && request.getInterval() != null) ? request.getInterval() : null;
+
+        CryptoConfig.History historyConfig = cryptoConfig.getHistory(); // внедрить CryptoConfig в контроллер
+        int actualDays = (days != null && days > 0) ? days : historyConfig.getDefaultDays();
+        String actualInterval = (interval != null && !interval.isBlank()) ? interval : historyConfig.getDefaultInterval();
+
+        CoinMarketCapService.RefreshResult result = coinMarketCapService.refreshSnapshots(symbols, actualDays, actualInterval);
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("syncEnabled", result.isSyncEnabled());
-        response.put(
-                "message",
-                result.isSyncEnabled()
-                        ? "Snapshots refreshed"
-                        : "CMC_API_KEY is not set. Running in DB-only mode, sync skipped"
-        );
+        response.put("message", "Snapshots refreshed with history");
         response.put("refreshedCount", result.getRefreshedCount());
         response.put("symbols", result.getSymbols());
         response.put("lastUpdatedAt", result.getLastUpdatedAt());
+        response.put("historyDays", actualDays);
+        response.put("historyInterval", actualInterval);
         return ResponseEntity.ok(response);
     }
 
     @lombok.Data
     static class RefreshRequest {
         private List<String> symbols;
+        private Integer days;     
+        private String interval;    
     }
 }

@@ -16,6 +16,8 @@ import java.util.List;
 
 @Repository
 public interface CoinSnapshotsRepository extends MongoRepository<CoinSnapshot, String>, CoinSnapshotsRepositoryCustom {
+    boolean existsBySymbolAndTimestamp(String symbol, Date timestamp);
+
 }
 
 interface CoinSnapshotsRepositoryCustom {

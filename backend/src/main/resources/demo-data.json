@@ -2,11 +2,20 @@
   "data": {
     "users": [
       {
-        "id": "u-user",
-        "login": "user",
+        "id": "u-user1",
+        "login": "user1",
         "passwordHash": "User123!",
         "role": "ROLE_USER",
         "watchlist": ["BTC", "ETH", "SOL"],
+        "favorites": ["BTC"],
+        "createdAt": "2026-04-20T09:00:00Z"
+      },
+      {
+        "id": "u-user2",
+        "login": "user2",
+        "passwordHash": "User123!",
+        "role": "ROLE_USER",
+        "watchlist": ["BTC"],
         "favorites": ["BTC"],
         "createdAt": "2026-04-20T09:00:00Z"
       },

@@ -15,3 +15,15 @@
 <a href=" ./../../../actions/workflows/6_report.yml" >![6. Пояснительная записка]( ./../../actions/workflows/6_report.yml/badge.svg)</a>
 
 <a href=" ./../../../actions/workflows/7_app_is_ready.yml" >![7. App is ready]( ./../../actions/workflows/7_app_is_ready.yml/badge.svg)</a>
+
+## Запуск
+
+В корне проекта
+```bash
+docker-compose up -d
+```
+
+## Данные для входа
+- Администратор: `admin` / `Admin123!`
+- Пользователь: `user1` / `User123!`
+- Пользователь: `user2` / `User123!`

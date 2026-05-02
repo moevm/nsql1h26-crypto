@@ -43,11 +43,18 @@ public class DemoDataInitializer implements CommandLineRunner {
     @Value("${app.seed.file:classpath:demo-data.json}")
     private String seedFilePath;
 
+    @Value("${app.seed.force:false}")
+    private boolean seedForce;
+
     @Override
     public void run(String... args) {
-        if (!isDatabaseEmpty()) {
+        if (!seedForce && !isDatabaseEmpty()) {
             log.info("Skip seed import: database is not empty");
             return;
+        }
+
+        if (seedForce && !isDatabaseEmpty()) {
+            log.info("Force seed import: overwriting existing data from {}", seedFilePath);
         }
 
         DemoSeedData seedData = loadSeedData();

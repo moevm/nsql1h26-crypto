@@ -1,9 +1,5 @@
 import type { NextConfig } from "next";
 
-import { parseApiMode } from "./utils/api-mode";
-
-const apiMode = parseApiMode(process.env.NEXT_PUBLIC_API_MODE);
-
 const getBackendApiOrigin = (): string => {
   const value = process.env.BACKEND_API_ORIGIN;
 
@@ -18,10 +14,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
   async rewrites() {
-    if (apiMode !== "backend") {
-      return [];
-    }
-
     const backendApiOrigin = getBackendApiOrigin();
 
     return [

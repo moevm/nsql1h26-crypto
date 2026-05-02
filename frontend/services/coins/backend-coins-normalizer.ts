@@ -8,12 +8,11 @@ import type {
   CoinHistoryResponse,
   CoinsMutationResponse,
   FavoritesResponse,
+  PaginatedCoinsResponse,
   RefreshWatchlistResponse,
-  SearchCoinsAppliedFilters,
   SearchCoinsResponse,
   WatchlistCoin
 } from "@/types/coins";
-import { getTableSortKeyFromBackendCoinSortKey } from "@/utils/coin-table-sorting";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -183,26 +182,23 @@ const normalizeCoinCollectionPayload = (payload: unknown): NormalizedCoinCollect
   }
 
   const coins = rawCoins.map(normalizeCoin);
-  const totalCount = parseNumber(payload.totalCount);
-  const pageNo = parseNumber(payload.pageNo);
-  const pageSize = parseNumber(payload.pageSize);
 
   return {
     coins,
-    totalCount: totalCount ?? coins.length,
-    hasMore: parseBoolean(payload.hasMore) ?? false,
-    pageNo: pageNo ?? 0,
-    pageSize: pageSize ?? coins.length
+    totalCount: parseRequiredNumber(payload.totalCount, "totalCount"),
+    hasMore: parseRequiredBoolean(payload.hasMore, "hasMore"),
+    pageNo: parseRequiredNumber(payload.pageNo, "pageNo"),
+    pageSize: parseRequiredNumber(payload.pageSize, "pageSize")
   };
 };
 
 export const normalizeCoinsMutationResponse = (payload: unknown): CoinsMutationResponse => {
   if (!isRecord(payload)) {
-    return { success: true };
+    throw createShapeError("payload");
   }
 
   return {
-    success: parseBoolean(payload.success) ?? true,
+    success: parseRequiredBoolean(payload.success, "success"),
     message: parseString(payload.message) ?? undefined
   };
 };
@@ -213,7 +209,7 @@ export const normalizeAddToWatchlistResponse = (payload: unknown): AddToWatchlis
   }
 
   return {
-    success: parseBoolean(payload.success) ?? true,
+    success: parseRequiredBoolean(payload.success, "success"),
     message: parseString(payload.message) ?? undefined,
     coin:
       payload.coin === undefined || payload.coin === null
@@ -234,37 +230,29 @@ export const normalizeFavoritesResponse = (payload: unknown): FavoritesResponse 
   };
 };
 
-const normalizeSearchAppliedFilters = (payload: unknown): SearchCoinsAppliedFilters => {
+export const normalizeWatchlistResponse = (
+  payload: unknown,
+  requestedPageNo?: number,
+  requestedPageSize?: number
+): PaginatedCoinsResponse => {
   if (!isRecord(payload)) {
-    throw createShapeError("appliedFilters");
+    throw createShapeError("payload");
   }
 
-  const sortBy = getTableSortKeyFromBackendCoinSortKey(
-    parseRequiredString(payload.sortBy, "appliedFilters.sortBy")
-  );
+  const rawCoins = payload.coins;
 
-  if (!sortBy) {
-    throw createShapeError("appliedFilters.sortBy");
+  if (!Array.isArray(rawCoins)) {
+    throw createShapeError("coins");
   }
 
-  const order = parseRequiredString(payload.order, "appliedFilters.order");
-
-  if (order !== "asc" && order !== "desc") {
-    throw createShapeError("appliedFilters.order");
-  }
+  const coins = rawCoins.map(normalizeCoin);
 
   return {
-    query: parseString(payload.query) ?? undefined,
-    sortBy,
-    order,
-    priceMin: parseNumber(payload.priceMin) ?? undefined,
-    priceMax: parseNumber(payload.priceMax) ?? undefined,
-    capMin: parseNumber(payload.capMin) ?? undefined,
-    capMax: parseNumber(payload.capMax) ?? undefined,
-    changeMin: parseNumber(payload.changeMin) ?? undefined,
-    changeMax: parseNumber(payload.changeMax) ?? undefined,
-    volumeMin: parseNumber(payload.volumeMin) ?? undefined,
-    volumeMax: parseNumber(payload.volumeMax) ?? undefined
+    coins,
+    totalCount: parseRequiredNumber(payload.totalCount, "totalCount"),
+    hasMore: parseRequiredBoolean(payload.hasMore, "hasMore"),
+    pageNo: parseNumber(payload.pageNo) ?? requestedPageNo ?? 0,
+    pageSize: parseNumber(payload.pageSize) ?? requestedPageSize ?? coins.length
   };
 };
 
@@ -282,23 +270,18 @@ export const normalizeSearchCoinsResponse = (payload: unknown): SearchCoinsRespo
     totalCount: parseRequiredNumber(payload.totalCount, "totalCount"),
     pageNo: parseRequiredNumber(payload.pageNo, "pageNo"),
     pageSize: parseRequiredNumber(payload.pageSize, "pageSize"),
-    hasMore: parseRequiredBoolean(payload.hasMore, "hasMore"),
-    appliedFilters: normalizeSearchAppliedFilters(payload.appliedFilters)
+    hasMore: parseRequiredBoolean(payload.hasMore, "hasMore")
   };
 };
 
 export const normalizeRefreshWatchlistResponse = (payload: unknown): RefreshWatchlistResponse => {
-  const mutationResult = normalizeCoinsMutationResponse(payload);
-
   if (!isRecord(payload)) {
-    return {
-      ...mutationResult,
-      refreshedCount: 0
-    };
+    throw createShapeError("payload");
   }
 
   return {
-    ...mutationResult,
+    success: parseRequiredBoolean(payload.success, "success"),
+    message: parseString(payload.message) ?? undefined,
     refreshedCount: parseNumber(payload.refreshedCount) ?? 0,
     lastUpdatedAt: parseIsoDateString(payload.lastUpdatedAt)
   };

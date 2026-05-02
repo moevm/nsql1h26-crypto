@@ -69,23 +69,7 @@ export interface PaginatedCoinsResponse {
 
 export interface FavoritesResponse extends PaginatedCoinsResponse {}
 
-export interface SearchCoinsAppliedFilters {
-  query?: string;
-  sortBy: ServerCoinTableSortKey;
-  order: CoinTableSortDirection;
-  priceMin?: number;
-  priceMax?: number;
-  capMin?: number;
-  capMax?: number;
-  changeMin?: number;
-  changeMax?: number;
-  volumeMin?: number;
-  volumeMax?: number;
-}
-
-export interface SearchCoinsResponse extends PaginatedCoinsResponse {
-  appliedFilters: SearchCoinsAppliedFilters;
-}
+export interface SearchCoinsResponse extends PaginatedCoinsResponse {}
 
 export interface CoinDetails {
   symbol: string;
@@ -162,7 +146,13 @@ export interface CoinsMutationResponse {
   message?: string;
 }
 
+export interface WatchlistRequestParams {
+  pageSize?: number;
+  pageNo?: number;
+}
+
 export interface CoinsApi {
+  getWatchlist(params?: WatchlistRequestParams): Promise<PaginatedCoinsResponse>;
   getFavorites(params?: FavoritesRequestParams): Promise<FavoritesResponse>;
   getCoinDetails(symbol: string): Promise<CoinDetails>;
   getCoinHistory(symbol: string, params?: CoinHistoryRequestParams): Promise<CoinHistoryResponse>;

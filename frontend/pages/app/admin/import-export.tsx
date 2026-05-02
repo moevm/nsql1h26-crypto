@@ -29,13 +29,13 @@ const ImportExportPageContent = () => {
             </div>
 
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-              <div className="cw-card-surface-md">
+              <div className="cw-card-surface p-5">
                 <p className="cw-card-title text-base">Файл</p>
                 <p className="mt-3 text-sm leading-6 text-text-main">
                   JSON с данными монет
                 </p>
               </div>
-              <div className="cw-card-surface-md">
+              <div className="cw-card-surface p-5">
                 <p className="cw-card-title text-base">Действие</p>
                 <button
                   className="cw-button-primary mt-4 w-full"
@@ -118,7 +118,7 @@ const ImportExportPageContent = () => {
               ) : null}
 
               {view.importResult ? (
-                <div className="cw-card-surface-md mt-4">
+                <div className="cw-card-surface p-5 mt-4">
                   <p className="cw-card-title text-base">{view.importResult.message}</p>
                   <ul className="mt-3 space-y-1 text-sm text-text-main">
                     {Object.entries(view.importResult.recordCount).map(([key, count]) => (

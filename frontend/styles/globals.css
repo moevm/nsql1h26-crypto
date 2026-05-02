@@ -42,6 +42,8 @@
   --color-success: #22c55e;
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
+  --color-favorite: #d79d17;
+  --overlay-favorite-active: rgba(246, 196, 83, 0.16);
   --shadow-panel-lg: 0 32px 80px rgba(15, 23, 42, 0.12);
   --shadow-panel: 0 24px 48px rgba(15, 23, 42, 0.08);
   --shadow-field-focus: 0 0 0 4px rgba(124, 58, 237, 0.16);

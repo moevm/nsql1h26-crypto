@@ -13,12 +13,19 @@ export interface StatisticsApi {
   deletePreset(presetId: string): Promise<void>;
 }
 
+const parseLocalDate = (dateStr: string, endOfDay = false): Date => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return endOfDay
+    ? new Date(year, month - 1, day, 23, 59, 59, 999)
+    : new Date(year, month - 1, day, 0, 0, 0, 0);
+};
+
 const buildStatisticsQuery = (params: StatisticsParams): string => {
   const q = new URLSearchParams();
   params.symbols.forEach((s) => q.append("symbols", s));
   q.set("aggregation", params.aggregation);
-  if (params.timeRangeFrom) q.set("timeRangeFrom", new Date(params.timeRangeFrom).toISOString());
-  if (params.timeRangeTo) q.set("timeRangeTo", new Date(params.timeRangeTo).toISOString());
+  if (params.timeRangeFrom) q.set("timeRangeFrom", parseLocalDate(params.timeRangeFrom).toISOString());
+  if (params.timeRangeTo) q.set("timeRangeTo", parseLocalDate(params.timeRangeTo, true).toISOString());
   if (params.minPrice !== null) q.set("minPrice", String(params.minPrice));
   if (params.maxPrice !== null) q.set("maxPrice", String(params.maxPrice));
   if (params.minVolume !== null) q.set("minVolume", String(params.minVolume));
@@ -49,8 +56,8 @@ export const statisticsService: StatisticsApi = {
       body: {
         name,
         symbols: params.symbols,
-        timeRangeFrom: params.timeRangeFrom ? new Date(params.timeRangeFrom).getTime() : null,
-        timeRangeTo: params.timeRangeTo ? new Date(params.timeRangeTo).getTime() : null,
+        timeRangeFrom: params.timeRangeFrom ? parseLocalDate(params.timeRangeFrom).getTime() : null,
+        timeRangeTo: params.timeRangeTo ? parseLocalDate(params.timeRangeTo, true).getTime() : null,
         minPrice: params.minPrice,
         maxPrice: params.maxPrice,
         minVolume: params.minVolume,

@@ -27,7 +27,7 @@ export type CoinTableSortKey =
 export type CoinTableSortDirection = "asc" | "desc";
 export type ServerCoinTableSortKey = Extract<
   CoinTableSortKey,
-  "priceUsd" | "change24hPercent" | "marketCapUsd"
+  "priceUsd" | "change24hPercent" | "marketCapUsd" | "volume24hUsd"
 >;
 
 export interface CoinTableSortState {

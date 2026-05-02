@@ -138,6 +138,8 @@ public class CoinService {
             comparator = Comparator.comparingDouble(CoinDto::getPrice);
         } else if ("percentChange24h".equalsIgnoreCase(sortBy)) {
             comparator = Comparator.comparingDouble(CoinDto::getPercentChange24h);
+        } else if ("volume24h".equalsIgnoreCase(sortBy)) {
+            comparator = Comparator.comparingDouble(CoinDto::getVolume24h);
         } else {
             comparator = Comparator.comparingDouble(CoinDto::getMarketCap);
         }

@@ -27,12 +27,6 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
   const templateState = useSearchableCoinListTemplate({
     routeConfig: WATCHLIST_ROUTE_STATE_CONFIG,
     rangeIdPrefix: "watchlist",
-    queryField: {
-      id: "watchlist-query",
-      name: "query",
-      label: "Глобальный поиск",
-      placeholder: "Название или тикер..."
-    },
     filterHelperText: "Фильтры применяются по кнопке"
   });
   const { routeState } = templateState;
@@ -45,7 +39,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     currentPage: routeState.appliedState.page,
     fallbackErrorMessage: "Не удалось загрузить список монет",
     isRouteReady: routeState.isRouteReady,
-    loadPage: coinsService.searchCoins,
+    loadPage: (params) => coinsService.getWatchlist({ pageSize: params.pageSize, pageNo: params.pageNo }),
     pageSize: requestPageSize,
     requestKey: JSON.stringify(routeState.requestParams),
     requestParams: routeState.requestParams
@@ -227,19 +221,11 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     }
   };
 
-  const emptyState =
-    dataState.totalCount === 0 && !routeState.hasActiveAppliedFilters
-      ? {
-          title: "Watchlist пока пуст",
-          message: "Добавьте монеты",
-          actionLabel: "Добавить монету"
-        }
-      : {
-          title: "Монеты не найдены",
-          message: "Измените фильтры или сбросьте их",
-          actionLabel: "Сбросить фильтры",
-          onAction: routeState.resetDraft
-        };
+  const emptyState = {
+    title: "Watchlist пока пуст",
+    message: "Добавьте монеты",
+    actionLabel: "Добавить монету"
+  };
 
   return {
     filters: {
@@ -302,8 +288,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       },
       emptyTitle: emptyState.title,
       emptyMessage: emptyState.message,
-      emptyActionLabel: emptyState.actionLabel,
-      onEmptyAction: emptyState.onAction
+      emptyActionLabel: emptyState.actionLabel
     },
     isRefreshPending,
     refreshWatchlist,

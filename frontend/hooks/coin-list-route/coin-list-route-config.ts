@@ -42,10 +42,10 @@ export const WATCHLIST_ROUTE_STATE_CONFIG: CoinListPageModeConfig = {
   mode: "watchlist",
   pathname: "/app",
   requestMode: "search",
-  supportsTextQuery: true,
+  supportsTextQuery: false,
   defaultPageSize: 10,
   defaultSort: DEFAULT_SERVER_SORT,
-  allowedSortKeys: SERVER_COIN_TABLE_SORTABLE_COLUMNS
+  allowedSortKeys: [] as readonly ServerCoinTableSortKey[]
 };
 
 export const FAVORITES_ROUTE_STATE_CONFIG: CoinListPageModeConfig = {

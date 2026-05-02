@@ -6,7 +6,8 @@ import {
   normalizeCoinsMutationResponse,
   normalizeFavoritesResponse,
   normalizeRefreshWatchlistResponse,
-  normalizeSearchCoinsResponse
+  normalizeSearchCoinsResponse,
+  normalizeWatchlistResponse
 } from "@/services/coins/backend-coins-normalizer";
 import {
   buildCoinHistoryQueryParams,
@@ -17,10 +18,18 @@ import type {
   CoinHistoryRequestParams,
   CoinsApi,
   FavoritesRequestParams,
-  SearchCoinsRequestParams
+  SearchCoinsRequestParams,
+  WatchlistRequestParams
 } from "@/types/coins";
 
 export const backendCoinsService: CoinsApi = {
+  async getWatchlist(params?: WatchlistRequestParams) {
+    const response = await authorizedHttpClient.get<unknown>("/api/coins/watchlist", {
+      params: params ? { pageSize: params.pageSize, pageNo: params.pageNo } : undefined
+    });
+
+    return normalizeWatchlistResponse(response, params?.pageNo, params?.pageSize);
+  },
   async getFavorites(params?: FavoritesRequestParams) {
     const response = await authorizedHttpClient.get<unknown>("/api/coins/favorites", {
       params: buildFavoritesQueryParams(params)

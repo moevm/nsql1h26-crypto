@@ -19,5 +19,7 @@ public class WatchlistResponse {
     private List<CoinDto> coins;
     private long totalCount;
     private boolean hasMore;
+    private int pageNo;
+    private int pageSize;
     private Date updatedAt;
 }

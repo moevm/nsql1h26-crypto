@@ -8,6 +8,7 @@ import com.cryptowatch.backend.dto.response.PresetListResponse;
 import com.cryptowatch.backend.dto.response.SavePresetResponse;
 import com.cryptowatch.backend.model.StatisticsPreset;
 import com.cryptowatch.backend.repository.StatisticsPresetRepository;
+import com.cryptowatch.backend.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,8 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,15 +31,18 @@ public class StatisticsService {
     private final StatisticsPresetRepository presetRepository;
     private final MongoTemplate mongoTemplate;
 
-    public PresetListResponse getUserPresets(String userId, int pageSize, int pageNo, String sortBy, String order) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize, 
+    public PresetListResponse getUserPresets(String userId, int pageSize, int pageNo,
+                                             String sortBy, String order) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize,
                 Sort.by(Sort.Direction.fromString(order), getSortField(sortBy)));
         List<StatisticsPreset> presets = presetRepository.findByUserId(userId, pageable);
         long totalCount = presetRepository.countByUserId(userId);
         boolean hasMore = (pageNo + 1) * pageSize < totalCount;
-        
-        List<PresetDto> presetDtos = presets.stream().map(this::toDto).collect(Collectors.toList());
-        
+
+        List<PresetDto> presetDtos = presets.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+
         return PresetListResponse.builder()
                 .success(true)
                 .presets(presetDtos)
@@ -50,22 +52,26 @@ public class StatisticsService {
                 .hasMore(hasMore)
                 .build();
     }
-    
+
     @Transactional
     public SavePresetResponse savePreset(String userId, SavePresetRequest request) {
         if ("update".equalsIgnoreCase(request.getMode())) {
             if (request.getPresetId() == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "presetId required for update");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "presetId required for update");
             }
-            StatisticsPreset existing = presetRepository.findByIdAndUserId(request.getPresetId(), userId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Preset not found"));
-            
+            StatisticsPreset existing = presetRepository
+                    .findByIdAndUserId(request.getPresetId(), userId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Preset not found"));
+
             // If name changed, check uniqueness
-            if (!existing.getName().equals(request.getName()) && 
-                presetRepository.existsByUserIdAndName(userId, request.getName())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Preset name already exists");
+            if (!existing.getName().equals(request.getName())
+                    && presetRepository.existsByUserIdAndName(userId, request.getName())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Preset name already exists");
             }
-            
+
             existing.setName(request.getName());
             existing.setSymbols(request.getSymbols());
             existing.setTimeRangeFrom(request.getTimeRangeFrom());
@@ -84,7 +90,8 @@ public class StatisticsService {
                     .build();
         } else {
             if (presetRepository.existsByUserIdAndName(userId, request.getName())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Preset name already exists");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Preset name already exists");
             }
             StatisticsPreset preset = StatisticsPreset.builder()
                     .userId(userId)
@@ -108,54 +115,57 @@ public class StatisticsService {
                     .build();
         }
     }
-    
+
     @Transactional
     public DeletePresetResponse deletePreset(String userId, String presetId) {
         StatisticsPreset preset = presetRepository.findByIdAndUserId(presetId, userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Preset not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Preset not found"));
         presetRepository.delete(preset);
         return DeletePresetResponse.builder()
                 .success(true)
                 .message("Preset deleted successfully")
                 .build();
     }
-    
+
     public BuildStatisticsResponse buildStatistics(String userId, List<String> symbols,
                                                    Date timeRangeFrom, Date timeRangeTo,
                                                    Double minPrice, Double maxPrice,
                                                    Double minVolume, String aggregation) {
         if (symbols == null || symbols.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one symbol required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "At least one symbol required");
         }
-        
-        Date from = timeRangeFrom != null ? timeRangeFrom : Date.from(Instant.now().minus(30, ChronoUnit.DAYS));
-        Date to = timeRangeTo != null ? timeRangeTo : new Date();
-        
+
+        Date from = DateUtils.atUtcDayStart(timeRangeFrom);
+        Date to = DateUtils.atUtcDayEnd(timeRangeTo);
+
         Map<String, List<BuildStatisticsResponse.AggregatedData>> resultMap = new HashMap<>();
-        
+
         for (String symbol : symbols) {
             List<BuildStatisticsResponse.AggregatedData> aggregated = aggregateForSymbol(
                     symbol, from, to, minPrice, maxPrice, minVolume, aggregation);
             resultMap.put(symbol, aggregated);
         }
-        
-        BuildStatisticsResponse.BuildParameters params = BuildStatisticsResponse.BuildParameters.builder()
-                .symbols(symbols)
-                .timeRangeFrom(from)
-                .timeRangeTo(to)
-                .minPrice(minPrice)
-                .maxPrice(maxPrice)
-                .minVolume(minVolume)
-                .aggregation(aggregation)
-                .build();
-        
+
+        BuildStatisticsResponse.BuildParameters params =
+                BuildStatisticsResponse.BuildParameters.builder()
+                        .symbols(symbols)
+                        .timeRangeFrom(from)
+                        .timeRangeTo(to)
+                        .minPrice(minPrice)
+                        .maxPrice(maxPrice)
+                        .minVolume(minVolume)
+                        .aggregation(aggregation)
+                        .build();
+
         return BuildStatisticsResponse.builder()
                 .success(true)
                 .data(resultMap)
                 .parameters(params)
                 .build();
     }
-    
+
     private List<BuildStatisticsResponse.AggregatedData> aggregateForSymbol(String symbol,
                                                                             Date from, Date to,
                                                                             Double minPrice, Double maxPrice,
@@ -163,10 +173,18 @@ public class StatisticsService {
                                                                             String aggregation) {
         Criteria criteria = Criteria.where("symbol").is(symbol)
                 .and("timestamp").gte(from).lte(to);
-        if (minPrice != null) criteria.and("price").gte(minPrice);
-        if (maxPrice != null) criteria.and("price").lte(maxPrice);
-        if (minVolume != null) criteria.and("volume24h").gte(minVolume);
-        
+
+        if (minPrice != null && maxPrice != null) {
+            criteria.and("price").gte(minPrice).lte(maxPrice);
+        } else if (minPrice != null) {
+            criteria.and("price").gte(minPrice);
+        } else if (maxPrice != null) {
+            criteria.and("price").lte(maxPrice);
+        }
+        if (minVolume != null) {
+            criteria.and("volume24h").gte(minVolume);
+        }
+
         String dateFormat;
         switch (aggregation.toLowerCase()) {
             case "hours":
@@ -180,7 +198,7 @@ public class StatisticsService {
                 dateFormat = "%Y-%m-%d";
                 break;
         }
-        
+
         Aggregation aggregationPipeline = Aggregation.newAggregation(
                 Aggregation.match(criteria),
                 Aggregation.addFields()
@@ -197,10 +215,10 @@ public class StatisticsService {
                         .last("timestamp").as("periodEnd"),
                 Aggregation.sort(Sort.by(Sort.Direction.ASC, "_id"))
         );
-        
+
         AggregationResults<AggregationResult> results = mongoTemplate.aggregate(
                 aggregationPipeline, "coin_snapshots", AggregationResult.class);
-        
+
         List<BuildStatisticsResponse.AggregatedData> list = new ArrayList<>();
         for (AggregationResult res : results.getMappedResults()) {
             list.add(BuildStatisticsResponse.AggregatedData.builder()
@@ -215,7 +233,7 @@ public class StatisticsService {
         }
         return list;
     }
-    
+
     private static class AggregationResult {
         public String _id;
         public Date periodStart;
@@ -226,13 +244,13 @@ public class StatisticsService {
         public double maxPrice;
         public long recordCount;
     }
-    
+
     private String getSortField(String sortBy) {
         if ("name".equals(sortBy)) return "name";
         if ("createdAt".equals(sortBy)) return "createdAt";
         return "updatedAt";
     }
-    
+
     private PresetDto toDto(StatisticsPreset preset) {
         return PresetDto.builder()
                 .id(preset.getId())

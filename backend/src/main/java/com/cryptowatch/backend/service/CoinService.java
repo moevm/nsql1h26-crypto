@@ -13,6 +13,8 @@ import com.cryptowatch.backend.model.User;
 import com.cryptowatch.backend.repository.CoinSnapshotsRepository;
 import com.cryptowatch.backend.repository.CoinsMetaRepository;
 import com.cryptowatch.backend.repository.UserRepository;
+import com.cryptowatch.backend.util.DateUtils;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -201,11 +203,13 @@ public class CoinService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Монета не найдена"));
 
         Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Date normalizedFrom = DateUtils.atUtcDayStart(dateFrom);
+        Date normalizedTo = DateUtils.atUtcDayEnd(dateTo);
         List<CoinSnapshot> snapshots = snapshotsRepository.findHistoryWithFilters(
-                symbol.toUpperCase(), dateFrom, dateTo, priceMin, priceMax, volumeMin, volumeMax,
+                symbol.toUpperCase(), normalizedFrom, normalizedTo, priceMin, priceMax, volumeMin, volumeMax,
                 sortBy, order, pageSize, pageNo, pageable);
         long totalCount = snapshotsRepository.countHistoryWithFilters(
-                symbol.toUpperCase(), dateFrom, dateTo, priceMin, priceMax, volumeMin, volumeMax);
+                symbol.toUpperCase(), normalizedFrom, normalizedTo, priceMin, priceMax, volumeMin, volumeMax);
 
         List<CoinHistoryResponse.HistoryEntry> history = snapshots.stream()
                 .map(s -> CoinHistoryResponse.HistoryEntry.builder()

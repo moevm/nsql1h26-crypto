@@ -77,6 +77,8 @@ public class WatchlistService {
                 .coins(coins)
                 .totalCount(totalCount)
                 .hasMore(hasMore)
+                .pageNo(pageNo)
+                .pageSize(pageSize)
                 .updatedAt(updatedAt)
                 .build();
     }

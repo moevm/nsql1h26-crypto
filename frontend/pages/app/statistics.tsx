@@ -51,7 +51,7 @@ const StatisticsPageContent = () => {
     >
       <section className="cw-toolbar">
         <div className="cw-toolbar-actions">
-          <button className="cw-button-primary" type="button" onClick={build}>
+          <button className="cw-button-primary" form="stats-params-form" type="submit">
             Построить
           </button>
           <button
@@ -96,7 +96,7 @@ const StatisticsPageContent = () => {
 
       <section className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-8">
-          <div>
+          <form id="stats-params-form" onSubmit={(e) => { e.preventDefault(); build(); }}>
             <div className="cw-section-label">Параметры</div>
             <div className="cw-panel-muted">
               <div className="mb-6">
@@ -200,7 +200,7 @@ const StatisticsPageContent = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </form>
 
           <div>
             <div className="cw-section-label">График</div>

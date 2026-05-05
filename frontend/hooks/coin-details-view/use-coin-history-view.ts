@@ -7,6 +7,7 @@ import {
   getCoinRouteSymbol
 } from "@/hooks/coin-details-view/coin-details-route";
 import type {
+  CoinHistoryChartFilters,
   CoinHistoryFiltersDraft,
   UseCoinHistoryViewResult
 } from "@/hooks/coin-details-view/coin-history-view-types";
@@ -22,6 +23,7 @@ import {
 
 const DEFAULT_HISTORY_PAGE_SIZE = 10;
 const DEFAULT_HISTORY_RANGE_DAYS = 7;
+const CHART_PAGE_SIZE = 2000;
 
 interface CoinHistoryRouteAppliedState {
   filters: CoinHistoryFiltersDraft;
@@ -190,6 +192,17 @@ const buildHistoryRequestParams = (state: CoinHistoryRouteAppliedState) => ({
   pageSize: DEFAULT_HISTORY_PAGE_SIZE
 });
 
+const buildChartRequestParams = (state: CoinHistoryRouteAppliedState) => ({
+  dateFrom: state.filters.dateFrom
+    ? toDateBoundaryIso(state.filters.dateFrom, "start")
+    : undefined,
+  dateTo: state.filters.dateTo ? toDateBoundaryIso(state.filters.dateTo, "end") : undefined,
+  pageNo: 0,
+  pageSize: CHART_PAGE_SIZE,
+  sortBy: "timestamp" as const,
+  order: "asc" as const
+});
+
 const getHistoryTotalLabel = (
   currentPage: number,
   pageSize: number,
@@ -220,10 +233,12 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
       };
   const [draftFilters, setDraftFilters] = useState<CoinHistoryFiltersDraft>(defaultDraft);
   const [entries, setEntries] = useState<UseCoinHistoryViewResult["entries"]>([]);
+  const [chartEntries, setChartEntries] = useState<UseCoinHistoryViewResult["chartEntries"]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [status, setStatus] = useState<UseCoinHistoryViewResult["status"]>(VIEW_STATUS.LOADING);
   const [errorMessage, setErrorMessage] = useState("Не удалось загрузить историю");
-  const latestRequestIdRef = useRef(0);
+  const latestTableRequestIdRef = useRef(0);
+  const latestChartRequestIdRef = useRef(0);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -300,13 +315,17 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
     ]
   );
 
-  const loadHistory = useCallback(async () => {
+  const chartRequestParams = useMemo(
+    () => buildChartRequestParams(appliedState),
+    [appliedState.filters.dateFrom, appliedState.filters.dateTo]
+  );
+
+  const loadTableData = useCallback(async () => {
     if (!router.isReady || !symbol) {
       return;
     }
 
-    const requestId = latestRequestIdRef.current + 1;
-    latestRequestIdRef.current = requestId;
+    const requestId = ++latestTableRequestIdRef.current;
 
     setStatus(VIEW_STATUS.LOADING);
     setEntries([]);
@@ -316,7 +335,7 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
     try {
       const response = await coinsService.getCoinHistory(symbol, requestParams);
 
-      if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
+      if (!isMountedRef.current || latestTableRequestIdRef.current !== requestId) {
         return;
       }
 
@@ -324,7 +343,7 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
       setTotalCount(response.totalCount);
       setStatus(response.totalCount === 0 ? VIEW_STATUS.EMPTY : VIEW_STATUS.READY);
     } catch (error) {
-      if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
+      if (!isMountedRef.current || latestTableRequestIdRef.current !== requestId) {
         return;
       }
 
@@ -335,9 +354,43 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
     }
   }, [requestParams, router.isReady, symbol]);
 
+  const loadChartData = useCallback(async () => {
+    if (!router.isReady || !symbol) {
+      return;
+    }
+
+    const requestId = ++latestChartRequestIdRef.current;
+
+    setChartEntries([]);
+
+    try {
+      const response = await coinsService.getCoinHistory(symbol, chartRequestParams);
+
+      if (!isMountedRef.current || latestChartRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      setChartEntries(response.history);
+    } catch {
+      if (!isMountedRef.current || latestChartRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      setChartEntries([]);
+    }
+  }, [chartRequestParams, router.isReady, symbol]);
+
+  const retry = useCallback(async () => {
+    await Promise.all([loadTableData(), loadChartData()]);
+  }, [loadTableData, loadChartData]);
+
   useEffect(() => {
-    void loadHistory();
-  }, [loadHistory]);
+    void loadTableData();
+  }, [loadTableData]);
+
+  useEffect(() => {
+    void loadChartData();
+  }, [loadChartData]);
 
   const replaceAppliedState = useCallback(
     (nextState: CoinHistoryRouteAppliedState) => {
@@ -366,8 +419,17 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
     isRouteTransitionPending;
   const totalPages = Math.max(1, Math.ceil(totalCount / DEFAULT_HISTORY_PAGE_SIZE));
 
+  const chartFilters: CoinHistoryChartFilters = {
+    priceMin: parseCoinFilterNumber(appliedState.filters.priceMin),
+    priceMax: parseCoinFilterNumber(appliedState.filters.priceMax),
+    volumeMin: parseCoinFilterNumber(appliedState.filters.volumeMin),
+    volumeMax: parseCoinFilterNumber(appliedState.filters.volumeMax)
+  };
+
   return {
     entries,
+    chartEntries,
+    chartFilters,
     errorMessage,
     filters: {
       draft: draftFilters,
@@ -455,7 +517,7 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
       },
       isPending: isRouteTransitionPending
     },
-    retry: loadHistory,
+    retry,
     status,
     totalLabel: getHistoryTotalLabel(
       appliedState.page,

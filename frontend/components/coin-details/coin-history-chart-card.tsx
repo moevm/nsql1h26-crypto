@@ -1,124 +1,176 @@
-import { type ReactNode, useMemo } from "react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
+import ReactECharts from "echarts-for-react";
+import { useMemo } from "react";
 
+import type { CoinHistoryChartFilters } from "@/hooks/coin-details-view/coin-history-view-types";
 import type { CoinHistoryEntry } from "@/types/coins";
 import { formatUsdCompact, formatUsdPrice } from "@/utils/coin-formatters";
+import {
+  BRAND,
+  FILTERED_OUT,
+  GRID,
+  MUTED,
+  TEXT,
+  TOOLTIP_BG,
+  TOOLTIP_BORDER,
+  defaultDataZoom,
+  tickFormatter
+} from "@/utils/chart-theme";
 
 interface CoinHistoryChartCardProps {
   entries: CoinHistoryEntry[];
+  chartFilters: CoinHistoryChartFilters;
 }
 
-interface CoinHistoryChartPoint {
-  timestamp: string;
-  priceUsd: number;
-}
+const tooltipFormatter = new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeStyle: "short" });
 
-const chartTickFormatter = new Intl.DateTimeFormat("ru-RU", {
-  day: "numeric",
-  month: "short"
-});
+const formatPriceTick = (value: number): string =>
+  Math.abs(value) >= 1000 ? formatUsdCompact(value) : formatUsdPrice(value);
 
-const chartTooltipFormatter = new Intl.DateTimeFormat("ru-RU", {
-  dateStyle: "medium",
-  timeStyle: "short"
-});
+export const CoinHistoryChartCard = ({ entries, chartFilters }: CoinHistoryChartCardProps) => {
+  const derived = useMemo(() => {
+    const sorted = [...entries].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
 
-const formatChartPriceTick = (value: number): string => {
-  if (Math.abs(value) >= 1000) {
-    return formatUsdCompact(value);
-  }
+    if (sorted.length === 0) return null;
 
-  return formatUsdPrice(value);
-};
+    let min = Number.POSITIVE_INFINITY;
+    let max = Number.NEGATIVE_INFINITY;
 
-const formatTooltipPrice = (value: unknown): string => {
-  const normalizedValue = Array.isArray(value) ? value[0] : value;
-  const numericValue =
-    typeof normalizedValue === "number"
-      ? normalizedValue
-      : typeof normalizedValue === "string"
-        ? Number(normalizedValue)
-        : null;
-
-  return typeof numericValue === "number" && Number.isFinite(numericValue)
-    ? formatUsdPrice(numericValue)
-    : formatUsdPrice(null);
-};
-
-const formatTooltipLabel = (value: ReactNode): string =>
-  chartTooltipFormatter.format(new Date(String(value)));
-
-export const CoinHistoryChartCard = ({ entries }: CoinHistoryChartCardProps) => {
-  const chartState = useMemo(() => {
-    const points = [...entries]
-      .sort((leftEntry, rightEntry) => {
-        const leftTime = new Date(leftEntry.timestamp).getTime();
-        const rightTime = new Date(rightEntry.timestamp).getTime();
-
-        return leftTime - rightTime;
-      })
-      .map<CoinHistoryChartPoint>((entry) => ({
-        timestamp: entry.timestamp,
-        priceUsd: entry.priceUsd
-      }));
-
-    let minPriceUsd = Number.POSITIVE_INFINITY;
-    let maxPriceUsd = Number.NEGATIVE_INFINITY;
-
-    for (const point of points) {
-      if (point.priceUsd < minPriceUsd) {
-        minPriceUsd = point.priceUsd;
-      }
-
-      if (point.priceUsd > maxPriceUsd) {
-        maxPriceUsd = point.priceUsd;
-      }
+    for (const p of sorted) {
+      if (p.priceUsd < min) min = p.priceUsd;
+      if (p.priceUsd > max) max = p.priceUsd;
     }
+
+    const padding = min === max ? Math.abs(min) * 0.05 : (max - min) * 0.05;
+    const prices = sorted.map((p) => p.priceUsd);
+
+    const hasFilters =
+      chartFilters.priceMin !== null ||
+      chartFilters.priceMax !== null ||
+      chartFilters.volumeMin !== null ||
+      chartFilters.volumeMax !== null;
+
+    const filteredPrices = hasFilters
+      ? sorted.map((entry) => {
+          const ok =
+            (chartFilters.priceMin === null || entry.priceUsd >= chartFilters.priceMin) &&
+            (chartFilters.priceMax === null || entry.priceUsd <= chartFilters.priceMax) &&
+            (chartFilters.volumeMin === null || entry.volume24hUsd >= chartFilters.volumeMin) &&
+            (chartFilters.volumeMax === null || entry.volume24hUsd <= chartFilters.volumeMax);
+          return ok ? entry.priceUsd : null;
+        })
+      : null;
+
+    const series = hasFilters
+      ? [
+          {
+            type: "line",
+            data: prices,
+            showSymbol: false,
+            lineStyle: { color: FILTERED_OUT, width: 1.5, type: "dashed" },
+            itemStyle: { color: FILTERED_OUT },
+            z: 1
+          },
+          {
+            type: "line",
+            data: filteredPrices,
+            connectNulls: false,
+            showSymbol: false,
+            lineStyle: { color: BRAND, width: 3 },
+            itemStyle: { color: BRAND },
+            z: 2
+          }
+        ]
+      : [
+          {
+            type: "line",
+            data: prices,
+            showSymbol: false,
+            lineStyle: { color: BRAND, width: 3 },
+            itemStyle: { color: BRAND }
+          }
+        ];
+
+    const axisLabel = { color: MUTED, fontSize: 12 };
+
+    const option = {
+      grid: { top: 8, right: 12, bottom: 52, left: 8, containLabel: true },
+      xAxis: {
+        type: "category",
+        data: sorted.map((p) => p.timestamp),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          ...axisLabel,
+          formatter: (value: string) => tickFormatter.format(new Date(value))
+        }
+      },
+      yAxis: {
+        type: "value",
+        min: min - padding,
+        max: max + padding,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { ...axisLabel, formatter: formatPriceTick },
+        splitLine: { lineStyle: { color: GRID, type: "dashed" } }
+      },
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: TOOLTIP_BG,
+        borderColor: TOOLTIP_BORDER,
+        borderRadius: 18,
+        textStyle: { color: TEXT, fontSize: 13 },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        formatter: (params: any[]) => {
+          const p = params[0];
+          if (!p) return "";
+          return `${tooltipFormatter.format(new Date(String(p.axisValue)))}<br/><b>${formatUsdPrice(Number(p.value))}</b>`;
+        }
+      },
+      dataZoom: defaultDataZoom,
+      series
+    };
 
     return {
-      points,
-      latestPriceUsd: points.at(-1)?.priceUsd ?? null,
-      minPriceUsd: Number.isFinite(minPriceUsd) ? minPriceUsd : null,
-      maxPriceUsd: Number.isFinite(maxPriceUsd) ? maxPriceUsd : null
+      option,
+      hasFilters,
+      summaryMetrics: [
+        { label: "Последняя цена", value: formatUsdPrice(sorted.at(-1)!.priceUsd) },
+        { label: "Мин. за период", value: formatUsdPrice(min) },
+        { label: "Макс. за период", value: formatUsdPrice(max) }
+      ]
     };
-  }, [entries]);
+  }, [entries, chartFilters.priceMin, chartFilters.priceMax, chartFilters.volumeMin, chartFilters.volumeMax]);
 
-  if (chartState.points.length === 0) {
-    return null;
-  }
+  if (!derived) return null;
 
-  const summaryMetrics = [
-    {
-      label: "Последняя цена",
-      value: formatUsdPrice(chartState.latestPriceUsd)
-    },
-    {
-      label: "Мин. на странице",
-      value: formatUsdPrice(chartState.minPriceUsd)
-    },
-    {
-      label: "Макс. на странице",
-      value: formatUsdPrice(chartState.maxPriceUsd)
-    }
-  ];
+  const { option, hasFilters, summaryMetrics } = derived;
 
   return (
     <section className="cw-surface-soft">
       <div className="flex flex-col gap-4 border-b border-dashed border-border pb-5 xl:flex-row xl:items-end xl:justify-between">
         <div className="min-w-0">
           <p className="cw-kicker">График цены</p>
-          <h3 className="cw-card-title mt-3">Динамика по текущим записям</h3>
-          <p className="mt-2 text-sm text-text-muted">
-            График строится по тем же строкам, которые показаны в таблице ниже
-          </p>
+          <h3 className="cw-card-title mt-3">Динамика за период</h3>
+          {hasFilters && (
+            <div className="mt-2 flex gap-4 text-xs text-text-muted">
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-px w-4"
+                  style={{ borderBottom: `1px dashed ${FILTERED_OUT}` }}
+                />
+                Вне фильтра
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-0.5 w-4 rounded"
+                  style={{ backgroundColor: BRAND }}
+                />
+                В фильтре
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -132,51 +184,7 @@ export const CoinHistoryChartCard = ({ entries }: CoinHistoryChartCardProps) => 
       </div>
 
       <div className="mt-6 h-80 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartState.points} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
-            <CartesianGrid stroke="rgba(209, 213, 219, 0.6)" strokeDasharray="3 6" vertical={false} />
-            <XAxis
-              axisLine={false}
-              dataKey="timestamp"
-              minTickGap={24}
-              tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
-              tickFormatter={(value: string) => chartTickFormatter.format(new Date(value))}
-              tickLine={false}
-            />
-            <YAxis
-              axisLine={false}
-              tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
-              tickFormatter={(value: number) => formatChartPriceTick(value)}
-              tickLine={false}
-              width={88}
-            />
-            <Tooltip
-              contentStyle={{
-                border: "1px solid var(--border-soft)",
-                borderRadius: "18px",
-                boxShadow: "var(--shadow-panel)",
-                backgroundColor: "rgba(255, 255, 255, 0.96)"
-              }}
-              cursor={{ stroke: "rgba(124, 58, 237, 0.24)", strokeWidth: 1 }}
-              formatter={formatTooltipPrice}
-              labelFormatter={formatTooltipLabel}
-            />
-            <Line
-              activeDot={{ r: 5 }}
-              dataKey="priceUsd"
-              dot={{
-                r: 3,
-                stroke: "var(--color-brand)",
-                strokeWidth: 2,
-                fill: "var(--color-surface)"
-              }}
-              name="Цена"
-              stroke="var(--color-brand)"
-              strokeWidth={3}
-              type="monotone"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <ReactECharts option={option} style={{ height: "100%", width: "100%" }} />
       </div>
     </section>
   );

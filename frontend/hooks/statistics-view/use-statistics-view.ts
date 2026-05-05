@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useStatisticsParams } from "@/hooks/statistics-view/use-statistics-params";
 import { useStatisticsPresets } from "@/hooks/statistics-view/use-statistics-presets";
 import { useStatisticsResults } from "@/hooks/statistics-view/use-statistics-results";
-import type { AggregatedDataPoint, StatisticsPreset } from "@/types/statistics";
+import type { StatisticsPreset } from "@/types/statistics";
 
 export type ChartMetric = "avgPrice" | "minPrice" | "maxPrice" | "avgVolume";
 
@@ -16,17 +16,8 @@ const loadSavedMetric = (): ChartMetric => {
   return "avgPrice";
 };
 
-const toShortDate = (timestamp: number): string =>
-  new Date(timestamp).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
-
 const toDateInputValue = (timestamp: number): string =>
   new Date(timestamp).toISOString().slice(0, 10);
-
-const computeLabels = (points: AggregatedDataPoint[]): string[] => {
-  if (points.length <= 6) return points.map((p) => toShortDate(p.periodStart));
-  const step = Math.floor(points.length / 5);
-  return points.filter((_, i) => i % step === 0).map((p) => toShortDate(p.periodStart));
-};
 
 export const useStatisticsView = () => {
   const params = useStatisticsParams();
@@ -43,9 +34,13 @@ export const useStatisticsView = () => {
   const data = results.result?.data;
   const firstSymbolPoints = symbols[0] ? (data?.[symbols[0]] ?? []) : [];
 
-  const chartMaxValue = Math.max(...firstSymbolPoints.map((p) => p[chartMetric]), 1);
-  const chartBars = firstSymbolPoints.map((p) => Math.round((p[chartMetric] / chartMaxValue) * 100));
-  const chartLabels = computeLabels(firstSymbolPoints);
+  const chartValues = firstSymbolPoints.map((p) => p[chartMetric]);
+  const chartTimestamps = firstSymbolPoints.map((p) => p.periodStart);
+
+  const dateValidationMessage =
+    params.timeRangeFrom && params.timeRangeTo && params.timeRangeFrom > params.timeRangeTo
+      ? "Поле «Период»: значение «от» не должно быть больше значения «до»"
+      : null;
 
   const build = useCallback(
     () => results.build(params.currentParams),
@@ -74,12 +69,12 @@ export const useStatisticsView = () => {
     params,
     results,
     presets,
-    chartBars,
-    chartLabels,
-    chartMaxValue,
+    chartValues,
+    chartTimestamps,
     chartMetric,
     setChartMetric,
     selectedSymbols: symbols,
+    dateValidationMessage,
     build,
     retry,
     loadPreset

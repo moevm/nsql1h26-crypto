@@ -132,7 +132,30 @@ public class CoinMarketCapService {
                 .cmcId(info.getId())
                 .lastUpdated(new Date())
                 .build();
-
+        try {
+            String quoteUrl = String.format("%s/quotes/latest?symbol=%s&convert=USD", CMC_URL, upperSymbol);
+            CmcResponse quoteResponse = executeGet(quoteUrl, CmcResponse.class);
+            if (quoteResponse != null && quoteResponse.getData() != null) {
+                CmcQuoteData quoteData = quoteResponse.getData().get(upperSymbol);
+                if (quoteData != null && quoteData.getQuote() != null) {
+                    CmcUsd usd = quoteData.getQuote().get("USD");
+                    if (usd != null) {
+                        CoinSnapshot snapshot = CoinSnapshot.builder()
+                                .symbol(upperSymbol)
+                                .timestamp(new Date())
+                                .price(usd.getPrice())
+                                .marketCap(usd.getMarketCap())
+                                .volume24h(usd.getVolume24h())
+                                .percentChange24h(usd.getPercentChange24h())
+                                .build();
+                        snapshotsRepository.save(snapshot);
+                        log.info("Initial snapshot created for {}: price={}", upperSymbol, usd.getPrice());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch initial snapshot for {}: {}", upperSymbol, e.getMessage());
+        }
         return coinsMetaRepository.save(meta);
     }
 

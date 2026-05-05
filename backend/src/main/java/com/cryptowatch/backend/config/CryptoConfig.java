@@ -19,6 +19,7 @@ public class CryptoConfig {
 
     @Data
     public static class History {
+        private boolean enabled = false;
         private int defaultDays = 7;
         private String defaultInterval = "hourly"; // hourly, daily, weekly
     }

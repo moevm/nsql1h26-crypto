@@ -3,10 +3,19 @@ import type { StatisticsParams } from "@/types/statistics";
 
 const STORAGE_KEY = "stats_params";
 
+const getDefaultTimeRange = () => {
+  const to = new Date();
+  const from = new Date();
+  from.setMonth(to.getMonth() - 1);
+  return {
+    timeRangeFrom: from.toISOString().split("T")[0],
+    timeRangeTo: to.toISOString().split("T")[0]
+  };
+};
+
 const DEFAULT_PARAMS: StatisticsParams = {
   symbols: [],
-  timeRangeFrom: "",
-  timeRangeTo: "",
+  ...getDefaultTimeRange(),
   minPrice: null,
   maxPrice: null,
   minVolume: null,

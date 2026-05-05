@@ -208,8 +208,8 @@ const StatisticsPageContent = () => {
 
             <ViewStateSection
               status={results.status}
-              errorTitle="Не удалось построить график"
-              errorMessage="Проверьте параметры и попробуйте снова"
+              errorTitle={results.errorDetails?.title || "Не удалось построить график"}
+              errorMessage={results.errorDetails?.message || "Проверьте параметры и попробуйте снова"}
               onRetry={retry}
             >
               <div className="cw-surface overflow-hidden px-5 py-5 sm:px-6">

@@ -588,10 +588,30 @@
 
 .cw-empty-badge { color: var(--color-text-muted); }
 
+.cw-dropdown {
+   @apply absolute z-50 mt-1 rounded-md border shadow-md;
+   border-color: var(--color-border);
+   background: var(--overlay-strong);
+   backdrop-filter: blur(12px);
+}
+
+.cw-dropdown-item {
+   @apply block w-full border-0 px-3 py-2 text-left text-sm font-normal;
+   color: var(--color-text-main);
+   transition-duration: 160ms;
+   transition-property: background-color, color;
+   transition-timing-function: ease-out;
+}
+
+.cw-dropdown-item:hover {
+   background: var(--overlay-brand-soft);
+   color: var(--color-text-strong);
+}
+
 .cw-error-title,
 .cw-empty-title {
-  color: var(--color-text-strong);
-  @apply mt-4 text-xl font-semibold;
+   color: var(--color-text-strong);
+   @apply mt-4 text-xl font-semibold;
 }
 
 .cw-error-message,

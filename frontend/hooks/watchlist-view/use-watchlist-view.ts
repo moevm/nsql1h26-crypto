@@ -1,14 +1,14 @@
-import { useState } from "react";
+import {useCallback, useState} from "react";
 
-import { useToastContext } from "@/components/toast-provider";
-import { useCoinListData } from "@/hooks/coin-list-route/use-coin-list-data";
-import { WATCHLIST_ROUTE_STATE_CONFIG } from "@/hooks/coin-list-route/coin-list-route-config";
-import { useSearchableCoinListTemplate } from "@/hooks/coin-list-route/use-searchable-coin-list-template";
-import { useAuth } from "@/hooks/use-auth";
-import type { UseWatchlistViewResult } from "@/hooks/watchlist-view/watchlist-view-types";
-import { coinsService } from "@/services/coins/coins-service";
-import type { WatchlistCoin } from "@/types/coins";
-import { getApiErrorMessage } from "@/utils/error-message";
+import {useToastContext} from "@/components/toast-provider";
+import {useCoinListData} from "@/hooks/coin-list-route/use-coin-list-data";
+import {WATCHLIST_ROUTE_STATE_CONFIG} from "@/hooks/coin-list-route/coin-list-route-config";
+import {useSearchableCoinListTemplate} from "@/hooks/coin-list-route/use-searchable-coin-list-template";
+import {useAuth} from "@/hooks/use-auth";
+import type {UseWatchlistViewResult} from "@/hooks/watchlist-view/watchlist-view-types";
+import {coinsService} from "@/services/coins/coins-service";
+import type {WatchlistCoin, WatchlistRequestParams} from "@/types/coins";
+import {getApiErrorMessage} from "@/utils/error-message";
 
 const assertSuccessfulResponse = (
   response: { success: boolean; message?: string },
@@ -22,24 +22,30 @@ const assertSuccessfulResponse = (
 };
 
 export const useWatchlistView = (): UseWatchlistViewResult => {
-  const { session, syncSessionUser } = useAuth();
-  const { pushToast } = useToastContext();
+  const {session, syncSessionUser} = useAuth();
+  const {pushToast} = useToastContext();
   const templateState = useSearchableCoinListTemplate({
     routeConfig: WATCHLIST_ROUTE_STATE_CONFIG,
     rangeIdPrefix: "watchlist",
     filterHelperText: "Фильтры применяются по кнопке"
   });
-  const { routeState } = templateState;
+  const {routeState} = templateState;
   const [isRefreshPending, setIsRefreshPending] = useState(false);
   const [favoritePendingSymbols, setFavoritePendingSymbols] = useState<string[]>([]);
   const [removePendingSymbols, setRemovePendingSymbols] = useState<string[]>([]);
   const requestPageSize =
     routeState.requestParams.pageSize ?? WATCHLIST_ROUTE_STATE_CONFIG.defaultPageSize;
+
+  const loadWatchlistPage = useCallback(
+    (params: WatchlistRequestParams) => coinsService.getWatchlist({pageSize: params.pageSize, pageNo: params.pageNo}),
+    []
+  );
+
   const dataState = useCoinListData({
     currentPage: routeState.appliedState.page,
     fallbackErrorMessage: "Не удалось загрузить список монет",
     isRouteReady: routeState.isRouteReady,
-    loadPage: (params) => coinsService.getWatchlist({ pageSize: params.pageSize, pageNo: params.pageNo }),
+    loadPage: loadWatchlistPage,
     pageSize: requestPageSize,
     requestKey: JSON.stringify(routeState.requestParams),
     requestParams: routeState.requestParams
@@ -105,9 +111,9 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
         currentCoins.map((currentCoin) =>
           currentCoin.symbol === coin.symbol
             ? {
-                ...currentCoin,
-                isFavorite: !currentCoin.isFavorite
-              }
+              ...currentCoin,
+              isFavorite: !currentCoin.isFavorite
+            }
             : currentCoin
         )
       );

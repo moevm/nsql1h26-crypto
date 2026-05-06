@@ -73,22 +73,22 @@ export default function ComparePage() {
                 }}
                 autoComplete="off"
               />
-              {v.searchResults.length > 0 && (
-                <ul className="absolute z-50 mt-1 w-full rounded-md border border-border bg-background shadow-md">
-                  {v.searchResults.slice(0, 8).map((coin) => (
-                    <li key={coin.symbol}>
-                      <button
-                        type="button"
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
-                        onClick={() => v.onAddSymbol(coin.symbol)}
-                      >
-                        <span className="font-medium" translate="no">{coin.symbol}</span>
-                        <span className="ml-2 text-muted-foreground">{coin.name}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+               {v.searchResults.length > 0 && (
+                 <ul className="cw-dropdown w-full">
+                   {v.searchResults.slice(0, 8).map((coin) => (
+                     <li key={coin.symbol}>
+                       <button
+                         type="button"
+                         className="cw-dropdown-item w-full"
+                         onClick={() => v.onAddSymbol(coin.symbol)}
+                       >
+                         <span className="font-medium" translate="no">{coin.symbol}</span>
+                         <span className="ml-2 text-muted-foreground">{coin.name}</span>
+                       </button>
+                     </li>
+                   ))}
+                 </ul>
+               )}
             </div>
           </div>
 

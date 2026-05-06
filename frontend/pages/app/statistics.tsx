@@ -1,24 +1,64 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import ReactECharts from "echarts-for-react";
 import { AppPageShell } from "@/components/app-page-shell";
 import { RangeField } from "@/components/coins/range-field";
 import { ViewStateSection } from "@/components/view-state/view-state-section";
 import { useStatisticsView } from "@/hooks/statistics-view/use-statistics-view";
 import type { ChartMetric } from "@/hooks/statistics-view/use-statistics-view";
 import type { StatisticsPreset } from "@/types/statistics";
+import { BRAND, GRID, MUTED, TEXT, TOOLTIP_BG, TOOLTIP_BORDER, defaultDataZoom, tickFormatter } from "@/utils/chart-theme";
+
+const formatValue = (value: number, metric: ChartMetric): string => {
+  const prefix = metric === "avgVolume" ? "" : "$";
+  if (value >= 1_000_000_000) return `${prefix}${(value / 1_000_000_000).toFixed(1)}B`;
+  if (value >= 1_000_000) return `${prefix}${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${prefix}${(value / 1_000).toFixed(0)}k`;
+  return `${prefix}${value.toFixed(0)}`;
+};
 
 const StatisticsPageContent = () => {
-  const { params, results, presets, chartBars, chartLabels, chartMaxValue, chartMetric, setChartMetric, selectedSymbols, build, retry, loadPreset } =
+  const { params, results, presets, chartValues, chartTimestamps, chartMetric, setChartMetric, selectedSymbols, dateValidationMessage, build, retry, loadPreset } =
     useStatisticsView();
 
-  const formatValue = (value: number, metric: ChartMetric): string => {
-    const isVolume = metric === "avgVolume";
-    const prefix = isVolume ? "" : "$";
-    const suffix = isVolume ? "" : "";
-    if (value >= 1_000_000_000) return `${prefix}${(value / 1_000_000_000).toFixed(1)}B${suffix}`;
-    if (value >= 1_000_000) return `${prefix}${(value / 1_000_000).toFixed(1)}M${suffix}`;
-    if (value >= 1_000) return `${prefix}${(value / 1_000).toFixed(0)}k${suffix}`;
-    return `${prefix}${value.toFixed(0)}${suffix}`;
-  };
+  const chartOption = useMemo(() => ({
+    grid: { top: 8, right: 12, bottom: 52, left: 8, containLabel: true },
+    xAxis: {
+      type: "category",
+      data: chartTimestamps.map((ts) => tickFormatter.format(new Date(ts))),
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: MUTED, fontSize: 11 }
+    },
+    yAxis: {
+      type: "value",
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: MUTED, fontSize: 11, formatter: (v: number) => formatValue(v, chartMetric) },
+      splitLine: { lineStyle: { color: GRID, type: "dashed" } }
+    },
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: TOOLTIP_BG,
+      borderColor: TOOLTIP_BORDER,
+      borderRadius: 18,
+      textStyle: { color: TEXT, fontSize: 13 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      formatter: (params: any[]) => {
+        const p = params[0];
+        if (!p) return "";
+        return `${String(p.axisValue)}<br/><b>${formatValue(Number(p.value), chartMetric)}</b>`;
+      }
+    },
+    dataZoom: defaultDataZoom,
+    series: [
+      {
+        type: "bar",
+        data: chartValues,
+        itemStyle: { color: BRAND, borderRadius: [18, 18, 0, 0] },
+        barMaxWidth: 48
+      }
+    ]
+  }), [chartTimestamps, chartValues, chartMetric]);
 
   const [symbolsInput, setSymbolsInput] = useState(() => params.currentParams.symbols.join(", "));
   const [showSaveForm, setShowSaveForm] = useState(false);
@@ -51,7 +91,7 @@ const StatisticsPageContent = () => {
     >
       <section className="cw-toolbar">
         <div className="cw-toolbar-actions">
-          <button className="cw-button-primary" form="stats-params-form" type="submit">
+          <button className="cw-button-primary" form="stats-params-form" type="submit" disabled={!!dateValidationMessage}>
             Построить
           </button>
           <button
@@ -96,7 +136,7 @@ const StatisticsPageContent = () => {
 
       <section className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-8">
-          <form id="stats-params-form" onSubmit={(e) => { e.preventDefault(); build(); }}>
+          <form id="stats-params-form" onSubmit={(e) => { e.preventDefault(); build(); }} onKeyDown={(e) => { if (e.key === "Enter" && (e.target as HTMLInputElement).type === "date") e.currentTarget.requestSubmit(); }}>
             <div className="cw-section-label">Параметры</div>
             <div className="cw-panel-muted">
               <div className="mb-6">
@@ -199,6 +239,9 @@ const StatisticsPageContent = () => {
                   </select>
                 </div>
               </div>
+              {dateValidationMessage && (
+                <p className="mt-4 text-sm cw-negative">{dateValidationMessage}</p>
+              )}
             </div>
           </form>
 
@@ -213,7 +256,7 @@ const StatisticsPageContent = () => {
               onRetry={retry}
             >
               <div className="cw-surface overflow-hidden px-5 py-5 sm:px-6">
-                <div className="mb-6 flex flex-wrap items-center gap-3">
+                <div className="mb-4 flex flex-wrap items-center gap-3">
                   {selectedSymbols.map((symbol) => (
                     <span key={symbol} className="cw-chip">
                       {symbol}
@@ -221,40 +264,8 @@ const StatisticsPageContent = () => {
                   ))}
                 </div>
 
-                <div className="cw-surface-soft relative">
-                  <div className="pointer-events-none absolute inset-y-6 left-12 right-6 flex flex-col justify-between">
-                    <div className="border-t border-dashed border-border"></div>
-                    <div className="border-t border-dashed border-border"></div>
-                    <div className="border-t border-dashed border-border"></div>
-                    <div className="border-t border-dashed border-border"></div>
-                  </div>
-
-                  <div className="absolute left-0 top-0 flex h-[280px] w-10 flex-col justify-between py-1 pr-1">
-                    {[1, 0.75, 0.5, 0.25, 0].map((pct) => (
-                      <span
-                        key={pct}
-                        className="block text-right text-[10px] leading-none text-text-muted"
-                      >
-                        {formatValue(chartMaxValue * pct, chartMetric)}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="relative flex h-[280px] items-end gap-3 pl-10 pr-2">
-                    {chartBars.map((value, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 rounded-t-[18px] bg-brand/80"
-                        style={{ height: `${value}%` }}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex justify-between pl-10 text-xs uppercase tracking-[0.14em] text-text-muted">
-                    {chartLabels.map((label) => (
-                      <span key={label}>{label}</span>
-                    ))}
-                  </div>
+                <div className="h-72 w-full">
+                  <ReactECharts option={chartOption} style={{ height: "100%", width: "100%" }} />
                 </div>
               </div>
             </ViewStateSection>

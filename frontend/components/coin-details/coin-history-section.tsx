@@ -68,7 +68,7 @@ export const CoinHistorySection = ({ viewState }: CoinHistorySectionProps) => {
           <h2 className="cw-card-title">Фильтры, график и записи</h2>
         </div>
 
-        <div className="cw-panel-muted">
+        <form className="cw-panel-muted" onSubmit={(e) => { e.preventDefault(); viewState.filters.onApply(); }} onKeyDown={(e) => { if (e.key === "Enter" && (e.target as HTMLInputElement).type === "date") e.currentTarget.requestSubmit(); }}>
           <div className="cw-filter-grid">
             <RangeField
               id="coin-history-date"
@@ -119,8 +119,7 @@ export const CoinHistorySection = ({ viewState }: CoinHistorySectionProps) => {
             <div className="cw-toolbar-actions">
               <button
                 className="cw-button-primary"
-                type="button"
-                onClick={viewState.filters.onApply}
+                type="submit"
                 disabled={viewState.filters.isApplyDisabled}
               >
                 {viewState.filters.isApplyPending ? "Применяем..." : "Применить"}
@@ -135,7 +134,7 @@ export const CoinHistorySection = ({ viewState }: CoinHistorySectionProps) => {
               </button>
             </div>
           </div>
-        </div>
+        </form>
       </div>
 
       <ViewStateSection
@@ -153,7 +152,7 @@ export const CoinHistorySection = ({ viewState }: CoinHistorySectionProps) => {
         }}
       >
         <div className="space-y-4">
-          <CoinHistoryChartCard entries={viewState.entries} />
+          <CoinHistoryChartCard entries={viewState.chartEntries} chartFilters={viewState.chartFilters} />
 
           <div className="cw-table-wrap">
             <table className="cw-table">

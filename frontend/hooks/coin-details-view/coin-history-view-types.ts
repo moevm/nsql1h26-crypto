@@ -27,8 +27,17 @@ export interface CoinHistoryFiltersViewState {
   onReset: () => void;
 }
 
+export interface CoinHistoryChartFilters {
+  priceMin: number | null;
+  priceMax: number | null;
+  volumeMin: number | null;
+  volumeMax: number | null;
+}
+
 export interface UseCoinHistoryViewResult {
   entries: CoinHistoryEntry[];
+  chartEntries: CoinHistoryEntry[];
+  chartFilters: CoinHistoryChartFilters;
   errorMessage: string;
   filters: CoinHistoryFiltersViewState;
   pagination: CoinTablePagination;

@@ -1,4 +1,7 @@
+import { useState } from "react";
+
 import { AppPageShell } from "@/components/app-page-shell";
+import { CompareDrawer } from "@/components/compare/compare-drawer";
 import { CoinHistorySection } from "@/components/coin-details/coin-history-section";
 import { CoinSummaryCard } from "@/components/coin-details/coin-summary-card";
 import { EmptyState } from "@/components/view-state/empty-state";
@@ -10,6 +13,7 @@ import { useCoinDetailsView } from "@/hooks/coin-details-view/use-coin-details-v
 export default function CoinDetailsPage() {
   const viewState = useCoinDetailsView();
   const historyViewState = useCoinHistoryView();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const symbolLabel = viewState.symbol || "...";
 
   return (
@@ -20,11 +24,30 @@ export default function CoinDetailsPage() {
       title={viewState.pageTitle}
       description={viewState.pageDescription}
     >
+      {viewState.symbol && (
+        <CompareDrawer
+          symbol={viewState.symbol}
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        />
+      )}
+
       <section className="mt-8 space-y-6">
         <div className="flex items-center justify-between gap-3">
-          <button className="cw-button-secondary" type="button" onClick={viewState.goBack}>
-            Назад
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="cw-button-secondary" type="button" onClick={viewState.goBack}>
+              Назад
+            </button>
+            {viewState.status === "ready" && viewState.symbol && (
+              <button
+                className="cw-button-primary"
+                type="button"
+                onClick={() => setDrawerOpen(true)}
+              >
+                Сравнить
+              </button>
+            )}
+          </div>
 
           <span className="cw-auth-badge" translate="no">
             {symbolLabel}

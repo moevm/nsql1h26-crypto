@@ -4,6 +4,7 @@ import {
   normalizeCoinDetailsResponse,
   normalizeCoinHistoryResponse,
   normalizeCoinsMutationResponse,
+  normalizeCompareResponse,
   normalizeFavoritesResponse,
   normalizeRefreshWatchlistResponse,
   normalizeSearchCoinsResponse,
@@ -17,6 +18,7 @@ import {
 import type {
   CoinHistoryRequestParams,
   CoinsApi,
+  CompareRequestParams,
   FavoritesRequestParams,
   SearchCoinsRequestParams,
   WatchlistRequestParams
@@ -93,5 +95,16 @@ export const backendCoinsService: CoinsApi = {
     );
 
     return normalizeCoinsMutationResponse(response);
+  },
+  async compareCoins(params: CompareRequestParams) {
+    const response = await authorizedHttpClient.get<unknown>("/api/coins/compare", {
+      params: {
+        symbols: params.symbols.join(","),
+        from: params.from,
+        to: params.to
+      }
+    });
+
+    return normalizeCompareResponse(response);
   }
 };

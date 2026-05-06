@@ -4,6 +4,7 @@ import com.cryptowatch.backend.dto.common.CoinDto;
 import com.cryptowatch.backend.dto.response.AddCoinResponse;
 import com.cryptowatch.backend.dto.response.CoinDetailsResponse;
 import com.cryptowatch.backend.dto.response.CoinHistoryResponse;
+import com.cryptowatch.backend.dto.response.CompareResponse;
 import com.cryptowatch.backend.dto.response.DeleteCoinResponse;
 import com.cryptowatch.backend.dto.response.FavoritesResponse;
 import com.cryptowatch.backend.dto.response.SearchCoinsResponse;
@@ -338,6 +339,94 @@ public class CoinService {
                 .message(symbol + " добавлена в избранное")
                 .coin(coinInfo)
                 .build();
+    }
+
+    public CompareResponse compareCoins(List<String> symbols, Date from, Date to) {
+        if (symbols.size() < 2 || symbols.size() > 10) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Сравнение доступно для 2–10 монет");
+        }
+
+        List<String> upperSymbols = symbols.stream()
+                .map(String::toUpperCase)
+                .collect(Collectors.toList());
+
+        for (String s : upperSymbols) {
+            coinsMetaRepository.findBySymbol(s)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Монета " + s + " не найдена"));
+        }
+
+        Date effectiveTo = (to != null) ? to : new Date();
+        Date effectiveFrom;
+        if (from != null) {
+            effectiveFrom = from;
+        } else {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(effectiveTo);
+            cal.add(Calendar.DAY_OF_YEAR, -7);
+            effectiveFrom = cal.getTime();
+        }
+
+        List<String> insufficientData = new ArrayList<>();
+        List<CompareResponse.CoinData> coinDataList = new ArrayList<>();
+
+        for (String s : upperSymbols) {
+            List<CoinSnapshot> snapshots = snapshotsRepository.findSnapshotsForSymbolBetweenDates(s, effectiveFrom, effectiveTo);
+            snapshots.sort(Comparator.comparing(CoinSnapshot::getTimestamp));
+            if (snapshots.size() < 2) insufficientData.add(s);
+            CoinsMeta meta = coinsMetaRepository.findBySymbol(s).orElseThrow();
+            coinDataList.add(buildCoinData(meta, snapshots));
+        }
+
+        return CompareResponse.builder()
+                .coins(coinDataList)
+                .insufficientData(insufficientData)
+                .build();
+    }
+
+    private CompareResponse.CoinData buildCoinData(CoinsMeta meta, List<CoinSnapshot> snapshots) {
+        double firstPrice = snapshots.isEmpty() ? 0.0 : snapshots.get(0).getPrice();
+
+        List<CompareResponse.LinearPoint> linearSeries = snapshots.stream()
+                .map(s -> {
+                    double pct = firstPrice == 0.0 ? 0.0 : (s.getPrice() - firstPrice) / firstPrice * 100.0;
+                    return CompareResponse.LinearPoint.builder()
+                            .timestamp(s.getTimestamp().toInstant().toString())
+                            .pctFromStart(Math.round(pct * 100.0) / 100.0)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        List<Double> prices = snapshots.stream()
+                .map(CoinSnapshot::getPrice)
+                .collect(Collectors.toList());
+
+        return CompareResponse.CoinData.builder()
+                .symbol(meta.getSymbol())
+                .name(meta.getName())
+                .linearSeries(linearSeries)
+                .boxPlot(prices.isEmpty() ? null : computeBoxPlot(prices))
+                .build();
+    }
+
+    private CompareResponse.BoxPlotStats computeBoxPlot(List<Double> prices) {
+        List<Double> sorted = new ArrayList<>(prices);
+        Collections.sort(sorted);
+        return CompareResponse.BoxPlotStats.builder()
+                .min(sorted.get(0))
+                .q1(percentile(sorted, 25))
+                .median(percentile(sorted, 50))
+                .q3(percentile(sorted, 75))
+                .max(sorted.get(sorted.size() - 1))
+                .build();
+    }
+
+    private double percentile(List<Double> sorted, double p) {
+        double index = (p / 100.0) * (sorted.size() - 1);
+        int lower = (int) Math.floor(index);
+        int upper = (int) Math.ceil(index);
+        if (lower == upper) return sorted.get(lower);
+        return sorted.get(lower) * (upper - index) + sorted.get(upper) * (index - lower);
     }
 
     public DeleteCoinResponse removeFromFavorites(String userId, String symbol) {

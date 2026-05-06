@@ -14,10 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/coins")
@@ -175,6 +177,25 @@ public class CoinsController {
     @lombok.Data
     static class AddToFavoritesRequest {
         private String symbol;
+    }
+
+    @GetMapping("/compare")
+    public ResponseEntity<CompareResponse> compareCoins(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String symbols,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date to) {
+
+        String token = authHeader.substring(7);
+        jwtTokenProvider.extractUserId(token);
+
+        List<String> symbolList = Arrays.stream(symbols.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toList());
+
+        CompareResponse response = coinService.compareCoins(symbolList, from, to);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")

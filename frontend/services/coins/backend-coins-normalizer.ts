@@ -7,6 +7,9 @@ import type {
   CoinHistoryEntry,
   CoinHistoryResponse,
   CoinsMutationResponse,
+  CompareBoxPlot,
+  CompareCoinData,
+  CompareResponse,
   FavoritesResponse,
   PaginatedCoinsResponse,
   RefreshWatchlistResponse,
@@ -359,5 +362,45 @@ export const normalizeCoinHistoryResponse = (payload: unknown): CoinHistoryRespo
     history: rawHistory.map(normalizeCoinHistoryEntry),
     totalCount: parseRequiredNumber(payload.totalCount, "totalCount"),
     dateRange: normalizeCoinHistoryDateRange(payload.dateRange)
+  };
+};
+
+const normalizeCompareBoxPlot = (payload: unknown): CompareBoxPlot => {
+  if (!isRecord(payload)) throw createShapeError("boxPlot");
+  return {
+    min: parseRequiredNumber(payload.min, "boxPlot.min"),
+    q1: parseRequiredNumber(payload.q1, "boxPlot.q1"),
+    median: parseRequiredNumber(payload.median, "boxPlot.median"),
+    q3: parseRequiredNumber(payload.q3, "boxPlot.q3"),
+    max: parseRequiredNumber(payload.max, "boxPlot.max")
+  };
+};
+
+const normalizeCompareCoinData = (payload: unknown): CompareCoinData => {
+  if (!isRecord(payload)) throw createShapeError("coinData");
+  const rawSeries = payload.linearSeries;
+  if (!Array.isArray(rawSeries)) throw createShapeError("linearSeries");
+  return {
+    symbol: parseRequiredString(payload.symbol, "coinData.symbol"),
+    name: parseString(payload.name) ?? parseRequiredString(payload.symbol, "coinData.symbol"),
+    linearSeries: rawSeries.map((p) => {
+      if (!isRecord(p)) throw createShapeError("linearPoint");
+      return {
+        timestamp: parseRequiredIsoDateString(p.timestamp, "linearPoint.timestamp"),
+        pctFromStart: parseRequiredNumber(p.pctFromStart, "linearPoint.pctFromStart")
+      };
+    }),
+    boxPlot: payload.boxPlot == null ? null : normalizeCompareBoxPlot(payload.boxPlot)
+  };
+};
+
+export const normalizeCompareResponse = (payload: unknown): CompareResponse => {
+  if (!isRecord(payload)) throw createShapeError("compareResponse");
+  if (!Array.isArray(payload.coins)) throw createShapeError("compareResponse.coins");
+  return {
+    coins: payload.coins.map(normalizeCompareCoinData),
+    insufficientData: Array.isArray(payload.insufficientData)
+      ? (payload.insufficientData as unknown[]).filter((s): s is string => typeof s === "string")
+      : []
   };
 };

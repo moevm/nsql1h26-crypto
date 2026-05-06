@@ -151,6 +151,37 @@ export interface WatchlistRequestParams {
   pageNo?: number;
 }
 
+export interface CompareLinearPoint {
+  timestamp: string;
+  pctFromStart: number;
+}
+
+export interface CompareBoxPlot {
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
+}
+
+export interface CompareCoinData {
+  symbol: string;
+  name: string;
+  linearSeries: CompareLinearPoint[];
+  boxPlot: CompareBoxPlot | null;
+}
+
+export interface CompareResponse {
+  coins: CompareCoinData[];
+  insufficientData: string[];
+}
+
+export interface CompareRequestParams {
+  symbols: string[];
+  from: string;
+  to: string;
+}
+
 export interface CoinsApi {
   getWatchlist(params?: WatchlistRequestParams): Promise<PaginatedCoinsResponse>;
   getFavorites(params?: FavoritesRequestParams): Promise<FavoritesResponse>;
@@ -162,4 +193,5 @@ export interface CoinsApi {
   addFavorite(symbol: string): Promise<CoinsMutationResponse>;
   removeFavorite(symbol: string): Promise<CoinsMutationResponse>;
   removeFromWatchlist(symbol: string): Promise<CoinsMutationResponse>;
+  compareCoins(params: CompareRequestParams): Promise<CompareResponse>;
 }

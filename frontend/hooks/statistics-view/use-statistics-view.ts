@@ -30,12 +30,34 @@ export const useStatisticsView = () => {
     try { sessionStorage.setItem(METRIC_KEY, metric); } catch {}
   }, []);
 
-  const symbols = params.currentParams.symbols;
-  const data = results.result?.data;
-  const firstSymbolPoints = symbols[0] ? (data?.[symbols[0]] ?? []) : [];
+     const symbols = params.currentParams.symbols;
+     const data = results.result?.data;
 
-  const chartValues = firstSymbolPoints.map((p) => p[chartMetric]);
-  const chartTimestamps = firstSymbolPoints.map((p) => p.periodStart);
+     // Use the longest available series to build the timeline
+     const bestSymbol = symbols.reduce<string | null>((acc, symbol) => {
+       const candidate = data?.[symbol]?.length ?? 0;
+       const current = acc ? (data?.[acc]?.length ?? 0) : 0;
+       return candidate > current ? symbol : acc;
+     }, null);
+     const basePoints = bestSymbol ? (data?.[bestSymbol] ?? []) : [];
+     const chartTimestamps = basePoints.map((p) => p.periodStart);
+
+      // Get values for all selected symbols
+      const chartSeriesData = symbols.map((symbol) => {
+        const symbolPoints = data?.[symbol] ?? [];
+
+        // If this symbol has fewer points than the first symbol, pad with null
+        const allValues: (number | null)[] = symbolPoints.map((p) => p[chartMetric]);
+
+        if (allValues.length < chartTimestamps.length) {
+          // Pad with nulls
+          while (allValues.length < chartTimestamps.length) {
+            allValues.push(null);
+          }
+        }
+
+        return allValues;
+      });
 
   const dateValidationMessage =
     params.timeRangeFrom && params.timeRangeTo && params.timeRangeFrom > params.timeRangeTo
@@ -65,18 +87,18 @@ export const useStatisticsView = () => {
     [params]
   );
 
-  return {
-    params,
-    results,
-    presets,
-    chartValues,
-    chartTimestamps,
-    chartMetric,
-    setChartMetric,
-    selectedSymbols: symbols,
-    dateValidationMessage,
-    build,
-    retry,
-    loadPreset
-  };
+   return {
+     params,
+     results,
+     presets,
+     chartSeriesData,
+     chartTimestamps,
+     chartMetric,
+     setChartMetric,
+     selectedSymbols: symbols,
+     dateValidationMessage,
+     build,
+     retry,
+     loadPreset
+   };
 };

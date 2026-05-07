@@ -6,6 +6,18 @@ export const TOOLTIP_BG = "rgba(255, 255, 255, 0.96)";
 export const TOOLTIP_BORDER = "rgba(229, 231, 235, 0.9)";
 export const FILTERED_OUT = "#d1d5db";
 
+// Color palette for multiple series
+export const CHART_COLORS = [
+  "#7c3aed", // Purple (brand)
+  "#06b6d4", // Cyan
+  "#10b981", // Emerald
+  "#f59e0b", // Amber
+  "#ef4444", // Red
+  "#8b5cf6", // Violet
+  "#ec4899", // Pink
+  "#3b82f6", // Blue
+];
+
 export const tickFormatter = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" });
 
 export const defaultDataZoom = [

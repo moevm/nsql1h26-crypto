@@ -33,13 +33,28 @@ public class CoinsController {
     private final CryptoConfig cryptoConfig;
 
     @GetMapping("/watchlist")
-    public ResponseEntity<?> getWatchlist(
+    public ResponseEntity<WatchlistResponse> getWatchlist(
             @RequestHeader("Authorization") String authHeader,
             @RequestParam(defaultValue = "10") int pageSize,
-            @RequestParam(defaultValue = "0") int pageNo) {
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(required = false) Double priceMin,
+            @RequestParam(required = false) Double priceMax,
+            @RequestParam(required = false) Double capMin,
+            @RequestParam(required = false) Double capMax,
+            @RequestParam(required = false) Double changeMin,
+            @RequestParam(required = false) Double changeMax,
+            @RequestParam(required = false) Double volumeMin,
+            @RequestParam(required = false) Double volumeMax,
+            @RequestParam(defaultValue = "marketCap") String sortBy,
+            @RequestParam(defaultValue = "desc") String order) {
+
         String token = authHeader.substring(7);
         String userId = jwtTokenProvider.extractUserId(token);
-        WatchlistResponse response = watchlistService.getWatchlist(userId, pageSize, pageNo);
+        WatchlistResponse response = watchlistService.getWatchlist(
+                userId, pageSize, pageNo,
+                priceMin, priceMax, capMin, capMax,
+                changeMin, changeMax, volumeMin, volumeMax,
+                sortBy, order);
         return ResponseEntity.ok(response);
     }
 

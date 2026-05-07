@@ -6,6 +6,7 @@ import com.cryptowatch.backend.model.CoinSnapshot;
 import com.cryptowatch.backend.model.CoinsMeta;
 import com.cryptowatch.backend.repository.CoinSnapshotsRepository;
 import com.cryptowatch.backend.repository.CoinsMetaRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ public class CoinMarketCapService {
     private final CoinSnapshotsRepository snapshotsRepository;
     private final RestTemplate restTemplate;
     private final CryptoConfig cryptoConfig;
+    private final ObjectMapper objectMapper;
 
     @Value("${CMC_API_KEY:}")
     private String apiKey;
@@ -44,61 +46,68 @@ public class CoinMarketCapService {
     public boolean isSyncEnabled() {
         return apiKey != null && !apiKey.isBlank();
     }
+    
     // Старый метод – для совместимости
     public RefreshResult refreshSnapshots(List<String> symbols) {
-        CryptoConfig.History historyConfig = cryptoConfig.getHistory(); // нужно внедрить CryptoConfig
+        CryptoConfig.History historyConfig = cryptoConfig.getHistory();
         return refreshSnapshots(symbols, historyConfig.getDefaultDays(), historyConfig.getDefaultInterval());
     }
 
     // Новый метод с параметрами истории
     public RefreshResult refreshSnapshots(List<String> symbols, int historyDays, String historyInterval) {
         if (!isSyncEnabled()) {
-            log.info("CMC_API_KEY not set – sync skipped");
+            log.warn("CMC_API_KEY not set – sync skipped");
             return new RefreshResult(0, new ArrayList<>(), new Date(), false);
         }
 
         List<CoinsMeta> metas = getMetas(symbols);
         if (metas.isEmpty()) {
+            log.warn("No coins found for refresh");
             return new RefreshResult(0, new ArrayList<>(), new Date(), true);
         }
 
         String symbolParam = metas.stream().map(CoinsMeta::getSymbol).collect(Collectors.joining(","));
         String latestUrl = String.format("%s/quotes/latest?symbol=%s&convert=USD", CMC_URL, symbolParam);
+        
         CmcResponse latestResponse = executeGet(latestUrl, CmcResponse.class);
         Date now = new Date();
         List<CoinSnapshot> allSnapshots = new ArrayList<>();
         List<String> refreshedSymbols = new ArrayList<>();
 
         for (CoinsMeta meta : metas) {
-            CmcQuoteData quoteData = latestResponse.getData().get(meta.getSymbol());
-            if (quoteData != null && quoteData.getQuote() != null) {
-                CmcUsd usd = quoteData.getQuote().get("USD");
-                if (usd != null) {
-                    CoinSnapshot current = CoinSnapshot.builder()
-                            .symbol(meta.getSymbol())
-                            .timestamp(now)
-                            .price(usd.getPrice())
-                            .marketCap(usd.getMarketCap())
-                            .volume24h(usd.getVolume24h())
-                            .percentChange24h(usd.getPercentChange24h())
-                            .build();
-                    allSnapshots.add(current);
-                    refreshedSymbols.add(meta.getSymbol());
+            try {
+                CmcQuoteData quoteData = latestResponse.getData().get(meta.getSymbol());
+                if (quoteData != null && quoteData.getQuote() != null) {
+                    CmcUsd usd = quoteData.getQuote().get("USD");
+                    if (usd != null) {
+                        CoinSnapshot current = CoinSnapshot.builder()
+                                .symbol(meta.getSymbol())
+                                .timestamp(now)
+                                .price(usd.getPrice())
+                                .marketCap(usd.getMarketCap())
+                                .volume24h(usd.getVolume24h())
+                                .percentChange24h(usd.getPercentChange24h())
+                                .build();
+                        allSnapshots.add(current);
+                        refreshedSymbols.add(meta.getSymbol());
+                    }
                 }
-            }
 
-            List<CoinSnapshot> historical = fetchHistoricalSnapshots(meta.getSymbol(), historyDays, historyInterval);
-            allSnapshots.addAll(historical);
+                List<CoinSnapshot> historical = fetchHistoricalSnapshots(meta.getSymbol(), historyDays, historyInterval);
+                allSnapshots.addAll(historical);
+            } catch (Exception e) {
+                log.warn("Failed to process coin {}: {}", meta.getSymbol(), e.getMessage());
+            }
         }
 
         if (!allSnapshots.isEmpty()) {
             snapshotsRepository.saveAll(allSnapshots);
-            log.info("Saved {} total snapshots ({} current + historical)", allSnapshots.size(),
-                    allSnapshots.size() - (allSnapshots.size() - refreshedSymbols.size())); // упрощённо
+            log.info("Saved {} total snapshots ({} current + historical)", allSnapshots.size(), refreshedSymbols.size());
         }
 
         return new RefreshResult(refreshedSymbols.size(), refreshedSymbols, now, true);
     }
+    
     public CoinsMeta fetchAndCreateMetaIfAbsent(String symbol) {
         if (!isSyncEnabled()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
@@ -132,6 +141,7 @@ public class CoinMarketCapService {
                 .cmcId(info.getId())
                 .lastUpdated(new Date())
                 .build();
+        
         try {
             String quoteUrl = String.format("%s/quotes/latest?symbol=%s&convert=USD", CMC_URL, upperSymbol);
             CmcResponse quoteResponse = executeGet(quoteUrl, CmcResponse.class);
@@ -169,22 +179,48 @@ public class CoinMarketCapService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+    
     private <T> T executeGet(String url, Class<T> responseType) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-CMC_PRO_API_KEY", apiKey);
+            headers.set("Accept", "application/json");
             HttpEntity<Void> entity = new HttpEntity<>(headers);
-            ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
-            T body = response.getBody();
-            if (body == null) {
+            
+            log.debug("CMC API request: {}", url);
+            
+            ResponseEntity<String> rawResponse = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String body = rawResponse.getBody();
+            
+            log.debug("CMC API response status: {}", rawResponse.getStatusCode());
+            log.debug("CMC API response body (first 500 chars): {}", 
+                    body != null ? body.substring(0, Math.min(500, body.length())) : "null");
+            
+            if (body == null || body.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                        "Empty response from CMC for URL: " + url);
+                        "Empty response from CMC");
             }
-            return body;
+            
+            // Десериализуем
+            return objectMapper.readValue(body, responseType);
+            
+        } catch (com.fasterxml.jackson.databind.JsonMappingException e) {
+            log.error("JSON deserialization error: {}", e.getMessage());
+            log.error("Error details: {}", e.getOriginalMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to parse CMC response: " + e.getMessage());
+        } catch (com.fasterxml.jackson.core.JsonParseException e) {
+            log.error("JSON parse error: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Invalid JSON from CMC: " + e.getMessage());
         } catch (RestClientException e) {
             log.error("CMC API request failed: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "CMC API error: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error during CMC API call", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected error: " + e.getMessage());
         }
     }
 

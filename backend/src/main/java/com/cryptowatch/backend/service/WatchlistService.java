@@ -11,6 +11,7 @@ import com.cryptowatch.backend.repository.CoinSnapshotsRepository;
 import com.cryptowatch.backend.repository.CoinsMetaRepository;
 import com.cryptowatch.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,60 +28,112 @@ public class WatchlistService {
     private final CoinsMetaRepository coinsMetaRepository;
     private final CoinSnapshotsRepository coinSnapshotsRepository;
     private final CoinMarketCapService coinMarketCapService;
-
+    
     @Transactional(readOnly = true)
-    public WatchlistResponse getWatchlist(String userId, int pageSize, int pageNo) {
+    public WatchlistResponse getWatchlist(String userId, int pageSize, int pageNo,
+                                        Double priceMin, Double priceMax,
+                                        Double capMin, Double capMax,
+                                        Double changeMin, Double changeMax,
+                                        Double volumeMin, Double volumeMax,
+                                        String sortBy, String order) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
-        List<String> watchlist = user.getWatchlist();
-        if (watchlist == null) watchlist = new ArrayList<>();
+        List<String> InputWatchlist = user.getWatchlist();
+        final List<String> watchlist = (InputWatchlist != null) ? InputWatchlist : new ArrayList<>();
 
-        long totalCount = watchlist.size();
-        int start = pageNo * pageSize;
-        int end = Math.min(start + pageSize, watchlist.size());
-        List<String> pageSymbols = (start < watchlist.size()) ? watchlist.subList(start, end) : new ArrayList<>();
+        if (watchlist.isEmpty()) {
+                return WatchlistResponse.builder()
+                        .success(true)
+                        .coins(List.of())
+                        .totalCount(0)
+                        .pageNo(pageNo)
+                        .pageSize(pageSize)
+                        .hasMore(false)
+                        .updatedAt(new Date())
+                        .build();
+        }
 
         List<CoinsMeta> metas = coinsMetaRepository.findAll().stream()
-                .filter(meta -> pageSymbols.contains(meta.getSymbol()))
+                .filter(meta -> watchlist.contains(meta.getSymbol()))
                 .collect(Collectors.toList());
 
-        List<CoinSnapshot> snapshots = coinSnapshotsRepository.findLatestSnapshotsForSymbols(pageSymbols);
+        List<CoinSnapshot> latestSnapshots = coinSnapshotsRepository.findLatestSnapshotsForSymbols(watchlist);
+        Map<String, CoinSnapshot> snapshotMap = latestSnapshots.stream()
+                .collect(Collectors.toMap(CoinSnapshot::getSymbol, s -> s));
 
-        List<CoinDto> coins = metas.stream()
+        List<CoinDto> filteredCoins = metas.stream()
                 .map(meta -> {
-                    CoinSnapshot snapshot = snapshots.stream()
-                            .filter(s -> s.getSymbol().equals(meta.getSymbol()))
-                            .findFirst().orElse(null);
-                    return CoinDto.builder()
-                            .symbol(meta.getSymbol())
-                            .name(meta.getName())
-                            .price(snapshot != null ? snapshot.getPrice() : 0.0)
-                            .percentChange24h(snapshot != null ? snapshot.getPercentChange24h() : 0.0)
-                            .marketCap(snapshot != null ? snapshot.getMarketCap() : 0.0)
-                            .volume24h(snapshot != null ? snapshot.getVolume24h() : 0.0)
-                            .isFavorite(user.getFavorites() != null && user.getFavorites().contains(meta.getSymbol()))
-                            .lastUpdated(meta.getLastUpdated())
-                            .build();
+                        CoinSnapshot snap = snapshotMap.get(meta.getSymbol());
+                        if (snap == null) return null;
+                        return CoinDto.builder()
+                                .symbol(meta.getSymbol())
+                                .name(meta.getName())
+                                .price(snap.getPrice())
+                                .percentChange24h(snap.getPercentChange24h())
+                                .marketCap(snap.getMarketCap())
+                                .volume24h(snap.getVolume24h())
+                                .isFavorite(user.getFavorites() != null && user.getFavorites().contains(meta.getSymbol()))
+                                .lastUpdated(snap.getTimestamp())
+                                .build();
                 })
-                .sorted(Comparator.comparingDouble(CoinDto::getMarketCap).reversed())
+                .filter(Objects::nonNull)
+                .filter(coin -> applyFilters(coin, priceMin, priceMax, capMin, capMax, changeMin, changeMax, volumeMin, volumeMax))
                 .collect(Collectors.toList());
 
-        boolean hasMore = end < watchlist.size();
-        Date updatedAt = snapshots.stream()
+        Comparator<CoinDto> comparator = getComparator(sortBy, order);
+        filteredCoins.sort(comparator);
+
+        long totalCount = filteredCoins.size();
+        int start = pageNo * pageSize;
+        int end = Math.min(start + pageSize, filteredCoins.size());
+        List<CoinDto> pagedCoins = (start < filteredCoins.size()) ? filteredCoins.subList(start, end) : new ArrayList<>();
+        boolean hasMore = end < totalCount;
+
+        Date updatedAt = latestSnapshots.stream()
                 .map(CoinSnapshot::getTimestamp)
                 .max(Comparator.naturalOrder())
                 .orElse(new Date());
 
         return WatchlistResponse.builder()
                 .success(true)
-                .coins(coins)
+                .coins(pagedCoins)
                 .totalCount(totalCount)
-                .hasMore(hasMore)
                 .pageNo(pageNo)
                 .pageSize(pageSize)
+                .hasMore(hasMore)
                 .updatedAt(updatedAt)
                 .build();
+        }
+
+   private boolean applyFilters(CoinDto coin, Double priceMin, Double priceMax,
+                                Double capMin, Double capMax,
+                                Double changeMin, Double changeMax,
+                                Double volumeMin, Double volumeMax) {
+        if (priceMin != null && coin.getPrice() < priceMin) return false;
+        if (priceMax != null && coin.getPrice() > priceMax) return false;
+        if (capMin != null && coin.getMarketCap() < capMin) return false;
+        if (capMax != null && coin.getMarketCap() > capMax) return false;
+        if (changeMin != null && coin.getPercentChange24h() < changeMin) return false;
+        if (changeMax != null && coin.getPercentChange24h() > changeMax) return false;
+        if (volumeMin != null && coin.getVolume24h() < volumeMin) return false;
+        if (volumeMax != null && coin.getVolume24h() > volumeMax) return false;
+        return true;
+    }
+
+    private Comparator<CoinDto> getComparator(String sortBy, String order) {
+        Comparator<CoinDto> comparator;
+        if ("price".equalsIgnoreCase(sortBy)) {
+                comparator = Comparator.comparingDouble(CoinDto::getPrice);
+        } else if ("percentChange24h".equalsIgnoreCase(sortBy)) {
+                comparator = Comparator.comparingDouble(CoinDto::getPercentChange24h);
+        } else {
+                comparator = Comparator.comparingDouble(CoinDto::getMarketCap);
+        }
+        if ("desc".equalsIgnoreCase(order)) {
+                comparator = comparator.reversed();
+        }
+        return comparator;
     }
 
     @Transactional

@@ -200,7 +200,7 @@ const buildChartRequestParams = (state: CoinHistoryRouteAppliedState) => ({
   pageNo: 0,
   pageSize: CHART_PAGE_SIZE,
   sortBy: "timestamp" as const,
-  order: "asc" as const
+  order: "desc" as const
 });
 
 const getHistoryTotalLabel = (
@@ -370,7 +370,7 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
         return;
       }
 
-      setChartEntries(response.history);
+      setChartEntries([...response.history].reverse());
     } catch {
       if (!isMountedRef.current || latestChartRequestIdRef.current !== requestId) {
         return;

@@ -3,7 +3,8 @@ import type {
   CoinHistoryRequestParams,
   CoinHistorySortKey,
   FavoritesRequestParams,
-  SearchCoinsRequestParams
+  SearchCoinsRequestParams,
+  WatchlistRequestParams
 } from "@/types/coins";
 import { getBackendCoinSortKey } from "@/utils/coin-table-sorting";
 
@@ -45,6 +46,10 @@ const buildCoinCollectionQueryParams = (
 
 export const buildFavoritesQueryParams = (
   params?: FavoritesRequestParams
+): QueryParams | undefined => buildCoinCollectionQueryParams(params);
+
+export const buildWatchlistQueryParams = (
+  params?: WatchlistRequestParams
 ): QueryParams | undefined => buildCoinCollectionQueryParams(params);
 
 export const buildSearchCoinsQueryParams = (

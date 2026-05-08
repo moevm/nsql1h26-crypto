@@ -13,7 +13,8 @@ import {
 import {
   buildCoinHistoryQueryParams,
   buildFavoritesQueryParams,
-  buildSearchCoinsQueryParams
+  buildSearchCoinsQueryParams,
+  buildWatchlistQueryParams
 } from "@/services/coins/coins-service-helpers";
 import type {
   CoinHistoryRequestParams,
@@ -27,10 +28,10 @@ import type {
 export const backendCoinsService: CoinsApi = {
   async getWatchlist(params?: WatchlistRequestParams) {
     const response = await authorizedHttpClient.get<unknown>("/api/coins/watchlist", {
-      params: params ? { pageSize: params.pageSize, pageNo: params.pageNo } : undefined
+      params: buildWatchlistQueryParams(params)
     });
 
-    return normalizeWatchlistResponse(response, params?.pageNo, params?.pageSize);
+    return normalizeWatchlistResponse(response);
   },
   async getFavorites(params?: FavoritesRequestParams) {
     const response = await authorizedHttpClient.get<unknown>("/api/coins/favorites", {

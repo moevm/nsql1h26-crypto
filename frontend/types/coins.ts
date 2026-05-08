@@ -146,10 +146,7 @@ export interface CoinsMutationResponse {
   message?: string;
 }
 
-export interface WatchlistRequestParams {
-  pageSize?: number;
-  pageNo?: number;
-}
+export interface WatchlistRequestParams extends CoinCollectionRequestParams {}
 
 export interface CompareLinearPoint {
   timestamp: string;

@@ -233,29 +233,15 @@ export const normalizeFavoritesResponse = (payload: unknown): FavoritesResponse 
   };
 };
 
-export const normalizeWatchlistResponse = (
-  payload: unknown,
-  requestedPageNo?: number,
-  requestedPageSize?: number
-): PaginatedCoinsResponse => {
-  if (!isRecord(payload)) {
-    throw createShapeError("payload");
-  }
-
-  const rawCoins = payload.coins;
-
-  if (!Array.isArray(rawCoins)) {
-    throw createShapeError("coins");
-  }
-
-  const coins = rawCoins.map(normalizeCoin);
+export const normalizeWatchlistResponse = (payload: unknown): PaginatedCoinsResponse => {
+  const normalized = normalizeCoinCollectionPayload(payload);
 
   return {
-    coins,
-    totalCount: parseRequiredNumber(payload.totalCount, "totalCount"),
-    hasMore: parseRequiredBoolean(payload.hasMore, "hasMore"),
-    pageNo: parseNumber(payload.pageNo) ?? requestedPageNo ?? 0,
-    pageSize: parseNumber(payload.pageSize) ?? requestedPageSize ?? coins.length
+    coins: normalized.coins,
+    totalCount: normalized.totalCount,
+    pageNo: normalized.pageNo,
+    pageSize: normalized.pageSize,
+    hasMore: normalized.hasMore
   };
 };
 

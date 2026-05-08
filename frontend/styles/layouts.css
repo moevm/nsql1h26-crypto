@@ -1,0 +1,133 @@
+.cw-auth-page {
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 24%),
+    var(--gradient-auth);
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: max(1.5rem, var(--safe-area-top));
+  padding-right: max(1rem, var(--safe-area-right));
+  padding-bottom: max(1.5rem, var(--safe-area-bottom));
+  padding-left: max(1rem, var(--safe-area-left));
+  @apply sm:px-6 lg:px-8;
+}
+
+.cw-auth-frame {
+  min-height: calc(100dvh - max(3rem, var(--safe-area-top) + var(--safe-area-bottom)));
+  @apply mx-auto flex w-full max-w-6xl flex-col justify-center;
+}
+
+.cw-auth-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-panel-lg);
+  @apply overflow-hidden rounded-[32px] border border-border;
+}
+
+.cw-auth-grid {
+  @apply grid min-h-[720px] lg:grid-cols-[1.05fr_0.95fr];
+}
+
+.cw-auth-side {
+  @apply flex flex-col border-b border-border px-6 py-8 sm:px-10 lg:border-b-0 lg:border-r lg:px-12 lg:py-12;
+}
+
+.cw-auth-side-copy {
+  @apply max-w-md;
+}
+
+.cw-auth-brand-panel {
+  background:
+    linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
+  box-shadow: var(--shadow-brand-panel);
+  @apply mt-8 rounded-[28px] px-6 py-6 text-white sm:px-8;
+}
+
+.cw-auth-brand-grid {
+  @apply mt-8 grid gap-3 sm:grid-cols-2;
+}
+
+.cw-auth-brand-card {
+  background: rgba(255, 255, 255, 0.12);
+  @apply rounded-2xl border border-white/20 p-4;
+}
+
+.cw-auth-content {
+  @apply flex items-center px-6 py-8 sm:px-10 lg:px-12 lg:py-12;
+}
+
+.cw-auth-content-inner {
+  @apply mx-auto w-full max-w-md;
+}
+
+.cw-app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top center, rgba(124, 58, 237, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(245, 245, 245, 1) 100%);
+}
+
+.cw-app-frame {
+  padding-top: max(1.5rem, var(--safe-area-top));
+  padding-right: max(1rem, var(--safe-area-right));
+  padding-bottom: max(1.5rem, var(--safe-area-bottom));
+  padding-left: max(1rem, var(--safe-area-left));
+  @apply mx-auto flex w-full max-w-7xl flex-col gap-6 sm:px-6 lg:px-8 lg:py-8;
+}
+
+.cw-app-header-bar {
+  @apply border-b border-border px-5 py-4 sm:px-6 lg:px-8;
+}
+
+.cw-app-header-row {
+  @apply flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between;
+}
+
+.cw-app-header-actions {
+  @apply flex flex-col gap-3 lg:items-end;
+}
+
+.cw-app-nav {
+  @apply flex flex-col gap-3 lg:items-end;
+  position: relative;
+  z-index: 10;
+}
+
+.cw-session-card {
+  @apply mt-3 space-y-1;
+}
+
+.cw-app-header-copy {
+  @apply px-5 py-5 sm:px-6 lg:px-8;
+}
+
+.cw-app-content {
+  @apply px-5 py-5 sm:px-6 lg:px-8 lg:py-8;
+}
+
+@media (min-width: 640px) {
+  .cw-auth-page {
+    padding-right: max(1.5rem, var(--safe-area-right));
+    padding-left: max(1.5rem, var(--safe-area-left));
+  }
+
+  .cw-app-frame {
+    padding-right: max(1.5rem, var(--safe-area-right));
+    padding-left: max(1.5rem, var(--safe-area-left));
+  }
+}
+
+@media (min-width: 1024px) {
+  .cw-auth-page {
+    padding-top: max(2rem, var(--safe-area-top));
+    padding-right: max(2rem, var(--safe-area-right));
+    padding-left: max(2rem, var(--safe-area-left));
+  }
+
+  .cw-app-frame {
+    padding-top: max(2rem, var(--safe-area-top));
+    padding-right: max(2rem, var(--safe-area-right));
+    padding-left: max(2rem, var(--safe-area-left));
+  }
+}

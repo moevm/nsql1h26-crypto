@@ -5,7 +5,7 @@ import { adminService } from "@/services/admin";
 import type { ImportResult } from "@/types/admin";
 import { getApiErrorMessage } from "@/utils/error-message";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 type OperationStatus = "idle" | "loading" | "success" | "error";
 
@@ -107,7 +107,7 @@ export const useImportExportView = (): UseImportExportViewResult => {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setFileError("Размер файла не должен превышать 10 МБ");
+      setFileError("Размер файла не должен превышать 50 МБ");
       setSelectedFile(null);
       return;
     }

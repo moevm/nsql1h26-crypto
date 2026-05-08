@@ -37,7 +37,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
     routeState.requestParams.pageSize ?? WATCHLIST_ROUTE_STATE_CONFIG.defaultPageSize;
 
   const loadWatchlistPage = useCallback(
-    (params: WatchlistRequestParams) => coinsService.getWatchlist({pageSize: params.pageSize, pageNo: params.pageNo}),
+    (params: WatchlistRequestParams) => coinsService.getWatchlist(params),
     []
   );
 

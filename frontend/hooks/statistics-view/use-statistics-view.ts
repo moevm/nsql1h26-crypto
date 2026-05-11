@@ -59,10 +59,31 @@ export const useStatisticsView = () => {
         return allValues;
       });
 
-  const dateValidationMessage =
-    params.timeRangeFrom && params.timeRangeTo && params.timeRangeFrom > params.timeRangeTo
-      ? "Поле «Период»: значение «от» не должно быть больше значения «до»"
-      : null;
+  const MAX_STATS_VALUE = 1e15;
+  const { minPrice, maxPrice, minVolume } = params;
+
+  const validationMessage = (() => {
+    if (params.timeRangeFrom && params.timeRangeTo && params.timeRangeFrom > params.timeRangeTo) {
+      return "Поле «Период»: значение «от» не должно быть больше значения «до»";
+    }
+    if ((minPrice !== null && minPrice < 0) || (maxPrice !== null && maxPrice < 0)) {
+      return "Поле «Цена»: значение не может быть отрицательным";
+    }
+    if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+      return "Поле «Цена»: значение «от» не должно быть больше значения «до»";
+    }
+    if (minVolume !== null && minVolume < 0) {
+      return "Поле «Объем торгов»: значение не может быть отрицательным";
+    }
+    if (
+      (minPrice !== null && minPrice > MAX_STATS_VALUE) ||
+      (maxPrice !== null && maxPrice > MAX_STATS_VALUE) ||
+      (minVolume !== null && minVolume > MAX_STATS_VALUE)
+    ) {
+      return "Введённое значение слишком велико";
+    }
+    return null;
+  })();
 
   const build = useCallback(
     () => results.build(params.currentParams),
@@ -96,7 +117,7 @@ export const useStatisticsView = () => {
      chartMetric,
      setChartMetric,
      selectedSymbols: symbols,
-     dateValidationMessage,
+     validationMessage,
      build,
      retry,
      loadPreset

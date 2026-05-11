@@ -19,6 +19,7 @@ import type {
 import type { CoinFilterRangeEdge, CoinFilterRangeKey } from "@/types/coins";
 import {
   areCoinFilterRangesEqual,
+  countActiveCoinFilterRanges,
   createEmptyCoinFilterRanges
 } from "@/utils/coin-filter-state";
 import { getNextSortState } from "@/utils/coin-table-sorting";
@@ -69,6 +70,7 @@ export const useCoinListRouteState = (config: CoinListPageModeConfig) => {
     !areCoinFilterRangesEqual(draftRanges, appliedState.ranges);
   const hasActiveDraftFilters = hasActiveCoinListRouteDraftFilters(draftState, config);
   const hasActiveAppliedFilters = hasActiveCoinListRouteDraftFilters(appliedDraftState, config);
+  const activeAppliedFilterCount = countActiveCoinFilterRanges(appliedState.ranges);
 
   const replaceAppliedState = (nextState: CoinListRouteAppliedState) => {
     if (!router.isReady || isCoinListRouteStateEqual(nextState, appliedState)) {
@@ -93,6 +95,7 @@ export const useCoinListRouteState = (config: CoinListPageModeConfig) => {
     hasPendingDraftChanges,
     hasActiveDraftFilters,
     hasActiveAppliedFilters,
+    activeAppliedFilterCount,
     isRouteReady: router.isReady,
     isRouteTransitionPending,
     setDraftQuery: config.supportsTextQuery ? setDraftQuery : undefined,

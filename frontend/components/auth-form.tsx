@@ -27,6 +27,7 @@ interface AuthFieldProps {
   autoComplete: string;
   placeholder: string;
   value: string;
+  maxLength: number;
   error?: string;
   onChange: (value: string) => void;
 }
@@ -38,6 +39,7 @@ const AuthField = ({
   autoComplete,
   placeholder,
   value,
+  maxLength,
   error,
   onChange
 }: AuthFieldProps) => {
@@ -56,6 +58,7 @@ const AuthField = ({
         autoComplete={autoComplete}
         placeholder={placeholder}
         value={value}
+        maxLength={maxLength}
         aria-invalid={error ? "true" : "false"}
         aria-describedby={error ? errorId : undefined}
         onChange={(event) => onChange(event.target.value)}
@@ -101,6 +104,7 @@ export const AuthForm = ({
           autoComplete="username"
           placeholder="Введите логин..."
           value={login}
+          maxLength={50}
           error={errors.login}
           onChange={onLoginChange}
         />
@@ -112,6 +116,7 @@ export const AuthForm = ({
           autoComplete="current-password"
           placeholder="Введите пароль..."
           value={password}
+          maxLength={100}
           error={errors.password}
           onChange={onPasswordChange}
         />
@@ -124,6 +129,7 @@ export const AuthForm = ({
             autoComplete="new-password"
             placeholder="Повторите пароль..."
             value={passwordConfirm}
+            maxLength={100}
             error={errors.passwordConfirm}
             onChange={(value) => onPasswordConfirmChange?.(value)}
           />

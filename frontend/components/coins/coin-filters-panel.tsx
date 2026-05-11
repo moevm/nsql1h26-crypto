@@ -31,6 +31,7 @@ interface CoinFiltersPanelProps {
   onRangeChange?: (key: CoinFilterRangeKey, edge: RangeFieldEdge, value: string) => void;
   children?: ReactNode;
   footer?: ReactNode;
+  activeFilterCount?: number;
 }
 
 export const CoinFiltersPanel = ({
@@ -47,7 +48,8 @@ export const CoinFiltersPanel = ({
   ranges,
   onRangeChange,
   children,
-  footer
+  footer,
+  activeFilterCount
 }: CoinFiltersPanelProps) => {
   const queryControlProps = onQueryChange
     ? {
@@ -64,7 +66,14 @@ export const CoinFiltersPanel = ({
 
   return (
     <div>
-      <div className="cw-section-label">{sectionLabel}</div>
+      <div className="cw-section-label">
+        {sectionLabel}
+        {!!activeFilterCount && (
+          <span className="ml-1.5 inline-block rounded-full bg-blue-600 px-1.5 py-0.5 align-middle text-xs font-semibold text-white">
+            {activeFilterCount}
+          </span>
+        )}
+      </div>
       <div className="cw-panel-muted">
         <h2 className="cw-card-title">{title}</h2>
 

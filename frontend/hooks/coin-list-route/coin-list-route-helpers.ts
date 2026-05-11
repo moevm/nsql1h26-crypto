@@ -16,11 +16,11 @@ import {
   sanitizeCoinFilterRanges
 } from "@/utils/coin-filter-state";
 
-import type {
-  CoinListPageModeConfig,
-  CoinListRouteAppliedState,
-  CoinListRouteFiltersDraft,
-  CoinListRouteRequestParams
+import {
+  type CoinListPageModeConfig,
+  type CoinListRouteAppliedState,
+  type CoinListRouteFiltersDraft,
+  type CoinListRouteRequestParams
 } from "@/hooks/coin-list-route/coin-list-route-config";
 
 const parseOrder = (
@@ -208,3 +208,24 @@ export const isCoinListRouteStateEqual = (
   leftState.sort.key === rightState.sort.key &&
   leftState.sort.direction === rightState.sort.direction &&
   areCoinFilterRangesEqual(leftState.ranges, rightState.ranges);
+
+export const buildCoinListPaginationProps = (
+  routeState: {
+    appliedState: { page: number };
+    isRouteTransitionPending: boolean;
+    setPage: (page: number) => void;
+  },
+  dataState: {
+    totalPages: number;
+    hasMore: boolean;
+    isTablePending: boolean;
+  }
+) => ({
+  currentPage: routeState.appliedState.page,
+  totalPages: dataState.totalPages,
+  canGoPrevious: routeState.appliedState.page > 1,
+  canGoNext: dataState.hasMore || routeState.appliedState.page < dataState.totalPages,
+  onPrevious: () => routeState.setPage(routeState.appliedState.page - 1),
+  onNext: () => routeState.setPage(routeState.appliedState.page + 1),
+  isPending: dataState.isTablePending || routeState.isRouteTransitionPending
+});

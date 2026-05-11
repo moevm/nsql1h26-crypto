@@ -7,7 +7,7 @@ export interface AuthFormErrors {
   form?: string;
 }
 
-const passwordPattern = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=\S+$).{8,}$/;
+const passwordPattern = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=\S+$).{8,100}$/;
 
 export const validateLoginPayload = (payload: LoginRequestPayload): AuthFormErrors => {
   const errors: AuthFormErrors = {};

@@ -74,10 +74,20 @@ export const areCoinFilterRangesEqual = (
       leftRanges[key].end === rightRanges[key].end
   );
 
-export const hasActiveCoinFilterRanges = (ranges: CoinFilterRangesState): boolean =>
-  COIN_FILTER_RANGE_KEYS.some(
-    (key) => ranges[key].start.trim().length > 0 || ranges[key].end.trim().length > 0
+export const countActiveCoinFilterRanges = (ranges: CoinFilterRangesState): number =>
+  COIN_FILTER_RANGE_KEYS.reduce(
+    (count, key) =>
+      ranges[key].start.trim().length > 0 || ranges[key].end.trim().length > 0
+        ? count + 1
+        : count,
+    0
   );
+
+export const hasActiveCoinFilterRanges = (ranges: CoinFilterRangesState): boolean =>
+  countActiveCoinFilterRanges(ranges) > 0;
+
+const NON_NEGATIVE_FILTER_KEYS: ReadonlySet<CoinFilterRangeKey> = new Set(["price", "cap", "volume"]);
+const MAX_FILTER_VALUE = 1e15;
 
 export const getCoinFilterRangesValidationMessage = (
   ranges: CoinFilterRangesState
@@ -85,6 +95,16 @@ export const getCoinFilterRangesValidationMessage = (
   for (const key of COIN_FILTER_RANGE_KEYS) {
     const startValue = parseCoinFilterNumber(ranges[key].start);
     const endValue = parseCoinFilterNumber(ranges[key].end);
+
+    if (NON_NEGATIVE_FILTER_KEYS.has(key)) {
+      if ((startValue !== null && startValue < 0) || (endValue !== null && endValue < 0)) {
+        return `Поле «${COIN_FILTER_RANGE_LABELS[key]}»: значение не может быть отрицательным`;
+      }
+    }
+
+    if ((startValue !== null && startValue > MAX_FILTER_VALUE) || (endValue !== null && endValue > MAX_FILTER_VALUE)) {
+      return `Поле «${COIN_FILTER_RANGE_LABELS[key]}»: значение слишком велико`;
+    }
 
     if (startValue !== null && endValue !== null && startValue > endValue) {
       return `Поле «${COIN_FILTER_RANGE_LABELS[key]}»: значение «от» не должно быть больше значения «до»`;

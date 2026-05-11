@@ -62,11 +62,9 @@ export const CoinTableSection = ({
       >
         Назад
       </button>
-
       <span className="text-sm text-text-muted">
         Страница {pagination.currentPage} из {pagination.totalPages}
       </span>
-
       <button
         className="cw-button-secondary"
         type="button"

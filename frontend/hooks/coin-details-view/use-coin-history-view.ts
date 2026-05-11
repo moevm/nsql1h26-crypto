@@ -99,6 +99,8 @@ const areHistoryDraftsEqual = (
   leftDraft.volumeMin === rightDraft.volumeMin &&
   leftDraft.volumeMax === rightDraft.volumeMax;
 
+const MAX_HISTORY_VALUE = 1e15;
+
 const getHistoryDraftValidationMessage = (
   draft: CoinHistoryFiltersDraft
 ): string | null => {
@@ -109,12 +111,28 @@ const getHistoryDraftValidationMessage = (
   const priceMin = parseCoinFilterNumber(draft.priceMin);
   const priceMax = parseCoinFilterNumber(draft.priceMax);
 
+  if ((priceMin !== null && priceMin < 0) || (priceMax !== null && priceMax < 0)) {
+    return "Поле «Цена»: значение не может быть отрицательным";
+  }
+
+  if ((priceMin !== null && priceMin > MAX_HISTORY_VALUE) || (priceMax !== null && priceMax > MAX_HISTORY_VALUE)) {
+    return "Поле «Цена»: значение слишком велико";
+  }
+
   if (priceMin !== null && priceMax !== null && priceMin > priceMax) {
     return "Поле «Цена»: значение «от» не должно быть больше значения «до»";
   }
 
   const volumeMin = parseCoinFilterNumber(draft.volumeMin);
   const volumeMax = parseCoinFilterNumber(draft.volumeMax);
+
+  if ((volumeMin !== null && volumeMin < 0) || (volumeMax !== null && volumeMax < 0)) {
+    return "Поле «Объем торгов»: значение не может быть отрицательным";
+  }
+
+  if ((volumeMin !== null && volumeMin > MAX_HISTORY_VALUE) || (volumeMax !== null && volumeMax > MAX_HISTORY_VALUE)) {
+    return "Поле «Объем торгов»: значение слишком велико";
+  }
 
   if (volumeMin !== null && volumeMax !== null && volumeMin > volumeMax) {
     return "Поле «Объем торгов»: значение «от» не должно быть больше значения «до»";

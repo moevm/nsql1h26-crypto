@@ -11,6 +11,7 @@ interface AddCoinModalProps {
 }
 
 const TICKER_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
+const MAX_TICKER_LENGTH = 20;
 
 const normalizeTicker = (value: string): string => value.trim().toUpperCase();
 
@@ -19,6 +20,10 @@ const getTickerError = (value: string): string | null => {
 
   if (!normalizedValue) {
     return "Введите тикер";
+  }
+
+  if (normalizedValue.length > MAX_TICKER_LENGTH) {
+    return `Тикер не должен превышать ${MAX_TICKER_LENGTH} символов`;
   }
 
   if (!TICKER_PATTERN.test(normalizedValue)) {
@@ -127,6 +132,7 @@ export const AddCoinModal = ({
             autoComplete="off"
             spellCheck={false}
             placeholder="Например, BTC"
+            maxLength={MAX_TICKER_LENGTH}
             value={symbol}
             aria-invalid={symbolError ? "true" : "false"}
             aria-describedby={symbolError ? symbolErrorId : helperTextId}

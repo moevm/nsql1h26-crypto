@@ -48,7 +48,8 @@ export const useSearchableCoinListTemplate = (
         routeState.isRouteTransitionPending,
       isApplyPending: routeState.isRouteTransitionPending,
       isResetDisabled:
-        !routeState.hasActiveDraftFilters && !routeState.hasPendingDraftChanges
+        !routeState.hasActiveDraftFilters && !routeState.hasPendingDraftChanges,
+      activeFilterCount: routeState.activeAppliedFilterCount
     },
     tableState: {
       sort: routeState.appliedState.sort,

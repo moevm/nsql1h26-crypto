@@ -20,7 +20,7 @@ const formatValue = (value: number, metric: ChartMetric): string => {
 };
 
 const StatisticsPageContent = () => {
-   const { params, results, presets, chartSeriesData, chartTimestamps, chartMetric, setChartMetric, selectedSymbols, dateValidationMessage, build, retry, loadPreset } =
+   const { params, results, presets, chartSeriesData, chartTimestamps, chartMetric, setChartMetric, selectedSymbols, validationMessage, build, retry, loadPreset } =
      useStatisticsView();
 
    const chartOption = useMemo(() => {
@@ -174,7 +174,7 @@ const StatisticsPageContent = () => {
   }, []);
 
   const handleSubmit = () => {
-    if (dateValidationMessage || selectedSymbols.length === 0) return;
+    if (validationMessage || selectedSymbols.length === 0) return;
     build();
   };
 
@@ -188,7 +188,7 @@ const StatisticsPageContent = () => {
     >
       <section className="cw-toolbar">
         <div className="cw-toolbar-actions">
-          <button className="cw-button-primary" form="stats-params-form" type="submit" disabled={!!dateValidationMessage || selectedSymbols.length === 0}>
+          <button className="cw-button-primary" form="stats-params-form" type="submit" disabled={!!validationMessage || selectedSymbols.length === 0}>
             Построить
           </button>
           <button
@@ -390,8 +390,8 @@ const StatisticsPageContent = () => {
                   </select>
                 </div>
               </div>
-              {dateValidationMessage && (
-                <p className="mt-4 text-sm cw-negative">{dateValidationMessage}</p>
+              {validationMessage && (
+                <p className="mt-4 text-sm cw-negative">{validationMessage}</p>
               )}
             </div>
           </form>

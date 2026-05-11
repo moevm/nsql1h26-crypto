@@ -3,6 +3,7 @@ import {useCallback, useState} from "react";
 import {useToastContext} from "@/components/toast-provider";
 import {useCoinListData} from "@/hooks/coin-list-route/use-coin-list-data";
 import {WATCHLIST_ROUTE_STATE_CONFIG} from "@/hooks/coin-list-route/coin-list-route-config";
+import {buildCoinListPaginationProps} from "@/hooks/coin-list-route/coin-list-route-helpers";
 import {useSearchableCoinListTemplate} from "@/hooks/coin-list-route/use-searchable-coin-list-template";
 import {useAuth} from "@/hooks/use-auth";
 import type {UseWatchlistViewResult} from "@/hooks/watchlist-view/watchlist-view-types";
@@ -278,20 +279,7 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
       sort: templateState.tableState.sort,
       onSortChange: templateState.tableState.onSortChange,
       sortableColumns: templateState.tableState.sortableColumns,
-      pagination: {
-        currentPage: routeState.appliedState.page,
-        totalPages: dataState.totalPages,
-        canGoPrevious: routeState.appliedState.page > 1,
-        canGoNext:
-          dataState.hasMore || routeState.appliedState.page < dataState.totalPages,
-        onPrevious: () => {
-          routeState.setPage(routeState.appliedState.page - 1);
-        },
-        onNext: () => {
-          routeState.setPage(routeState.appliedState.page + 1);
-        },
-        isPending: dataState.isTablePending || routeState.isRouteTransitionPending
-      },
+      pagination: buildCoinListPaginationProps(routeState, dataState),
       emptyTitle: emptyState.title,
       emptyMessage: emptyState.message,
       emptyActionLabel: emptyState.actionLabel

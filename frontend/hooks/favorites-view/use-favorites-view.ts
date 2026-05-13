@@ -17,7 +17,13 @@ export const useFavoritesView = (): UseFavoritesViewResult => {
   const templateState = useSearchableCoinListTemplate({
     routeConfig: FAVORITES_ROUTE_STATE_CONFIG,
     rangeIdPrefix: "favorites",
-    filterHelperText: "Фильтры применяются по кнопке"
+    filterHelperText: "Фильтры применяются по кнопке",
+    queryField: {
+      id: "favorites-query",
+      name: "query",
+      label: "Поиск по названию",
+      placeholder: "Название или символ..."
+    }
   });
   const { routeState } = templateState;
   const [favoritePendingSymbols, setFavoritePendingSymbols] = useState<string[]>([]);

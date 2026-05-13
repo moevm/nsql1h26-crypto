@@ -35,7 +35,8 @@ public class WatchlistService {
                                         Double capMin, Double capMax,
                                         Double changeMin, Double changeMax,
                                         Double volumeMin, Double volumeMax,
-                                        String sortBy, String order) {
+                                        String sortBy, String order,
+                                        String query, Boolean onlyFavorites) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
 
@@ -78,6 +79,10 @@ public class WatchlistService {
                                 .build();
                 })
                 .filter(Objects::nonNull)
+                .filter(coin -> query == null || query.isBlank() ||
+                        coin.getSymbol().toLowerCase().contains(query.toLowerCase()) ||
+                        coin.getName().toLowerCase().contains(query.toLowerCase()))
+                .filter(coin -> !Boolean.TRUE.equals(onlyFavorites) || coin.isFavorite())
                 .filter(coin -> applyFilters(coin, priceMin, priceMax, capMin, capMax, changeMin, changeMax, volumeMin, volumeMax))
                 .collect(Collectors.toList());
 

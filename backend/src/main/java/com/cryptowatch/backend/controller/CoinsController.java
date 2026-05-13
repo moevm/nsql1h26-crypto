@@ -46,7 +46,9 @@ public class CoinsController {
             @RequestParam(required = false) Double volumeMin,
             @RequestParam(required = false) Double volumeMax,
             @RequestParam(defaultValue = "marketCap") String sortBy,
-            @RequestParam(defaultValue = "desc") String order) {
+            @RequestParam(defaultValue = "desc") String order,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Boolean onlyFavorites) {
 
         String token = authHeader.substring(7);
         String userId = jwtTokenProvider.extractUserId(token);
@@ -54,7 +56,7 @@ public class CoinsController {
                 userId, pageSize, pageNo,
                 priceMin, priceMax, capMin, capMax,
                 changeMin, changeMax, volumeMin, volumeMax,
-                sortBy, order);
+                sortBy, order, query, onlyFavorites);
         return ResponseEntity.ok(response);
     }
 
@@ -156,14 +158,15 @@ public class CoinsController {
             @RequestParam(required = false) Double changeMin,
             @RequestParam(required = false) Double changeMax,
             @RequestParam(required = false) Double volumeMin,
-            @RequestParam(required = false) Double volumeMax) {
+            @RequestParam(required = false) Double volumeMax,
+            @RequestParam(required = false) String query) {
 
         String token = authHeader.substring(7);
         String userId = jwtTokenProvider.extractUserId(token);
         FavoritesResponse response = coinService.getFavorites(
                 userId, pageSize, pageNo, sortBy, order,
                 priceMin, priceMax, capMin, capMax,
-                changeMin, changeMax, volumeMin, volumeMax);
+                changeMin, changeMax, volumeMin, volumeMax, query);
         return ResponseEntity.ok(response);
     }
 

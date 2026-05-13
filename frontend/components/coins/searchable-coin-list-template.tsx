@@ -24,6 +24,9 @@ export interface SearchableCoinListTemplateFiltersProps {
   rangeIdPrefix: string;
   queryValue?: string;
   onQueryChange?: (value: string) => void;
+  showOnlyFavoritesField?: boolean;
+  onlyFavoritesValue?: boolean;
+  onOnlyFavoritesChange?: (value: boolean) => void;
   ranges: CoinFilterRangesState;
   onRangeChange: (key: CoinFilterRangeKey, edge: CoinFilterRangeEdge, value: string) => void;
   helperText?: string;
@@ -128,6 +131,9 @@ export const SearchableCoinListTemplate = ({
         rangeIdPrefix={filters.rangeIdPrefix}
         queryValue={filters.queryValue}
         onQueryChange={filters.onQueryChange}
+        showOnlyFavoritesField={filters.showOnlyFavoritesField}
+        onlyFavoritesValue={filters.onlyFavoritesValue}
+        onOnlyFavoritesChange={filters.onOnlyFavoritesChange}
         ranges={filters.ranges}
         onRangeChange={filters.onRangeChange}
         footer={buildFiltersFooter(filters)}

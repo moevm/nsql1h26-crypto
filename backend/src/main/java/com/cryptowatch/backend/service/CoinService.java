@@ -243,7 +243,8 @@ public class CoinService {
                                           Double priceMin, Double priceMax,
                                           Double capMin, Double capMax,
                                           Double changeMin, Double changeMax,
-                                          Double volumeMin, Double volumeMax) {
+                                          Double volumeMin, Double volumeMax,
+                                          String query) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не найден"));
         List<String> favoriteSymbols = user.getFavorites();
@@ -284,6 +285,9 @@ public class CoinService {
                             .build();
                 })
                 .filter(Objects::nonNull)
+                .filter(coin -> query == null || query.isBlank() ||
+                        coin.getSymbol().toLowerCase().contains(query.toLowerCase()) ||
+                        coin.getName().toLowerCase().contains(query.toLowerCase()))
                 .filter(coin -> applyFilters(coin, priceMin, priceMax, capMin, capMax, changeMin, changeMax, volumeMin, volumeMax))
                 .collect(Collectors.toList());
 

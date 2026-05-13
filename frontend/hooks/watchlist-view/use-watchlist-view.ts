@@ -28,7 +28,13 @@ export const useWatchlistView = (): UseWatchlistViewResult => {
   const templateState = useSearchableCoinListTemplate({
     routeConfig: WATCHLIST_ROUTE_STATE_CONFIG,
     rangeIdPrefix: "watchlist",
-    filterHelperText: "Фильтры применяются по кнопке"
+    filterHelperText: "Фильтры применяются по кнопке",
+    queryField: {
+      id: "watchlist-query",
+      name: "query",
+      label: "Поиск по названию",
+      placeholder: "Название или символ..."
+    }
   });
   const {routeState} = templateState;
   const [isRefreshPending, setIsRefreshPending] = useState(false);

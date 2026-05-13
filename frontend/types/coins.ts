@@ -53,7 +53,9 @@ export interface CoinCollectionRequestParams extends CoinNumericFilterParams {
   order?: CoinTableSortDirection;
 }
 
-export interface FavoritesRequestParams extends CoinCollectionRequestParams {}
+export interface FavoritesRequestParams extends CoinCollectionRequestParams {
+  query?: string;
+}
 
 export interface SearchCoinsRequestParams extends CoinCollectionRequestParams {
   query?: string;
@@ -146,7 +148,10 @@ export interface CoinsMutationResponse {
   message?: string;
 }
 
-export interface WatchlistRequestParams extends CoinCollectionRequestParams {}
+export interface WatchlistRequestParams extends CoinCollectionRequestParams {
+  query?: string;
+  onlyFavorites?: boolean;
+}
 
 export interface CompareLinearPoint {
   timestamp: string;

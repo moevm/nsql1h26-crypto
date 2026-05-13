@@ -14,6 +14,7 @@ export interface CoinListPageModeConfig {
   pathname: string;
   requestMode: CoinListRequestMode;
   supportsTextQuery: boolean;
+  supportsOnlyFavorites?: boolean;
   defaultPageSize: number;
   defaultSort: CoinTableSortState & { key: ServerCoinTableSortKey };
   allowedSortKeys: readonly ServerCoinTableSortKey[];
@@ -22,6 +23,7 @@ export interface CoinListPageModeConfig {
 export interface CoinListRouteFiltersDraft {
   query: string;
   ranges: CoinFilterRangesState;
+  onlyFavorites: boolean;
 }
 
 export interface CoinListRouteAppliedState extends CoinListRouteFiltersDraft {
@@ -31,6 +33,7 @@ export interface CoinListRouteAppliedState extends CoinListRouteFiltersDraft {
 
 export type CoinListRouteRequestParams = CoinCollectionRequestParams & {
   query?: string;
+  onlyFavorites?: boolean;
 };
 
 const DEFAULT_SERVER_SORT: CoinTableSortState & { key: ServerCoinTableSortKey } = {
@@ -42,7 +45,8 @@ export const WATCHLIST_ROUTE_STATE_CONFIG: CoinListPageModeConfig = {
   mode: "watchlist",
   pathname: "/app",
   requestMode: "search",
-  supportsTextQuery: false,
+  supportsTextQuery: true,
+  supportsOnlyFavorites: true,
   defaultPageSize: 10,
   defaultSort: DEFAULT_SERVER_SORT,
   allowedSortKeys: [] as readonly ServerCoinTableSortKey[]
@@ -52,7 +56,7 @@ export const FAVORITES_ROUTE_STATE_CONFIG: CoinListPageModeConfig = {
   mode: "favorites",
   pathname: "/app/favorites",
   requestMode: "favorites",
-  supportsTextQuery: false,
+  supportsTextQuery: true,
   defaultPageSize: 10,
   defaultSort: DEFAULT_SERVER_SORT,
   allowedSortKeys: SERVER_COIN_TABLE_SORTABLE_COLUMNS

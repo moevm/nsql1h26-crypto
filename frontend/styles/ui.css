@@ -30,6 +30,11 @@
   @apply mb-2 block text-sm font-semibold;
 }
 
+.cw-checkbox-label {
+  @apply flex cursor-pointer select-none items-center gap-2 text-sm font-semibold;
+  color: var(--color-text-strong);
+}
+
 .cw-input {
   @apply w-full rounded-2xl border px-4 py-3 text-sm;
   border-color: var(--color-border);

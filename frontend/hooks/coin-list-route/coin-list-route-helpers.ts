@@ -35,13 +35,8 @@ const parseOrder = (
 };
 
 const normalizeRangeQueryValue = (value: string | undefined): string => {
-  if (!value) {
-    return "";
-  }
-
-  const parsedValue = parseCoinFilterNumber(value);
-
-  return parsedValue === null ? "" : String(parsedValue);
+  if (!value) return "";
+  return parseCoinFilterNumber(value) !== null ? value.trim() : "";
 };
 
 const normalizeDraftQueryForMode = (
@@ -63,6 +58,7 @@ export const createDefaultCoinListRouteState = (
 ): CoinListRouteAppliedState => ({
   query: "",
   ranges: createEmptyCoinFilterRanges(),
+  onlyFavorites: false,
   sort: config.defaultSort,
   page: 1
 });
@@ -97,6 +93,7 @@ export const parseCoinListRouteState = (
         end: normalizeRangeQueryValue(readSingleQueryValue(routeQuery.volumeMax))
       }
     },
+    onlyFavorites: config.supportsOnlyFavorites === true ? readSingleQueryValue(routeQuery.onlyFavorites) === "true" : false,
     sort: {
       key: isAllowedSortKey
         ? (sortByValue as CoinListRouteAppliedState["sort"]["key"])
@@ -112,13 +109,16 @@ export const areCoinListRouteDraftsEqual = (
   rightDraft: CoinListRouteFiltersDraft
 ): boolean =>
   leftDraft.query === rightDraft.query &&
+  leftDraft.onlyFavorites === rightDraft.onlyFavorites &&
   areCoinFilterRangesEqual(leftDraft.ranges, rightDraft.ranges);
 
 export const hasActiveCoinListRouteDraftFilters = (
   draft: CoinListRouteFiltersDraft,
   config: CoinListPageModeConfig
 ): boolean =>
-  normalizeDraftQueryForMode(draft.query, config).length > 0 || hasActiveCoinFilterRanges(draft.ranges);
+  normalizeDraftQueryForMode(draft.query, config).length > 0 ||
+  hasActiveCoinFilterRanges(draft.ranges) ||
+  (config.supportsOnlyFavorites === true && draft.onlyFavorites);
 
 export const getCoinListRouteDraftValidationMessage = (
   draft: CoinListRouteFiltersDraft
@@ -128,7 +128,8 @@ export const buildAppliedCoinListRouteDraft = (
   state: CoinListRouteAppliedState
 ): CoinListRouteFiltersDraft => ({
   query: state.query,
-  ranges: state.ranges
+  ranges: state.ranges,
+  onlyFavorites: state.onlyFavorites
 });
 
 export const buildNextAppliedCoinListRouteStateFromDraft = (
@@ -139,6 +140,7 @@ export const buildNextAppliedCoinListRouteStateFromDraft = (
   ...currentState,
   query: normalizeDraftQueryForMode(draft.query, config),
   ranges: normalizeDraftRanges(draft.ranges),
+  onlyFavorites: config.supportsOnlyFavorites === true ? draft.onlyFavorites : false,
   page: 1
 });
 
@@ -156,6 +158,8 @@ export const buildCoinListRouteHref = (
       config.supportsTextQuery && sanitizedState.query.length > 0
         ? sanitizedState.query
         : undefined,
+    onlyFavorites:
+      config.supportsOnlyFavorites === true && sanitizedState.onlyFavorites ? true : undefined,
     priceMin: sanitizedState.ranges.price.start || undefined,
     priceMax: sanitizedState.ranges.price.end || undefined,
     capMin: sanitizedState.ranges.cap.start || undefined,
@@ -193,10 +197,8 @@ export const buildCoinListRouteRequestParams = (
   changeMax: parseCoinFilterNumber(state.ranges.change.end) ?? undefined,
   volumeMin: parseCoinFilterNumber(state.ranges.volume.start) ?? undefined,
   volumeMax: parseCoinFilterNumber(state.ranges.volume.end) ?? undefined,
-  query:
-    config.requestMode === "search" && config.supportsTextQuery && state.query.length > 0
-      ? state.query
-      : undefined
+  query: config.supportsTextQuery && state.query.length > 0 ? state.query : undefined,
+  onlyFavorites: config.supportsOnlyFavorites === true && state.onlyFavorites ? true : undefined
 });
 
 export const isCoinListRouteStateEqual = (
@@ -204,6 +206,7 @@ export const isCoinListRouteStateEqual = (
   rightState: CoinListRouteAppliedState
 ): boolean =>
   leftState.query === rightState.query &&
+  leftState.onlyFavorites === rightState.onlyFavorites &&
   leftState.page === rightState.page &&
   leftState.sort.key === rightState.sort.key &&
   leftState.sort.direction === rightState.sort.direction &&

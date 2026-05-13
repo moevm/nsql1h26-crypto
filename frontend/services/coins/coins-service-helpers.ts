@@ -46,11 +46,22 @@ const buildCoinCollectionQueryParams = (
 
 export const buildFavoritesQueryParams = (
   params?: FavoritesRequestParams
-): QueryParams | undefined => buildCoinCollectionQueryParams(params);
+): QueryParams | undefined => {
+  const base = buildCoinCollectionQueryParams(params);
+  const query = normalizeCoinSearchQuery(params?.query);
+  if (!base && query === undefined) return undefined;
+  return { ...base, query };
+};
 
 export const buildWatchlistQueryParams = (
   params?: WatchlistRequestParams
-): QueryParams | undefined => buildCoinCollectionQueryParams(params);
+): QueryParams | undefined => {
+  const base = buildCoinCollectionQueryParams(params);
+  const query = normalizeCoinSearchQuery(params?.query);
+  const onlyFavorites = params?.onlyFavorites || undefined;
+  if (!base && query === undefined && onlyFavorites === undefined) return undefined;
+  return { ...base, query, onlyFavorites };
+};
 
 export const buildSearchCoinsQueryParams = (
   params?: SearchCoinsRequestParams

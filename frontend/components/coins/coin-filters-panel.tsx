@@ -9,11 +9,28 @@ const COIN_FILTER_FIELDS: Array<{
   key: CoinFilterRangeKey;
   idSuffix: string;
   label: string;
+  inputType?: "text" | "number";
+  startPlaceholder?: string;
+  endPlaceholder?: string;
 }> = [
   { key: "price", idSuffix: "price", label: "Цена, USD" },
-  { key: "cap", idSuffix: "cap", label: "Капитализация" },
+  {
+    key: "cap",
+    idSuffix: "cap",
+    label: "Капитализация",
+    inputType: "text",
+    startPlaceholder: "напр. $1B",
+    endPlaceholder: "напр. $100B"
+  },
   { key: "change", idSuffix: "change", label: "Изменение за 24ч" },
-  { key: "volume", idSuffix: "volume", label: "Объем торгов" }
+  {
+    key: "volume",
+    idSuffix: "volume",
+    label: "Объем торгов",
+    inputType: "text",
+    startPlaceholder: "напр. $500M",
+    endPlaceholder: "напр. $50B"
+  }
 ];
 
 interface CoinFiltersPanelProps {
@@ -27,6 +44,9 @@ interface CoinFiltersPanelProps {
   rangeIdPrefix: string;
   queryValue?: string;
   onQueryChange?: (value: string) => void;
+  showOnlyFavoritesField?: boolean;
+  onlyFavoritesValue?: boolean;
+  onOnlyFavoritesChange?: (value: boolean) => void;
   ranges?: Partial<Record<CoinFilterRangeKey, CoinFilterRangeValue>>;
   onRangeChange?: (key: CoinFilterRangeKey, edge: RangeFieldEdge, value: string) => void;
   children?: ReactNode;
@@ -45,6 +65,9 @@ export const CoinFiltersPanel = ({
   rangeIdPrefix,
   queryValue,
   onQueryChange,
+  showOnlyFavoritesField,
+  onlyFavoritesValue,
+  onOnlyFavoritesChange,
   ranges,
   onRangeChange,
   children,
@@ -94,13 +117,29 @@ export const CoinFiltersPanel = ({
           </div>
         ) : null}
 
+        {showOnlyFavoritesField ? (
+          <div className="mt-6">
+            <label className="cw-checkbox-label">
+              <input
+                type="checkbox"
+                className="h-4 w-4 shrink-0 rounded"
+                checked={onlyFavoritesValue ?? false}
+                onChange={(e) => onOnlyFavoritesChange?.(e.target.checked)}
+              />
+              Только избранные
+            </label>
+          </div>
+        ) : null}
+
         <div className="cw-filter-grid mt-6">
           {COIN_FILTER_FIELDS.map((field) => (
             <RangeField
               key={field.key}
               id={`${rangeIdPrefix}-${field.idSuffix}`}
               label={field.label}
-              inputType="number"
+              inputType={field.inputType ?? "number"}
+              startPlaceholder={field.startPlaceholder}
+              endPlaceholder={field.endPlaceholder}
               startValue={ranges?.[field.key]?.start}
               endValue={ranges?.[field.key]?.end}
               onStartChange={

@@ -26,21 +26,31 @@ export const createEmptyCoinFilterRanges = (): CoinFilterRangesState => ({
 });
 
 export const parseCoinFilterNumber = (value: string): number | null => {
-  const normalizedValue = value.trim().replace(",", ".");
+  const normalizedValue = value.trim().replace(",", ".").replace(/^\$/, "");
 
   if (!normalizedValue) {
     return null;
   }
 
-  const parsedValue = Number(normalizedValue);
+  const match = normalizedValue.match(/^(\d+(?:\.\d+)?)\s*([KkMmBbTt])?$/);
+  if (!match) {
+    return null;
+  }
 
-  return Number.isFinite(parsedValue) ? parsedValue : null;
+  const num = parseFloat(match[1]);
+  const suffix = match[2]?.toUpperCase();
+
+  if (suffix) {
+    const multipliers: Record<string, number> = { K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
+    const result = num * (multipliers[suffix] ?? 1);
+    return Number.isFinite(result) ? result : null;
+  }
+
+  return Number.isFinite(num) ? num : null;
 };
 
 const normalizeCoinFilterNumber = (value: string): string => {
-  const parsedValue = parseCoinFilterNumber(value);
-
-  return parsedValue === null ? "" : String(parsedValue);
+  return parseCoinFilterNumber(value) !== null ? value.trim() : "";
 };
 
 export const sanitizeCoinFilterRanges = (
@@ -93,6 +103,16 @@ export const getCoinFilterRangesValidationMessage = (
   ranges: CoinFilterRangesState
 ): string | null => {
   for (const key of COIN_FILTER_RANGE_KEYS) {
+    const rawStart = ranges[key].start.trim();
+    const rawEnd = ranges[key].end.trim();
+
+    if (rawStart && parseCoinFilterNumber(rawStart) === null) {
+      return `Поле «${COIN_FILTER_RANGE_LABELS[key]}»: неверный формат (пример: 1.5B)`;
+    }
+    if (rawEnd && parseCoinFilterNumber(rawEnd) === null) {
+      return `Поле «${COIN_FILTER_RANGE_LABELS[key]}»: неверный формат (пример: 1.5B)`;
+    }
+
     const startValue = parseCoinFilterNumber(ranges[key].start);
     const endValue = parseCoinFilterNumber(ranges[key].end);
 

@@ -97,9 +97,9 @@ export const CoinHistorySection = ({ viewState }: CoinHistorySectionProps) => {
             <RangeField
               id="coin-history-volume"
               label="Объем торгов, USD"
-              inputType="number"
-              startPlaceholder="Мин."
-              endPlaceholder="Макс."
+              inputType="text"
+              startPlaceholder="напр. $500M"
+              endPlaceholder="напр. $50B"
               startValue={viewState.filters.draft.volumeMin}
               endValue={viewState.filters.draft.volumeMax}
               onStartChange={viewState.filters.onVolumeMinChange}

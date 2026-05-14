@@ -67,6 +67,13 @@ export const CoinSummaryCard = ({
       valueClassName: "cw-table-primary"
     },
     {
+      label: "Дата добавления",
+      value: coinDetails.createdAt
+        ? updatedAtFormatter.format(new Date(coinDetails.createdAt))
+        : "—",
+      valueClassName: "cw-table-primary"
+    },
+    {
       label: "Последнее обновление",
       value: updatedAtFormatter.format(new Date(coinDetails.lastUpdatedAt)),
       valueClassName: "cw-table-primary"

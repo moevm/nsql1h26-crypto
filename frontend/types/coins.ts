@@ -84,6 +84,7 @@ export interface CoinDetails {
   maxPrice7d: number | null;
   avgPrice7d: number | null;
   isFavorite: boolean;
+  createdAt: string | null;
   lastUpdatedAt: string;
 }
 

@@ -135,11 +135,13 @@ public class CoinMarketCapService {
                     "Symbol not found: " + upperSymbol);
         }
 
+        Date now = new Date();
         CoinsMeta meta = CoinsMeta.builder()
                 .symbol(upperSymbol)
                 .name(info.getName())
                 .cmcId(info.getId())
-                .lastUpdated(new Date())
+                .createdAt(now)
+                .lastUpdated(now)
                 .build();
         
         try {

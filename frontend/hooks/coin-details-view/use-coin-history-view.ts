@@ -30,52 +30,36 @@ interface CoinHistoryRouteAppliedState {
   page: number;
 }
 
-const formatDateInputValue = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+const pad = (n: number) => String(n).padStart(2, "0");
 
-  return `${year}-${month}-${day}`;
+const formatDateTimeLocalValue = (date: Date): string =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+const isValidDateTimeLocalValue = (value: string): boolean => {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return false;
+  return !isNaN(new Date(value).getTime());
+};
+
+const sanitizeDateTimeLocalValue = (value: string | undefined): string => {
+  if (!value) return "";
+  const normalized = value.trim();
+  return isValidDateTimeLocalValue(normalized) ? normalized : "";
 };
 
 const createDefaultHistoryFiltersDraft = (): CoinHistoryFiltersDraft => {
   const dateTo = new Date();
   const dateFrom = new Date(dateTo);
   dateFrom.setDate(dateTo.getDate() - (DEFAULT_HISTORY_RANGE_DAYS - 1));
+  dateFrom.setHours(0, 0, 0, 0);
 
   return {
-    dateFrom: formatDateInputValue(dateFrom),
-    dateTo: formatDateInputValue(dateTo),
+    dateFrom: formatDateTimeLocalValue(dateFrom),
+    dateTo: formatDateTimeLocalValue(dateTo),
     priceMin: "",
     priceMax: "",
     volumeMin: "",
     volumeMax: ""
   };
-};
-
-const isValidDateInputValue = (value: string): boolean => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-};
-
-const sanitizeDateInputValue = (value: string | undefined): string => {
-  if (!value) {
-    return "";
-  }
-
-  const normalizedValue = value.trim();
-
-  return isValidDateInputValue(normalizedValue) ? normalizedValue : "";
 };
 
 const sanitizeNumericDraftValue = (value: string | undefined): string => {
@@ -147,8 +131,8 @@ const parseHistoryRouteState = (
   routeQuery: ReturnType<typeof useRouter>["query"]
 ): CoinHistoryRouteAppliedState => {
   const defaultDraft = createDefaultHistoryFiltersDraft();
-  const rawDateFrom = sanitizeDateInputValue(readSingleQueryValue(routeQuery.dateFrom));
-  const rawDateTo = sanitizeDateInputValue(readSingleQueryValue(routeQuery.dateTo));
+  const rawDateFrom = sanitizeDateTimeLocalValue(readSingleQueryValue(routeQuery.dateFrom));
+  const rawDateTo = sanitizeDateTimeLocalValue(readSingleQueryValue(routeQuery.dateTo));
 
   return {
     filters: {
@@ -182,28 +166,14 @@ const buildHistoryRouteHref = (
   return `${buildCoinDetailsRoutePath(symbol)}${createQueryString(params)}`;
 };
 
-const toDateBoundaryIso = (
-  value: string,
-  edge: "start" | "end"
-): string | undefined => {
-  if (!isValidDateInputValue(value)) {
-    return undefined;
-  }
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date =
-    edge === "start"
-      ? new Date(year, month - 1, day, 0, 0, 0, 0)
-      : new Date(year, month - 1, day, 23, 59, 59, 999);
-
-  return date.toISOString();
+const toDateTimeIso = (value: string): string | undefined => {
+  if (!isValidDateTimeLocalValue(value)) return undefined;
+  return new Date(value).toISOString();
 };
 
 const buildHistoryRequestParams = (state: CoinHistoryRouteAppliedState) => ({
-  dateFrom: state.filters.dateFrom
-    ? toDateBoundaryIso(state.filters.dateFrom, "start")
-    : undefined,
-  dateTo: state.filters.dateTo ? toDateBoundaryIso(state.filters.dateTo, "end") : undefined,
+  dateFrom: state.filters.dateFrom ? toDateTimeIso(state.filters.dateFrom) : undefined,
+  dateTo: state.filters.dateTo ? toDateTimeIso(state.filters.dateTo) : undefined,
   priceMin: parseCoinFilterNumber(state.filters.priceMin) ?? undefined,
   priceMax: parseCoinFilterNumber(state.filters.priceMax) ?? undefined,
   volumeMin: parseCoinFilterNumber(state.filters.volumeMin) ?? undefined,
@@ -213,10 +183,8 @@ const buildHistoryRequestParams = (state: CoinHistoryRouteAppliedState) => ({
 });
 
 const buildChartRequestParams = (state: CoinHistoryRouteAppliedState) => ({
-  dateFrom: state.filters.dateFrom
-    ? toDateBoundaryIso(state.filters.dateFrom, "start")
-    : undefined,
-  dateTo: state.filters.dateTo ? toDateBoundaryIso(state.filters.dateTo, "end") : undefined,
+  dateFrom: state.filters.dateFrom ? toDateTimeIso(state.filters.dateFrom) : undefined,
+  dateTo: state.filters.dateTo ? toDateTimeIso(state.filters.dateTo) : undefined,
   pageNo: 0,
   pageSize: CHART_PAGE_SIZE,
   sortBy: "timestamp" as const,
@@ -460,13 +428,13 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
       onDateFromChange: (value) => {
         setDraftFilters((currentDraft) => ({
           ...currentDraft,
-          dateFrom: sanitizeDateInputValue(value)
+          dateFrom: sanitizeDateTimeLocalValue(value)
         }));
       },
       onDateToChange: (value) => {
         setDraftFilters((currentDraft) => ({
           ...currentDraft,
-          dateTo: sanitizeDateInputValue(value)
+          dateTo: sanitizeDateTimeLocalValue(value)
         }));
       },
       onPriceMinChange: (value) => {
@@ -500,8 +468,8 @@ export const useCoinHistoryView = (): UseCoinHistoryViewResult => {
 
         replaceAppliedState({
           filters: {
-            dateFrom: sanitizeDateInputValue(draftFilters.dateFrom),
-            dateTo: sanitizeDateInputValue(draftFilters.dateTo),
+            dateFrom: sanitizeDateTimeLocalValue(draftFilters.dateFrom),
+            dateTo: sanitizeDateTimeLocalValue(draftFilters.dateTo),
             priceMin: sanitizeNumericDraftValue(draftFilters.priceMin),
             priceMax: sanitizeNumericDraftValue(draftFilters.priceMax),
             volumeMin: sanitizeNumericDraftValue(draftFilters.volumeMin),

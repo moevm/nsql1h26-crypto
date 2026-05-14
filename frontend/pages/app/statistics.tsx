@@ -242,7 +242,7 @@ const StatisticsPageContent = () => {
             onKeyDown={(e) => {
               if (
                 e.key === "Enter" &&
-                (e.target as HTMLInputElement).type === "date"
+                (e.target as HTMLInputElement).type === "datetime-local"
               ) {
                 e.currentTarget.requestSubmit();
               }
@@ -316,7 +316,7 @@ const StatisticsPageContent = () => {
 
                 <RangeField
                   id="stats-range"
-                  inputType="date"
+                  inputType="datetime-local"
                   label="Период"
                   startValue={params.timeRangeFrom}
                   endValue={params.timeRangeTo}
@@ -456,6 +456,9 @@ const StatisticsPageContent = () => {
                   </p>
                   <p className="text-sm leading-6 text-text-main">
                     Агрегация: {preset.aggregation}
+                  </p>
+                  <p className="text-sm leading-6 text-text-main">
+                    Создан: {new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(preset.createdAt))}
                   </p>
                   <div className="mt-4 flex gap-2">
                     <button

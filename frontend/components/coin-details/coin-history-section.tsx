@@ -68,14 +68,12 @@ export const CoinHistorySection = ({ viewState }: CoinHistorySectionProps) => {
           <h2 className="cw-card-title">Фильтры, график и записи</h2>
         </div>
 
-        <form className="cw-panel-muted" onSubmit={(e) => { e.preventDefault(); viewState.filters.onApply(); }} onKeyDown={(e) => { if (e.key === "Enter" && (e.target as HTMLInputElement).type === "date") e.currentTarget.requestSubmit(); }}>
+        <form className="cw-panel-muted" onSubmit={(e) => { e.preventDefault(); viewState.filters.onApply(); }} onKeyDown={(e) => { if (e.key === "Enter" && (e.target as HTMLInputElement).type === "datetime-local") e.currentTarget.requestSubmit(); }}>
           <div className="cw-filter-grid">
             <RangeField
               id="coin-history-date"
               label="Период"
-              inputType="date"
-              startPlaceholder="Дата от"
-              endPlaceholder="Дата до"
+              inputType="datetime-local"
               startValue={viewState.filters.draft.dateFrom}
               endValue={viewState.filters.draft.dateTo}
               onStartChange={viewState.filters.onDateFromChange}

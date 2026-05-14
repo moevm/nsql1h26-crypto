@@ -5,6 +5,11 @@ import { SharedDialog } from "@/components/shared-dialog";
 import { useImportExportView } from "@/hooks/import-export-view/use-import-export-view";
 import { AUTH_ROLES } from "@/services/auth/auth-roles";
 
+const COLLECTION_LABELS: Record<string, string> = {
+  coins_meta: "Монеты",
+  coin_snapshots: "Снимки цен"
+};
+
 const ImportExportPageContent = () => {
   const view = useImportExportView();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,16 +124,17 @@ const ImportExportPageContent = () => {
 
               {view.importResult ? (
                 <div className="cw-card-surface p-5 mt-4">
-                  <p className="cw-card-title text-base">{view.importResult.message}</p>
+                  <p className="cw-card-title text-base">Импорт выполнен успешно</p>
                   <ul className="mt-3 space-y-1 text-sm text-text-main">
                     {Object.entries(view.importResult.recordCount).map(([key, count]) => (
                       <li key={key}>
-                        {key}: <span className="font-medium">{count}</span>
+                        {COLLECTION_LABELS[key] ?? key}:{" "}
+                        <span className="font-medium">{count}</span>
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-2 text-sm text-text-main">
-                    {new Date(view.importResult.importedAt).toLocaleString("ru-RU")}
+                  <p className="mt-2 text-sm text-text-muted">
+                    {new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(view.importResult.importedAt))}
                   </p>
                 </div>
               ) : null}

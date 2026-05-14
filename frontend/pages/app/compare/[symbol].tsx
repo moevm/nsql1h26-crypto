@@ -6,6 +6,12 @@ import { LoadingState } from "@/components/view-state/loading-state";
 import type { CompareDatePreset } from "@/hooks/compare-view/compare-view-types";
 import { useCompareView } from "@/hooks/compare-view/use-compare-view";
 
+const pad = (n: number) => String(n).padStart(2, "0");
+const toDateTimeLocalValue = (iso: string): string => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 const DATE_PRESETS: { label: string; value: CompareDatePreset }[] = [
   { label: "7д", value: "7d" },
   { label: "30д", value: "30d" },
@@ -106,17 +112,17 @@ export default function ComparePage() {
                 </button>
               ))}
               <input
-                type="date"
+                type="datetime-local"
                 className="cw-input"
-                value={v.dateFrom.slice(0, 10)}
-                onChange={(e) => v.onDateFromChange(`${e.target.value}T00:00:00.000Z`)}
+                value={toDateTimeLocalValue(v.dateFrom)}
+                onChange={(e) => v.onDateFromChange(new Date(e.target.value).toISOString())}
               />
               <span className="text-muted-foreground">—</span>
               <input
-                type="date"
+                type="datetime-local"
                 className="cw-input"
-                value={v.dateTo.slice(0, 10)}
-                onChange={(e) => v.onDateToChange(`${e.target.value}T23:59:59.999Z`)}
+                value={toDateTimeLocalValue(v.dateTo)}
+                onChange={(e) => v.onDateToChange(new Date(e.target.value).toISOString())}
               />
             </div>
           </div>

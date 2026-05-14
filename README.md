@@ -22,8 +22,10 @@
 
 В корне проекта
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
+
+После запуска приложение будет доступно по адресу [http://localhost:3000](http://localhost:3000)
 
 ## Данные для входа
 - Администратор: `admin` / `Admin123!`

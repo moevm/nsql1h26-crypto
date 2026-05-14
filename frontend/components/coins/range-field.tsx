@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 interface RangeFieldProps {
   label: string;
   id: string;
-  inputType?: "text" | "number" | "date";
+  inputType?: "text" | "number" | "date" | "datetime-local";
   disabled?: boolean;
   startName?: string;
   endName?: string;

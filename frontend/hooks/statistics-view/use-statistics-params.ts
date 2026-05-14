@@ -3,14 +3,15 @@ import type { StatisticsParams } from "@/types/statistics";
 
 const STORAGE_KEY = "stats_params";
 
+const pad = (n: number) => String(n).padStart(2, "0");
+const fmtDateTimeLocal = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
 const getDefaultTimeRange = () => {
   const to = new Date();
   const from = new Date();
   from.setMonth(to.getMonth() - 1);
-  return {
-    timeRangeFrom: from.toISOString().split("T")[0],
-    timeRangeTo: to.toISOString().split("T")[0]
-  };
+  return { timeRangeFrom: fmtDateTimeLocal(from), timeRangeTo: fmtDateTimeLocal(to) };
 };
 
 const DEFAULT_PARAMS: StatisticsParams = {

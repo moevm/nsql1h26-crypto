@@ -14,6 +14,7 @@ export interface StatisticsApi {
 }
 
 const parseLocalDate = (dateStr: string, endOfDay = false): Date => {
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateStr)) return new Date(dateStr);
   const [year, month, day] = dateStr.split("-").map(Number);
   return endOfDay
     ? new Date(year, month - 1, day, 23, 59, 59, 999)

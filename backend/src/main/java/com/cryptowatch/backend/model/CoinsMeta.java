@@ -24,5 +24,6 @@ public class CoinsMeta {
 
     private String name;
     private int cmcId;
+    private Date createdAt;
     private Date lastUpdated;
 }

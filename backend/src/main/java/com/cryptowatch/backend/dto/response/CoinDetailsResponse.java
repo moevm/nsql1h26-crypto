@@ -24,5 +24,6 @@ public class CoinDetailsResponse {
     private Double avgPrice7d;
     @JsonProperty("isFavorite")
     private boolean isFavorite;
+    private Date createdAt;
     private Date lastUpdated;
 }

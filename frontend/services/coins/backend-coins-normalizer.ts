@@ -294,6 +294,7 @@ export const normalizeCoinDetailsResponse = (payload: unknown): CoinDetails => {
     maxPrice7d: parseNumber(payload.maxPrice7d),
     avgPrice7d: parseNumber(payload.avgPrice7d),
     isFavorite: parseFavorite(payload, "isFavorite"),
+    createdAt: parseIsoDateString(payload.createdAt),
     lastUpdatedAt: parseRequiredIsoDateString(payload.lastUpdated, "lastUpdated")
   };
 };

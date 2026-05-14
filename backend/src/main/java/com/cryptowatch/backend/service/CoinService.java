@@ -193,6 +193,7 @@ public class CoinService {
                 .maxPrice7d(maxPrice)
                 .avgPrice7d(avgPrice)
                 .isFavorite(isFavorite)
+                .createdAt(meta.getCreatedAt())
                 .lastUpdated(latest.getTimestamp())
                 .build();
     }

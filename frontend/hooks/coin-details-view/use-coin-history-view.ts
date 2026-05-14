@@ -79,13 +79,8 @@ const sanitizeDateInputValue = (value: string | undefined): string => {
 };
 
 const sanitizeNumericDraftValue = (value: string | undefined): string => {
-  if (!value) {
-    return "";
-  }
-
-  const parsedValue = parseCoinFilterNumber(value);
-
-  return parsedValue === null ? "" : String(parsedValue);
+  if (!value) return "";
+  return parseCoinFilterNumber(value) !== null ? value.trim() : "";
 };
 
 const areHistoryDraftsEqual = (
@@ -121,6 +116,13 @@ const getHistoryDraftValidationMessage = (
 
   if (priceMin !== null && priceMax !== null && priceMin > priceMax) {
     return "Поле «Цена»: значение «от» не должно быть больше значения «до»";
+  }
+
+  if (draft.volumeMin.trim() && parseCoinFilterNumber(draft.volumeMin) === null) {
+    return "Поле «Объем торгов»: неверный формат (пример: 1.5B)";
+  }
+  if (draft.volumeMax.trim() && parseCoinFilterNumber(draft.volumeMax) === null) {
+    return "Поле «Объем торгов»: неверный формат (пример: 1.5B)";
   }
 
   const volumeMin = parseCoinFilterNumber(draft.volumeMin);

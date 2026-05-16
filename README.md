@@ -25,7 +25,7 @@
 docker compose up -d
 ```
 
-После запуска приложение будет доступно по адресу [http://localhost:3000](http://localhost:3000)\
+После запуска приложение будет доступно по адресу [http://localhost:3000](http://localhost:3000)
 
 ## Интеграция с CMC API
 
